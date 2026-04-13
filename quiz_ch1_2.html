@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Défi des Fondamentaux - Chapitres 1-2</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f1a;--card:#1a1a2e;--card2:#232640;--accent:#2563eb;--accent2:#60a5fa;
+  --green:#22c55e;--red:#ef4444;--text:#e0e0e0;--muted:#8888a0;--border:#2a2d3e;
+  --radius:14px;
+}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:20px 16px;line-height:1.6;
+}
+h1{font-size:1.8rem;margin-bottom:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;}
+.subtitle{color:var(--muted);font-size:.9rem;margin-bottom:24px;text-align:center;}
+.container{max-width:720px;width:100%;}
+
+.progress-wrap{width:100%;margin-bottom:18px;}
+.progress-info{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px;}
+.progress-bar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .5s ease;}
+
+.score-badge{
+  position:fixed;top:16px;right:20px;background:var(--card);border:1px solid var(--border);
+  padding:8px 18px;border-radius:99px;font-weight:600;font-size:.95rem;z-index:10;
+}
+.score-badge span{color:var(--accent2);}
+
+.quiz-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:28px 32px;margin-bottom:16px;position:relative;overflow:hidden;
+  animation:fadeIn .4s ease;
+}
+.quiz-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.q-type{
+  display:inline-block;padding:3px 12px;border-radius:99px;font-size:.75rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;
+  background:rgba(37,99,235,.15);color:var(--accent2);border:1px solid rgba(37,99,235,.3);
+}
+.q-text{font-size:1.1rem;font-weight:600;margin-bottom:20px;line-height:1.5;}
+
+.options{display:flex;flex-direction:column;gap:10px;}
+.opt-btn{
+  width:100%;padding:14px 18px;border-radius:10px;border:2px solid var(--border);
+  background:var(--card2);color:var(--text);font-size:.95rem;text-align:left;
+  cursor:pointer;transition:all .2s;font-weight:500;position:relative;
+}
+.opt-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(37,99,235,.08);transform:translateX(4px);}
+.opt-btn.correct{border-color:var(--green);background:rgba(34,197,94,.12);color:var(--green);}
+.opt-btn.wrong{border-color:var(--red);background:rgba(239,68,68,.12);color:var(--red);}
+.opt-btn:disabled{cursor:default;}
+.opt-btn .letter{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:8px;margin-right:12px;font-weight:700;font-size:.85rem;
+  background:rgba(37,99,235,.15);color:var(--accent2);flex-shrink:0;
+}
+
+.explanation{
+  margin-top:16px;padding:14px 18px;border-radius:10px;font-size:.9rem;line-height:1.5;
+  animation:fadeIn .3s ease;
+}
+.explanation.correct{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#86efac;}
+.explanation.wrong{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;}
+
+.next-btn{
+  display:inline-flex;align-items:center;gap:8px;margin-top:16px;
+  padding:12px 28px;border:none;border-radius:10px;
+  font-size:.95rem;font-weight:600;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  transition:all .2s;
+}
+.next-btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+
+/* Final screen */
+.final{
+  text-align:center;padding:40px 32px;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  animation:fadeIn .5s ease;
+}
+.final h2{font-size:1.6rem;margin-bottom:8px;color:var(--accent2);}
+.final .big-score{font-size:3.5rem;font-weight:800;margin:16px 0;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.final .msg{color:var(--muted);font-size:1rem;margin-bottom:24px;}
+.stars{font-size:2.4rem;margin:10px 0 20px;}
+.stars .on{color:#facc15;}
+.stars .off{color:#333;}
+.replay-btn{
+  padding:14px 36px;border:none;border-radius:12px;
+  font-size:1.05rem;font-weight:700;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  transition:all .2s;
+}
+.replay-btn:hover{filter:brightness(1.15);transform:translateY(-2px);}
+
+.hidden{display:none!important;}
+.confetti{position:fixed;width:10px;height:10px;border-radius:2px;pointer-events:none;z-index:999;animation:confettiFall 1.5s ease forwards;}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
+
+@media(max-width:500px){
+  .quiz-card{padding:20px 16px;}
+  h1{font-size:1.4rem;}
+  .q-text{font-size:1rem;}
+}
+</style>
+</head>
+<body>
+
+<h1>Le Defi des Fondamentaux</h1>
+<p class="subtitle">Chapitres 1-2 : Psychopathologie &amp; Normalite</p>
+
+<div class="score-badge">Score : <span id="scoreDisplay">0</span> / <span id="totalDisplay">20</span></div>
+
+<div class="container">
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="qNum">Question 1 / 20</span>
+      <span id="pctText">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+
+  <div id="quizArea"></div>
+  <div id="finalArea" class="hidden"></div>
+</div>
+
+<script>
+const QUESTIONS_PER_SESSION = 20;
+
+const ALL_QUESTIONS = [
+  // ===== CHAPTER 1 =====
+  {type:"qcm",q:"Quelle est l'etymologie correcte du mot 'psychopathologie' ?",opts:["Psyche (esprit) + Pathos (souffrance) + Logos (discours)","Psyche (ame) + Pathos (maladie) + Logos (science)","Psyche (corps) + Pathos (souffrance) + Logos (etude)","Psyche (esprit) + Pathos (douleur) + Logos (guerison)"],ans:0,expl:"Psyche = esprit, Pathos = souffrance, Logos = discours. La psychopathologie est le 'discours sur la souffrance psychique'."},
+  {type:"qcm",q:"Selon Samacher (2005), la psychopathologie est :",opts:["L'etude exclusive des nevroses et psychoses","L'etude des troubles mentaux, maladies mentales, du fonctionnement mental anormal et de la psychologie des conduites pathologiques","L'etude des comportements normaux et anormaux dans leur contexte social","La science qui traite exclusivement les maladies du cerveau"],ans:1,expl:"Samacher (2005) definit la psychopathologie comme l'etude des troubles mentaux, des maladies mentales, du fonctionnement mental anormal et de la psychologie des conduites pathologiques."},
+  {type:"qcm",q:"Selon Minkowski (1966), la 'pathologie du psychologique' correspond a :",opts:["L'etude des processus psychologiques dans des conditions pathologiques comme la schizophrenie","L'etude des processus normaux qui sont alteres (deuil, sommeil, sexualite)","L'etude des maladies physiques ayant un impact psychologique","L'etude de la normalite statistique"],ans:1,expl:"La pathologie du psychologique concerne des processus normaux qui sont alteres (deuil pathologique, troubles du sommeil, troubles de la sexualite)."},
+  {type:"qcm",q:"La 'psychologie du pathologique' de Minkowski (1966) etudie :",opts:["Les processus normaux alteres comme le deuil","Les processus psychologiques dans des conditions pathologiques (depression, schizophrenie)","Les bases biologiques des maladies mentales","Les traitements pharmacologiques des troubles mentaux"],ans:1,expl:"La psychologie du pathologique s'interesse aux processus psychologiques a l'oeuvre dans les conditions pathologiques comme la depression ou la schizophrenie."},
+  {type:"vf",q:"Selon Minkowski, le deuil pathologique est un exemple de 'psychologie du pathologique'.",ans:false,expl:"Le deuil pathologique est un processus normal altere, il releve donc de la 'pathologie du psychologique', pas de la 'psychologie du pathologique'."},
+  {type:"qcm",q:"Quels sont les 3 objectifs de la psychopathologie ?",opts:["Observer, Traiter, Guerir","Decrire, Interpreter, Intervenir","Analyser, Classifier, Medicaliser","Evaluer, Diagnostiquer, Hospitaliser"],ans:1,expl:"Les 3 objectifs sont : Decrire (etudier, evaluer), Interpreter (diagnostic), et Intervenir (aide et traitement)."},
+  {type:"qcm",q:"Laquelle de ces methodes est associee a la psychiatrie ?",opts:["La methode clinique","La semiologie","Les tests et echelles","L'introspection"],ans:1,expl:"La semiologie est la methode associee a la psychiatrie. La methode clinique est associee a la psychologie clinique, et les tests/echelles a la psychologie cognitive et neuropsychologie."},
+  {type:"qcm",q:"Les tests et echelles sont la methode de :",opts:["La psychologie clinique","La psychiatrie","La psychologie cognitive et la neuropsychologie","La psychanalyse"],ans:2,expl:"Les tests et echelles sont les outils de la psychologie cognitive et de la neuropsychologie."},
+  {type:"vf",q:"Le mot 'clinique' vient du grec 'klinikos' qui signifie 'lit, couche'.",ans:true,expl:"Klinikos vient effectivement du grec et signifie 'lit, couche', reference a l'observation au chevet du malade."},
+  {type:"qcm",q:"Depuis quelle annee le psychologue clinicien est-il reconnu comme profession de soin independante en Belgique ?",opts:["2010","2014","2016","2020"],ans:2,expl:"Depuis 2016, le psychologue clinicien est reconnu comme profession de soin independante en Belgique."},
+  {type:"qcm",q:"Quel est le cursus necessaire pour devenir psychologue clinicien en Belgique ?",opts:["Bachelier de 3 ans + stage","Master de 5 ans + VISA","Doctorat de 8 ans","Licence de 4 ans + agrement"],ans:1,expl:"Il faut un master de 5 ans et un VISA pour exercer comme psychologue clinicien en Belgique."},
+  {type:"qcm",q:"L'etymologie du mot 'psychiatrie' signifie :",opts:["Science de l'esprit","Medecine de l'ame","Guerison du cerveau","Etude de la folie"],ans:1,expl:"Psychiatrie vient de psyche (ame) et iatros (medecin), signifiant litteralement 'medecine de l'ame'."},
+  {type:"vf",q:"La psychiatrie et la psychopathologie sont des disciplines identiques avec les memes objectifs.",ans:false,expl:"Ce sont des disciplines complementaires : la psychiatrie se concentre sur le diagnostic (DSM/CIM) et le traitement, tandis que la psychopathologie vise a comprendre l'origine des dysfonctionnements."},
+  {type:"qcm",q:"Selon l'OMS :",opts:["La sante mentale est secondaire par rapport a la sante physique","Il n'y a pas de sante sans sante mentale","La sante mentale ne concerne que les troubles graves","La sante mentale est l'absence de maladie mentale"],ans:1,expl:"L'OMS affirme qu' 'il n'y a pas de sante sans sante mentale'."},
+  {type:"qcm",q:"Quelle proportion des personnes avec un trouble mental souffre aussi d'une maladie physique ?",opts:["1/4","1/3","1/2","2/3"],ans:3,expl:"2/3 des personnes avec un trouble mental souffrent egalement d'une maladie physique."},
+  {type:"vf",q:"1/3 des maladies physiques chroniques s'accompagnent aussi d'un trouble mental.",ans:true,expl:"C'est exact : un tiers des personnes souffrant de maladies physiques chroniques presentent egalement un trouble mental."},
+  {type:"qcm",q:"Combien de personnes dans le monde souffrent de troubles mentaux ?",opts:["100 millions","200 millions","400 millions","600 millions"],ans:2,expl:"Selon les chiffres, 400 millions de personnes dans le monde souffrent de troubles mentaux."},
+  {type:"qcm",q:"Quelle proportion de la population mondiale souffre d'un trouble mental chaque annee ?",opts:["1/10","1/5","1/3","1/2"],ans:1,expl:"1 personne sur 5 souffre d'un trouble mental chaque annee dans le monde."},
+  {type:"qcm",q:"Au cours de la vie, quelle proportion de la population souffrira d'un trouble mental ?",opts:["1/10","1/5","1/3","1/2"],ans:2,expl:"1/3 de la population souffrira d'un trouble mental au cours de sa vie."},
+  {type:"qcm",q:"Quel pourcentage des Europeens est touche par des troubles mentaux ?",opts:["18,2%","28,2%","38,2%","48,2%"],ans:2,expl:"38,2% des Europeens sont touches par des troubles mentaux."},
+  {type:"qcm",q:"A quel age apparaissent le plus souvent les premiers signes de troubles mentaux ?",opts:["Entre 5 et 15 ans","Entre 15 et 25 ans","Entre 25 et 35 ans","Entre 35 et 45 ans"],ans:1,expl:"70% des premiers signes de troubles mentaux apparaissent entre 15 et 25 ans."},
+  {type:"vf",q:"20% des enfants et adolescents presentent des troubles mentaux.",ans:true,expl:"C'est exact selon les chiffres epidemiologiques."},
+  {type:"qcm",q:"En Belgique, quelle proportion de la population souffre de mal-etre psychologique ?",opts:["1 Belge sur 5","1 Belge sur 4","1 Belge sur 3","1 Belge sur 2"],ans:2,expl:"1 Belge sur 3 souffre de mal-etre psychologique."},
+  {type:"qcm",q:"En Belgique, quel pourcentage de la population souffre de depression ?",opts:["5%","9%","15%","20%"],ans:1,expl:"9% de la population belge souffre de depression."},
+  {type:"qcm",q:"Quel pourcentage de la population belge presente des troubles anxieux ?",opts:["14%","24%","34%","44%"],ans:2,expl:"34% de la population belge presente des troubles anxieux."},
+  {type:"qcm",q:"Quelle proportion des incapacites de travail en Belgique est d'origine psychosociale ?",opts:["10%","15%","25%","35%"],ans:2,expl:"25% des incapacites de travail en Belgique sont d'origine psychosociale."},
+  {type:"vf",q:"En 2019, 1 244 500 patients prenaient des antidepresseurs en Belgique.",ans:true,expl:"C'est le chiffre exact rapporte pour 2019 en Belgique."},
+  {type:"qcm",q:"En Belgique, la mortalite des personnes souffrant de troubles mentaux est :",opts:["2 fois plus elevee","4 fois plus elevee","6 fois plus elevee","8 fois plus elevee"],ans:2,expl:"La mortalite est 6 fois plus elevee chez les personnes souffrant de troubles mentaux en Belgique."},
+  {type:"vf",q:"La Belgique est le 5e pays europeen en termes de taux de suicides.",ans:false,expl:"La Belgique est le 3e pays europeen en termes de taux de suicides, pas le 5e."},
+  {type:"qcm",q:"Quelle proportion des Belges prend des antidepresseurs ?",opts:["1/20","1/10","1/5","1/3"],ans:1,expl:"1 Belge sur 10 prend des antidepresseurs."},
+
+  // ===== CHAPTER 2 =====
+  {type:"qcm",q:"Selon Beauchesne (1986), la psychopathologie etudie :",opts:["Uniquement les maladies mentales graves","La maladie mentale ET les dysfonctionnements de sujets normaux","Exclusivement les processus inconscients","Les bases neurologiques des comportements"],ans:1,expl:"Beauchesne (1986) definit la psychopathologie comme l'etude de la maladie mentale ET des dysfonctionnements de sujets normaux."},
+  {type:"qcm",q:"Widlocher (1994) souligne l'importance de :",opts:["La rupture entre normal et pathologique","Les methodes comparatives et la continuite entre normal et pathologique","L'approche exclusivement medicale","La classification categorielle stricte"],ans:1,expl:"Widlocher met l'accent sur les methodes comparatives et la continuite entre le normal et le pathologique."},
+  {type:"qcm",q:"Combien de types de normalite sont habituellement distingues dans le cours ?",opts:["3","4","5","6"],ans:3,expl:"On distingue 6 types de normalite : statistique, ideale, sociale, subjective, fonctionnelle et normativite."},
+  {type:"qcm",q:"La normalite statistique definit le normal comme :",opts:["Ce qui correspond a un ideal","Ce qui est conforme aux normes sociales","Ce qui correspond a la majorite","Ce qui est fonctionnel pour l'individu"],ans:2,expl:"La normalite statistique definit le normal comme ce qui correspond a la majorite de la population."},
+  {type:"qcm",q:"Un QI compris entre 90 et 109 est considere comme :",opts:["Inferieur a la moyenne","Moyen (normalite statistique)","Superieur a la moyenne","Exceptionnellement eleve"],ans:1,expl:"Un QI entre 90 et 109 correspond a la moyenne selon la normalite statistique."},
+  {type:"qcm",q:"Quel est le principal probleme de la normalite statistique ?",opts:["Elle est trop couteuse a mesurer","Le seuil est arbitraire et etre different n'est pas forcement pathologique","Elle ne s'applique qu'aux enfants","Elle necessite des tests genetiques"],ans:1,expl:"Le seuil est arbitraire (p=.05) et etre gaucher ou roux ne sont pas des pathologies, bien que minoritaires."},
+  {type:"vf",q:"Selon la normalite statistique, etre gaucher est pathologique car c'est minoritaire.",ans:false,expl:"C'est le probleme de la normalite statistique : etre gaucher ou roux est minoritaire mais n'est pas pathologique. Le seuil est arbitraire."},
+  {type:"qcm",q:"La normalite ideale definit le normal comme :",opts:["La moyenne statistique","Un ideal de conformite et de perfection","Le fonctionnement subjectif de chacun","L'adaptation aux normes sociales"],ans:1,expl:"La normalite ideale definit le normal comme un ideal, un absolu, une conformite a un modele parfait."},
+  {type:"qcm",q:"Quel auteur est associe a la 'fully functioning person' ?",opts:["Freud","Rogers","Canguilhem","Bergeret"],ans:1,expl:"Carl Rogers a propose le concept de 'fully functioning person' dans le cadre de la normalite ideale."},
+  {type:"vf",q:"Le principal probleme de la normalite ideale est : qui definit l'ideal ?",ans:true,expl:"En effet, la question fondamentale de la normalite ideale est de savoir qui a le pouvoir de definir cet ideal."},
+  {type:"qcm",q:"La normalite sociale se base sur :",opts:["Des criteres statistiques","Des criteres personnels et subjectifs","Des criteres socio-culturels qui varient selon les cultures et epoques","Des criteres biologiques et genetiques"],ans:2,expl:"La normalite sociale se base sur des criteres socio-culturels qui varient selon les cultures et les epoques."},
+  {type:"qcm",q:"La normalite subjective se definit par :",opts:["La comparaison avec les normes de la societe","Les criteres personnels de l'individu et la comparaison avec son fonctionnement anterieur","La moyenne statistique de la population","L'avis du medecin traitant"],ans:1,expl:"La normalite subjective repose sur les criteres personnels de l'individu, qui se compare a son propre fonctionnement anterieur."},
+  {type:"qcm",q:"La normalite fonctionnelle compare l'individu a :",opts:["La moyenne de la population","L'ideal social","Lui-meme et son fonctionnement optimal","Les normes medicales"],ans:2,expl:"La normalite fonctionnelle compare l'individu a lui-meme et a son fonctionnement optimal."},
+  {type:"qcm",q:"Quel auteur est associe a la notion d' 'espace de jeu psychique' ?",opts:["Rogers","Canguilhem","Bergeret","Widlocher"],ans:2,expl:"Bergeret a propose la notion d'espace de jeu psychique dans le cadre de la normalite fonctionnelle."},
+  {type:"vf",q:"Freud propose un continuum entre le normal et le pathologique.",ans:true,expl:"Freud considere effectivement qu'il y a un continuum entre le normal et le pathologique, dans le cadre de la normalite fonctionnelle."},
+  {type:"qcm",q:"La normativite selon Canguilhem (1966) definit la sante comme :",opts:["L'absence totale de maladie","La capacite de tomber malade et de se retablir, de creer de nouvelles normes","La conformite a une norme statistique","Un etat permanent d'equilibre psychique"],ans:1,expl:"Pour Canguilhem, l'individu sain est celui qui peut tomber malade ET se retablir, creer de nouvelles normes, s'adapter avec flexibilite."},
+  {type:"qcm",q:"Quel concept Canguilhem (1966) met-il en avant ?",opts:["La normalite statistique","La normativite : adaptation, flexibilite, nouvelles normes","La normalite ideale absolue","La conformite sociale stricte"],ans:1,expl:"Canguilhem met en avant la normativite : la capacite de changement, d'adaptation et de flexibilite psychologique."},
+  {type:"qcm",q:"Les 3 trajectoires face a l'adversite sont :",opts:["Fuite, Combat, Inhibition","Fragilite, Resilience, Antifragilite","Depression, Adaptation, Croissance","Deni, Acceptation, Transformation"],ans:1,expl:"Les 3 trajectoires sont : Fragilite (ne se remet pas), Resilience (retrouve le niveau initial), Antifragilite (sort renforce)."},
+  {type:"qcm",q:"La resilience se definit comme :",opts:["Ne jamais se remettre de l'adversite","Retrouver son niveau de fonctionnement initial apres l'adversite","Sortir renforce de l'adversite","Eviter toute forme d'adversite"],ans:1,expl:"La resilience consiste a retrouver le niveau de fonctionnement initial apres une epreuve."},
+  {type:"qcm",q:"L'antifragilite se definit comme :",opts:["Ne jamais etre affecte par l'adversite","Retrouver son niveau initial apres une epreuve","Sortir renforce de l'adversite","S'effondrer face a l'adversite"],ans:2,expl:"L'antifragilite signifie que l'individu sort renforce de l'epreuve."},
+  {type:"vf",q:"La fragilite correspond a la trajectoire ou l'individu ne se remet pas de l'adversite.",ans:true,expl:"Exact : dans la trajectoire de fragilite, l'individu ne retrouve pas son niveau de fonctionnement anterieur."},
+  {type:"qcm",q:"Selon Wciorka (2002), la signification clinique implique :",opts:["Uniquement la presence de symptomes mesurables","La souffrance, la rupture de sens et l'alteration du fonctionnement","Un diagnostic obligatoire du DSM","Une hospitalisation necessaire"],ans:1,expl:"Wciorka definit la signification clinique par trois elements : la souffrance, la rupture de sens et l'alteration du fonctionnement."},
+  {type:"vf",q:"Selon les donnees recentes, un adulte sur deux souffrira d'un trouble mental avant l'age de 75 ans.",ans:true,expl:"C'est effectivement le chiffre avance par les etudes epidemiologiques recentes."},
+  {type:"qcm",q:"La methode clinique est l'outil principal de :",opts:["La psychiatrie","La psychologie clinique","La neuropsychologie","La psychopharmacologie"],ans:1,expl:"La methode clinique est l'outil principal de la psychologie clinique."},
+  {type:"vf",q:"La psychologie clinique et la psychiatrie sont exactement la meme discipline.",ans:false,expl:"Ce sont des disciplines complementaires. La psychiatrie utilise le DSM/CIM pour diagnostiquer et traiter, tandis que la psychopathologie cherche a comprendre l'origine des dysfonctionnements."},
+
+  // More Chapter 1 questions
+  {type:"qcm",q:"Le 'Pathos' dans psychopathologie signifie :",opts:["Discours","Esprit","Souffrance","Science"],ans:2,expl:"Pathos signifie souffrance en grec."},
+  {type:"qcm",q:"Le 'Logos' dans psychopathologie signifie :",opts:["Souffrance","Esprit","Guerison","Discours"],ans:3,expl:"Logos signifie discours, etude, raison en grec."},
+  {type:"vf",q:"Selon Samacher, la psychopathologie n'etudie que les maladies mentales graves.",ans:false,expl:"Samacher definit la psychopathologie comme englobant l'etude des troubles mentaux, maladies mentales, fonctionnement mental anormal ET psychologie des conduites pathologiques."},
+  {type:"qcm",q:"Parmi les objectifs de la psychopathologie, 'Interpreter' correspond a :",opts:["L'aide et le traitement","Le diagnostic","L'etude et l'evaluation","La prevention"],ans:1,expl:"Interpreter correspond au diagnostic dans les 3 objectifs de la psychopathologie."},
+  {type:"qcm",q:"Parmi les objectifs de la psychopathologie, 'Decrire' correspond a :",opts:["Le diagnostic","L'aide et le traitement","L'etude et l'evaluation","La prescription medicamenteuse"],ans:2,expl:"Decrire correspond a etudier et evaluer."},
+  {type:"qcm",q:"Parmi les objectifs de la psychopathologie, 'Intervenir' correspond a :",opts:["L'etude et l'evaluation","Le diagnostic","La classification","L'aide et le traitement"],ans:3,expl:"Intervenir correspond a l'aide et au traitement."},
+  {type:"vf",q:"Le psychologue clinicien en Belgique a besoin d'un VISA pour exercer.",ans:true,expl:"Depuis 2016, le psychologue clinicien en Belgique doit avoir un master de 5 ans et un VISA."},
+  {type:"qcm",q:"Le mot 'psychiatrie' vient de :",opts:["Psyche (esprit) et logos (discours)","Psyche (ame) et iatros (medecin)","Psyche (corps) et pathos (souffrance)","Psyche (pensee) et therapeia (soin)"],ans:1,expl:"Psychiatrie vient de psyche (ame) et iatros (medecin)."},
+  {type:"vf",q:"La psychopathologie a pour role principal de prescrire des medicaments.",ans:false,expl:"La psychopathologie cherche a comprendre l'origine des dysfonctionnements. La prescription de medicaments releve de la psychiatrie."},
+  {type:"qcm",q:"Quel pourcentage des symptomes depressifs est observe dans la population belge ?",opts:["18%","28%","38%","48%"],ans:2,expl:"38% de la population belge presente des symptomes depressifs."},
+
+  // More Chapter 2 questions
+  {type:"qcm",q:"Un etudiant qui se sent mal mais qui fonctionnait bien avant sa rentree universitaire utilise quelle normalite pour s'evaluer ?",opts:["Normalite statistique","Normalite ideale","Normalite subjective","Normalite sociale"],ans:2,expl:"La normalite subjective repose sur la comparaison avec son propre fonctionnement anterieur."},
+  {type:"qcm",q:"Dire qu'une personne est 'anormale' car elle ne correspond pas aux attentes culturelles releve de la normalite :",opts:["Statistique","Ideale","Sociale","Fonctionnelle"],ans:2,expl:"La normalite sociale se base sur les criteres socio-culturels."},
+  {type:"vf",q:"La normalite sociale est stable et universelle a travers les cultures et les epoques.",ans:false,expl:"Au contraire, la normalite sociale varie selon les cultures et les epoques."},
+  {type:"qcm",q:"Quel type de normalite pose la question 'Qui definit l'ideal ?' comme principale limite ?",opts:["Normalite statistique","Normalite ideale","Normalite fonctionnelle","Normalite subjective"],ans:1,expl:"La normalite ideale est critiquee car la question de savoir qui definit l'ideal reste sans reponse universelle."},
+  {type:"qcm",q:"L'homosexualite etait consideree comme pathologique jusqu'en 1973 dans le DSM. Cela illustre les limites de la normalite :",opts:["Statistique","Fonctionnelle","Sociale","Subjective"],ans:2,expl:"La depathologisation de l'homosexualite illustre que les criteres sociaux et culturels changent avec le temps."},
+  {type:"vf",q:"Canguilhem considere que la sante est l'absence totale de maladie.",ans:false,expl:"Pour Canguilhem, la sante n'est pas l'absence de maladie mais la capacite de tomber malade et de se retablir, de creer de nouvelles normes."},
+  {type:"qcm",q:"Le concept de 'flexibilite psychologique' est central dans :",opts:["La normalite statistique","La normalite ideale","La normativite de Canguilhem","La normalite sociale"],ans:2,expl:"La flexibilite psychologique est un concept cle de la normativite selon Canguilhem (1966)."},
+  {type:"qcm",q:"Si une personne traverse un deuil et retrouve progressivement son equilibre, elle suit la trajectoire de :",opts:["Fragilite","Resilience","Antifragilite","Normalite statistique"],ans:1,expl:"Retrouver son equilibre apres une epreuve correspond a la resilience."},
+  {type:"qcm",q:"Si une personne traverse un traumatisme et developpe ensuite de nouvelles forces, elle suit la trajectoire de :",opts:["Fragilite","Resilience","Antifragilite","Normalite ideale"],ans:2,expl:"Sortir renforce d'une epreuve correspond a l'antifragilite."},
+  {type:"vf",q:"La question de la frontiere entre normal et pathologique est une question centrale en psychopathologie.",ans:true,expl:"C'est en effet la question centrale du chapitre 2 et un enjeu fondamental de la psychopathologie."},
+  {type:"qcm",q:"Selon Wciorka (2002), lequel de ces elements ne fait PAS partie de la signification clinique ?",opts:["La souffrance","La rupture de sens","L'alteration du fonctionnement","Le QI inferieur a 70"],ans:3,expl:"Wciorka definit la signification clinique par la souffrance, la rupture de sens et l'alteration du fonctionnement. Le QI n'en fait pas partie."},
+  {type:"qcm",q:"Quel auteur a propose une definition de la psychopathologie en 1986 integrant sujets normaux et pathologiques ?",opts:["Samacher","Widlocher","Beauchesne","Canguilhem"],ans:2,expl:"Beauchesne (1986) definit la psychopathologie comme l'etude de la maladie mentale ET des dysfonctionnements de sujets normaux."},
+  {type:"vf",q:"Widlocher (1994) soutient qu'il y a une discontinuite totale entre le normal et le pathologique.",ans:false,expl:"Widlocher soutient au contraire la continuite entre le normal et le pathologique, avec des methodes comparatives."},
+  {type:"qcm",q:"Le seuil arbitraire p = .05 est une critique adressee a la normalite :",opts:["Ideale","Sociale","Statistique","Fonctionnelle"],ans:2,expl:"Le seuil de p = .05 est une convention statistique arbitraire, ce qui constitue une critique de la normalite statistique."},
+  {type:"qcm",q:"Quel type de normalite met en avant la notion de continuum chez Freud ?",opts:["Statistique","Sociale","Fonctionnelle","Normativite"],ans:2,expl:"Freud propose un continuum entre le normal et le pathologique dans le cadre de la normalite fonctionnelle."},
+
+  // Extra questions for variety
+  {type:"vf",q:"La semiologie est la methode principale de la psychologie clinique.",ans:false,expl:"La semiologie est la methode de la psychiatrie. La psychologie clinique utilise la methode clinique."},
+  {type:"qcm",q:"70% des premiers signes de troubles mentaux apparaissent entre :",opts:["5 et 15 ans","15 et 25 ans","25 et 35 ans","35 et 45 ans"],ans:1,expl:"70% des premiers signes apparaissent entre 15 et 25 ans."},
+  {type:"vf",q:"En Belgique, la proportion de personnes souffrant de troubles anxieux (34%) est superieure a celle souffrant de depression (9%).",ans:true,expl:"En effet, 34% presentent des troubles anxieux contre 9% pour la depression en Belgique."},
+  {type:"qcm",q:"Quelle est la place de la Belgique en Europe pour le taux de suicides ?",opts:["1er pays","2e pays","3e pays","5e pays"],ans:2,expl:"La Belgique est le 3e pays europeen en termes de taux de suicides."},
+  {type:"qcm",q:"Un trouble du sommeil persistant est un exemple de :",opts:["Psychologie du pathologique","Pathologie du psychologique","Normativite","Normalite fonctionnelle"],ans:1,expl:"Le sommeil est un processus normal ; quand il est altere, c'est de la pathologie du psychologique (processus normaux alteres)."},
+  {type:"qcm",q:"Les processus psychologiques a l'oeuvre dans la depression relevent de :",opts:["La pathologie du psychologique","La psychologie du pathologique","La normalite ideale","La normalite subjective"],ans:1,expl:"La depression est une condition pathologique ; etudier les processus psychologiques qui y sont a l'oeuvre releve de la psychologie du pathologique."},
+  {type:"vf",q:"Les 3 methodes de la psychopathologie sont : la methode clinique, la semiologie, et les tests/echelles.",ans:true,expl:"Ce sont bien les 3 methodes : methode clinique (psychologie clinique), semiologie (psychiatrie), tests et echelles (psychologie cognitive/neuropsychologie)."},
+  {type:"qcm",q:"Si un psychologue compare le QI d'un patient a la courbe de Gauss pour determiner s'il est 'normal', il utilise la normalite :",opts:["Ideale","Subjective","Statistique","Fonctionnelle"],ans:2,expl:"Comparer a la distribution statistique de la population releve de la normalite statistique."},
+  {type:"vf",q:"Bergeret est associe a la normalite ideale et au concept de 'fully functioning person'.",ans:false,expl:"Bergeret est associe a la normalite fonctionnelle et a la notion d'espace de jeu psychique. C'est Rogers qui a propose la 'fully functioning person' (normalite ideale)."},
+  {type:"qcm",q:"Lequel de ces exemples illustre la normalite subjective ?",opts:["Un patient dont le QI est dans la moyenne","Un patient qui se compare aux normes sociales de son epoque","Un patient qui remarque qu'il fonctionne moins bien qu'avant","Un patient qui atteint l'ideal de Rogers"],ans:2,expl:"Se comparer a son propre fonctionnement anterieur est le propre de la normalite subjective."},
+  {type:"qcm",q:"Selon les chiffres, combien de personnes souffrent de troubles mentaux en Europe ?",opts:["18,2% de la population","28,2% de la population","38,2% de la population","48,2% de la population"],ans:2,expl:"38,2% des Europeens sont touches par des troubles mentaux."},
+  {type:"vf",q:"La normalite fonctionnelle compare l'individu a la norme du groupe social.",ans:false,expl:"La normalite fonctionnelle compare l'individu a lui-meme et a son fonctionnement optimal, pas au groupe social."},
+  {type:"qcm",q:"La schizophrenie est un exemple utilise par Minkowski pour illustrer :",opts:["La pathologie du psychologique","La psychologie du pathologique","La normalite statistique","La normativite"],ans:1,expl:"La schizophrenie est une condition pathologique ; etudier les processus psychologiques a l'oeuvre releve de la psychologie du pathologique."},
+  {type:"vf",q:"Le DSM et la CIM sont des outils de la psychopathologie, pas de la psychiatrie.",ans:false,expl:"Le DSM et la CIM sont des outils de la psychiatrie utilises pour le diagnostic."},
+  {type:"qcm",q:"Quel est le probleme principal de definir l'anormalite uniquement par la souffrance subjective ?",opts:["Certains troubles ne s'accompagnent pas de souffrance subjective (ex: manie)","La souffrance est toujours mesurable objectivement","Tous les troubles mentaux impliquent de la souffrance","La souffrance n'est pas un concept psychologique"],ans:0,expl:"Certains troubles (comme la phase maniaque du trouble bipolaire) peuvent ne pas s'accompagner de souffrance subjective, ce qui limite ce critere."},
+  {type:"qcm",q:"La 'psyche' dans psychopathologie signifie :",opts:["Corps","Souffrance","Esprit","Science"],ans:2,expl:"Psyche signifie esprit en grec."},
+  {type:"vf",q:"Un adulte sur trois souffrira d'un trouble mental avant 75 ans.",ans:false,expl:"C'est un adulte sur DEUX qui souffrira d'un trouble mental avant 75 ans, pas un sur trois."},
+  {type:"qcm",q:"Etre roux est un bon exemple pour critiquer la normalite :",opts:["Ideale","Statistique","Sociale","Subjective"],ans:1,expl:"Etre roux est minoritaire statistiquement mais n'est pas pathologique, ce qui montre la limite de la normalite statistique."},
+];
+
+// --- Engine ---
+let session=[], current=0, score=0;
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}
+
+function startGame(){
+  session=shuffle([...ALL_QUESTIONS]).slice(0,QUESTIONS_PER_SESSION);
+  current=0;score=0;
+  document.getElementById('scoreDisplay').textContent='0';
+  document.getElementById('totalDisplay').textContent=session.length;
+  document.getElementById('finalArea').classList.add('hidden');
+  document.getElementById('quizArea').classList.remove('hidden');
+  showQuestion();
+}
+
+function showQuestion(){
+  const q=session[current];
+  const pct=Math.round((current/session.length)*100);
+  document.getElementById('qNum').textContent=`Question ${current+1} / ${session.length}`;
+  document.getElementById('pctText').textContent=pct+'%';
+  document.getElementById('progFill').style.width=pct+'%';
+
+  let html='<div class="quiz-card">';
+  html+=`<div class="q-type">${q.type==='vf'?'Vrai / Faux':'QCM'}</div>`;
+  html+=`<div class="q-text">${q.q}</div>`;
+  html+='<div class="options">';
+
+  if(q.type==='vf'){
+    html+=`<button class="opt-btn" onclick="answer(this,true)"><span class="letter">V</span>Vrai</button>`;
+    html+=`<button class="opt-btn" onclick="answer(this,false)"><span class="letter">F</span>Faux</button>`;
+  } else {
+    // Shuffle options while tracking correct answer
+    let indices=[0,1,2,3];
+    shuffle(indices);
+    const letters=['A','B','C','D'];
+    indices.forEach((origIdx,i)=>{
+      html+=`<button class="opt-btn" onclick="answer(this,${origIdx})" data-idx="${origIdx}"><span class="letter">${letters[i]}</span>${q.opts[origIdx]}</button>`;
+    });
+  }
+
+  html+='</div><div id="feedback"></div></div>';
+  document.getElementById('quizArea').innerHTML=html;
+}
+
+function answer(btn,val){
+  const q=session[current];
+  const btns=document.querySelectorAll('.opt-btn');
+  btns.forEach(b=>b.disabled=true);
+
+  let correct=false;
+  if(q.type==='vf'){
+    correct=(val===q.ans);
+    btns.forEach(b=>{
+      const bVal=(b.textContent.trim().startsWith('V'));
+      if(bVal===q.ans) b.classList.add('correct');
+      else if(b===btn && !correct) b.classList.add('wrong');
+    });
+  } else {
+    correct=(val===q.ans);
+    btns.forEach(b=>{
+      const idx=parseInt(b.dataset.idx);
+      if(idx===q.ans) b.classList.add('correct');
+      else if(b===btn && !correct) b.classList.add('wrong');
+    });
+  }
+
+  if(correct) score++;
+  document.getElementById('scoreDisplay').textContent=score;
+
+  const fb=document.getElementById('feedback');
+  fb.innerHTML=`<div class="explanation ${correct?'correct':'wrong'}">${correct?'Correct !':'Incorrect.'} ${q.expl}</div><button class="next-btn" onclick="nextQ()">Suivante &rarr;</button>`;
+}
+
+function nextQ(){
+  current++;
+  if(current>=session.length) showFinal();
+  else showQuestion();
+}
+
+function showFinal(){
+  document.getElementById('quizArea').classList.add('hidden');
+  const pct=Math.round((score/session.length)*100);
+  document.getElementById('progFill').style.width='100%';
+  document.getElementById('pctText').textContent='100%';
+  document.getElementById('qNum').textContent=`Termine !`;
+
+  const stars=pct>=90?5:pct>=75?4:pct>=60?3:pct>=40?2:1;
+  let starsHtml='';
+  for(let i=0;i<5;i++) starsHtml+=`<span class="${i<stars?'on':'off'}">&#9733;</span>`;
+
+  let msg='';
+  if(pct>=90) msg='Excellent ! Maitrise parfaite !';
+  else if(pct>=75) msg='Tres bien ! Quelques details a revoir.';
+  else if(pct>=60) msg='Bien, mais continuez a reviser !';
+  else if(pct>=40) msg='Moyen, relisez les chapitres 1 et 2.';
+  else msg='Il faut reprendre les bases. Courage !';
+
+  const fa=document.getElementById('finalArea');
+  fa.classList.remove('hidden');
+  fa.innerHTML=`<div class="final"><h2>Resultats</h2><div class="big-score">${score} / ${session.length}</div><div class="stars">${starsHtml}</div><p class="msg">${msg} (${pct}%)</p><p style="color:var(--muted);font-size:.85rem;margin-bottom:20px;">Banque : ${ALL_QUESTIONS.length} questions &mdash; ${QUESTIONS_PER_SESSION} par session</p><button class="replay-btn" onclick="startGame()">Rejouer</button></div>`;
+
+  if(pct>=60) launchConfetti();
+}
+
+function launchConfetti(){
+  const colors=['#2563eb','#60a5fa','#22c55e','#facc15','#ef4444','#a78bfa'];
+  for(let i=0;i<50;i++){
+    const el=document.createElement('div');
+    el.className='confetti';
+    el.style.left=Math.random()*100+'vw';
+    el.style.top='-10px';
+    el.style.background=colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDelay=Math.random()*0.7+'s';
+    el.style.animationDuration=(1+Math.random())+'s';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),2500);
+  }
+}
+
+startGame();
+</script>
+</body>
+</html>

@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Spectre — Quiz Chapitre 8</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f1a;
+    color: #e2e2e8;
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+  }
+
+  :root {
+    --accent: #b91c1c;
+    --accent-light: #ef4444;
+    --accent-glow: rgba(185, 28, 28, 0.35);
+    --bg-card: #1a1a2e;
+    --bg-card-hover: #22223a;
+    --correct: #22c55e;
+    --wrong: #ef4444;
+    --border: #2a2a40;
+  }
+
+  #app {
+    max-width: 780px;
+    width: 100%;
+  }
+
+  /* ---- START SCREEN ---- */
+  .start-screen {
+    text-align: center;
+    padding: 4rem 2rem;
+    animation: fadeIn .6s ease;
+  }
+  .start-screen .icon { font-size: 4rem; margin-bottom: 1rem; filter: drop-shadow(0 0 20px var(--accent-glow)); }
+  .start-screen h1 {
+    font-size: 2.8rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-light), #fca5a5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+  }
+  .start-screen .subtitle {
+    font-size: 1.1rem;
+    color: #9ca3af;
+    margin: .5rem 0 2.5rem;
+    font-weight: 500;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .9rem 2.2rem;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 25px var(--accent-glow);
+  }
+  .btn-primary:hover { background: var(--accent-light); transform: translateY(-2px); box-shadow: 0 0 35px var(--accent-glow); }
+
+  .btn-secondary {
+    background: var(--bg-card);
+    color: #e2e2e8;
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--bg-card-hover); }
+
+  /* ---- HEADER / PROGRESS ---- */
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .7rem;
+    font-size: .9rem;
+    color: #9ca3af;
+  }
+  .score-display { font-weight: 700; color: var(--accent-light); }
+  .progress-bar-track {
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 1.8rem;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+    border-radius: 99px;
+    transition: width .4s ease;
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  /* ---- QUESTION CARD ---- */
+  .question-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    animation: slideUp .35s ease;
+  }
+  .question-tag {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent-light);
+    background: rgba(185,28,28,.15);
+    padding: .3rem .75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+  }
+  .question-text {
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.55;
+    margin-bottom: 1.6rem;
+  }
+
+  /* ---- CHOICES ---- */
+  .choices { display: flex; flex-direction: column; gap: .65rem; }
+  .choice-btn {
+    width: 100%;
+    text-align: left;
+    padding: 1rem 1.2rem;
+    background: #12122a;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    color: #e2e2e8;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .18s;
+    line-height: 1.45;
+  }
+  .choice-btn:hover:not(.disabled) { background: var(--bg-card-hover); border-color: var(--accent); }
+
+  .choice-btn.correct {
+    border-color: var(--correct) !important;
+    background: rgba(34,197,94,.12) !important;
+    color: #bbf7d0;
+  }
+  .choice-btn.wrong {
+    border-color: var(--wrong) !important;
+    background: rgba(239,68,68,.1) !important;
+    color: #fca5a5;
+  }
+  .choice-btn.disabled { cursor: default; opacity: .65; }
+  .choice-btn.correct.disabled, .choice-btn.wrong.disabled { opacity: 1; }
+
+  /* ---- EXPLANATION ---- */
+  .explanation {
+    margin-top: 1.4rem;
+    padding: 1.1rem 1.3rem;
+    background: rgba(185,28,28,.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    font-size: .92rem;
+    line-height: 1.55;
+    color: #d1d5db;
+    animation: fadeIn .3s ease;
+  }
+  .explanation strong { color: var(--accent-light); }
+
+  .next-btn-wrap { text-align: center; margin-top: 1.5rem; }
+
+  /* ---- RESULTS ---- */
+  .results {
+    text-align: center;
+    padding: 3rem 2rem;
+    animation: fadeIn .6s ease;
+  }
+  .results .big-score {
+    font-size: 5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-light), #fca5a5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .results .label { color: #9ca3af; margin-bottom: 2rem; font-size: 1.1rem; }
+  .results .message {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 2.5rem;
+    line-height: 1.5;
+  }
+  .results .btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+  /* ---- REVIEW ---- */
+  .review-section { margin-top: 2.5rem; text-align: left; }
+  .review-section h3 { margin-bottom: 1rem; font-size: 1.15rem; }
+  .review-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: .8rem;
+  }
+  .review-item.was-correct { border-left: 3px solid var(--correct); }
+  .review-item.was-wrong { border-left: 3px solid var(--wrong); }
+  .review-q { font-weight: 600; margin-bottom: .4rem; }
+  .review-a { font-size: .9rem; color: #9ca3af; }
+  .review-a span { color: var(--correct); font-weight: 600; }
+
+  /* ---- ANIMATIONS ---- */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 600px) {
+    .start-screen h1 { font-size: 2rem; }
+    .question-card { padding: 1.4rem; }
+    .question-text { font-size: 1.05rem; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ============================================================
+//  QUESTION BANK — 105 questions
+// ============================================================
+const ALL_QUESTIONS = [
+  // ====== GÉNÉRALITÉS — LA PSYCHOSE ======
+  {
+    type:"qcm",
+    tag:"Généralités",
+    q:"Quelle est l'étymologie du mot « psychose » ?",
+    choices:["psyche (esprit) + osis (anomalie)","psyche (corps) + logos (étude)","phren (esprit) + osis (maladie)","psyche (âme) + therapeia (soin)"],
+    answer:0,
+    explanation:"Du grec <strong>psyche</strong> (esprit, âme) + <strong>-osis</strong> (anomalie) = trouble de l'esprit."
+  },
+  {
+    type:"vf",
+    tag:"Généralités",
+    q:"Le terme « psychose » constitue un diagnostic psychiatrique en soi.",
+    answer:1,
+    explanation:"Faux. « Psychose » n'est <strong>pas</strong> un diagnostic. C'est un terme parapluie désignant un ensemble de symptômes."
+  },
+  {
+    type:"qcm",
+    tag:"Généralités",
+    q:"Quelle est la caractéristique centrale de la psychose ?",
+    choices:["Un trouble de la mémoire à long terme","Une altération profonde de la conscience du sujet avec désorganisation de la pensée et rapport perturbé à la réalité","Un trouble exclusivement moteur","Une anxiété généralisée chronique"],
+    answer:1,
+    explanation:"La psychose se caractérise par une <strong>altération profonde de la conscience</strong> du sujet : la pensée se désorganise et le rapport à la réalité est perturbé."
+  },
+  {
+    type:"qcm",
+    tag:"Généralités",
+    q:"Quel pourcentage de la population générale présente des symptômes psychotiques ?",
+    choices:["0,5%","3%","10%","15%"],
+    answer:1,
+    explanation:"Environ <strong>3%</strong> de la population générale. Parmi les adolescents consultants/hospitalisés, le chiffre monte à 5-20%."
+  },
+  {
+    type:"vf",
+    tag:"Généralités",
+    q:"Les symptômes psychotiques ne peuvent être causés que par des conditions psychopathologiques.",
+    answer:1,
+    explanation:"Faux. Ils peuvent aussi être causés par des conditions <strong>neurologiques</strong> ou <strong>médicales</strong>."
+  },
+
+  // ====== LE DÉLIRE ======
+  {
+    type:"qcm",
+    tag:"Délire",
+    q:"Comment définit-on le délire ?",
+    choices:["Un trouble de la mémoire épisodique","L'attribution de significations anormales à la réalité, individuelles et stables, avec conviction","Une perte totale de conscience","Un état de somnolence pathologique"],
+    answer:1,
+    explanation:"Le délire consiste en l'attribution de <strong>significations anormales</strong> à la réalité, de manière individuelle et stable, avec <strong>conviction</strong> (adhésion)."
+  },
+  {
+    type:"qcm",
+    tag:"Délire",
+    q:"Pour Henri Ey, le délire est quasiment synonyme de :",
+    choices:["Trouble bipolaire","Schizophrénie","Dépression majeure","Trouble anxieux généralisé"],
+    answer:1,
+    explanation:"Henri Ey considérait que le délire était quasiment <strong>synonyme de schizophrénie</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Délire",
+    q:"Selon Pinel, un délire généralisé correspond à :",
+    choices:["La mélancolie","La manie","La schizophrénie","L'hystérie"],
+    answer:1,
+    explanation:"Pour Pinel : délire généralisé = <strong>manie</strong> ; délire partiel = mélancolie."
+  },
+
+  // ====== MÉCANISMES DU DÉLIRE ======
+  {
+    type:"qcm",
+    tag:"Mécanismes du délire",
+    q:"Le mécanisme d'interprétation consiste à :",
+    choices:["Percevoir un objet qui n'existe pas","Attribuer un sens unique à une perception correcte (le jugement est distordu, pas la perception)","Recevoir une révélation brusque sans élément objectif","Inventer des scénarios entiers par fabulation"],
+    answer:1,
+    explanation:"L'interprétation : un sens unique est attribué à une perception <strong>correcte</strong>. C'est le <strong>jugement</strong> qui est distordu, pas la perception."
+  },
+  {
+    type:"qcm",
+    tag:"Mécanismes du délire",
+    q:"Le mécanisme d'intuition se caractérise par :",
+    choices:["La déformation d'une perception existante","Une « révélation » brusque sans déduction ni élément objectif","La fabrication de scénarios imaginaires","La perception d'un objet inexistant"],
+    answer:1,
+    explanation:"L'intuition délirante est une <strong>révélation brusque</strong>, sans déduction ni élément objectif."
+  },
+  {
+    type:"qcm",
+    tag:"Mécanismes du délire",
+    q:"Dans le mécanisme de l'illusion, qu'est-ce qui est déformé ?",
+    choices:["Le jugement","La perception elle-même","La mémoire","L'attention"],
+    answer:1,
+    explanation:"Dans l'illusion, c'est la <strong>perception elle-même</strong> qui est déformée. L'objet existe mais est perçu de travers."
+  },
+  {
+    type:"qcm",
+    tag:"Mécanismes du délire",
+    q:"Les hallucinations se définissent comme :",
+    choices:["Des jugements erronés sur des perceptions correctes","Des perceptions déformées d'objets existants","Des perceptions sans objet réel","Des révélations brusques sans déduction"],
+    answer:2,
+    explanation:"Les hallucinations sont des <strong>perceptions sans objet réel</strong>. Elles peuvent être psycho-sensorielles ou intra-psychiques."
+  },
+  {
+    type:"qcm",
+    tag:"Mécanismes du délire",
+    q:"Combien de « portes d'entrée » (mécanismes) du délire distingue-t-on ?",
+    choices:["3","4","5","7"],
+    answer:2,
+    explanation:"Il y a <strong>5 mécanismes</strong> : interprétation, intuition, imagination, illusion, hallucinations."
+  },
+  {
+    type:"vf",
+    tag:"Mécanismes du délire",
+    q:"Dans l'imagination délirante, le patient fabule et invente des scénarios entiers.",
+    answer:0,
+    explanation:"Vrai. L'imagination délirante se caractérise par la <strong>fabulation</strong> : le patient invente des scénarios entiers."
+  },
+
+  // ====== THÈMES DU DÉLIRE ======
+  {
+    type:"qcm",
+    tag:"Thèmes du délire",
+    q:"Le délire d'influence se caractérise par la conviction :",
+    choices:["D'être aimé par quelqu'un","D'être contrôlé de l'extérieur","De souffrir d'une maladie grave","D'être le messie"],
+    answer:1,
+    explanation:"Le délire d'influence implique la conviction d'être <strong>contrôlé de l'extérieur</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Thèmes du délire",
+    q:"Le délire érotomaniaque consiste en :",
+    choices:["La conviction que sa pensée est diffusée à tous","La conviction d'être aimé par une personne","La conviction d'être persécuté","La conviction de posséder des pouvoirs surnaturels"],
+    answer:1,
+    explanation:"Le délire érotomaniaque est la <strong>conviction inébranlable d'être aimé</strong> par une personne (souvent de rang social élevé)."
+  },
+  {
+    type:"qcm",
+    tag:"Thèmes du délire",
+    q:"Le délire de référence se caractérise par :",
+    choices:["La conviction que tout se rapporte à soi","La conviction d'être immortel","La conviction de se transformer en animal","La conviction d'être damné"],
+    answer:0,
+    explanation:"Dans le délire de référence, le sujet est convaincu que <strong>tout se rapporte à lui</strong> (événements, conversations, médias…)."
+  },
+
+  // ====== DÉLIRES DE POSSESSION ======
+  {
+    type:"qcm",
+    tag:"Délires de possession",
+    q:"Comment s'appelle le délire de damnation ?",
+    choices:["Démonopathie externe","Démonomanie","Damnomanie","Démonopathie interne"],
+    answer:2,
+    explanation:"La <strong>damnomanie</strong> est le délire de damnation."
+  },
+  {
+    type:"qcm",
+    tag:"Délires de possession",
+    q:"La démonomanie correspond à la conviction :",
+    choices:["D'être persécuté par un démon","D'être possédé par un démon","D'être transformé en démon","D'avoir un commerce sexuel avec un démon"],
+    answer:2,
+    explanation:"La <strong>démonomanie</strong> = conviction d'être <strong>transformé</strong> en démon. C'est le degré le plus extrême de la gradation."
+  },
+  {
+    type:"qcm",
+    tag:"Délires de possession",
+    q:"Les délires des incubes et succubes concernent :",
+    choices:["Un commerce sexuel avec un démon","La possession par un démon","La transformation en démon","La persécution par un démon"],
+    answer:0,
+    explanation:"Les délires des incubes et succubes impliquent un <strong>commerce sexuel avec un démon</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Délires de possession",
+    q:"Qui a historiquement décrit les délires de possession en 1843 ?",
+    choices:["Kraepelin","Macario","Bleuler","Clérambault"],
+    answer:1,
+    explanation:"Les délires de possession ont été décrits par <strong>Macario en 1843</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Délires de possession",
+    q:"Quelle est la bonne gradation des délires de possession (du moins au plus grave) ?",
+    choices:["Démonomanie → Démonopathie interne → Démonopathie externe → Damnomanie","Damnomanie → Incubes/Succubes → Démonopathie externe → Démonopathie interne → Démonomanie","Démonopathie externe → Incubes/Succubes → Démonomanie → Damnomanie","Incubes/Succubes → Damnomanie → Démonomanie → Démonopathie interne"],
+    answer:1,
+    explanation:"Gradation : <strong>Damnomanie → Incubes/Succubes → Démonopathie externe → Démonopathie interne → Démonomanie</strong>."
+  },
+
+  // ====== STRUCTURE DU DÉLIRE ======
+  {
+    type:"qcm",
+    tag:"Structure du délire",
+    q:"Un délire systématisé est aussi appelé délire :",
+    choices:["Paranoïde","Paranoïaque","Schizophrénique","Hallucinatoire"],
+    answer:1,
+    explanation:"Délire systématisé = délire <strong>paranoïaque</strong> : monothématique, cohérent, ordonné, logique."
+  },
+  {
+    type:"qcm",
+    tag:"Structure du délire",
+    q:"Quelles sont les caractéristiques d'un délire paranoïde (non systématisé) ?",
+    choices:["Monothématique, cohérent, logique, peu d'hallucinations","Thèmes et mécanismes multiples, hallucinations présentes, incohérent et flou","Systématisé en secteur, sans hallucinations","Uniquement auditif, très structuré"],
+    answer:1,
+    explanation:"Délire paranoïde = <strong>non systématisé</strong> : thèmes et mécanismes multiples, hallucinations présentes, incohérent et flou, pas de logique interne."
+  },
+  {
+    type:"vf",
+    tag:"Structure du délire",
+    q:"Un délire systématisé se caractérise par la présence massive d'hallucinations.",
+    answer:1,
+    explanation:"Faux. Le délire systématisé (paranoïaque) présente <strong>pas ou peu d'hallucinations</strong>. C'est le délire non systématisé (paranoïde) qui en comporte."
+  },
+  {
+    type:"vf",
+    tag:"Structure du délire",
+    q:"Un délire paranoïaque peut être organisé « en secteur » (limité) ou « en réseau » (généralisé).",
+    answer:0,
+    explanation:"Vrai. Le délire systématisé peut être <strong>en secteur</strong> (limité à un domaine) ou <strong>en réseau</strong> (généralisé à de multiples domaines)."
+  },
+
+  // ====== DURÉE ET TERRAIN ======
+  {
+    type:"qcm",
+    tag:"Durée et terrain",
+    q:"Un délire est considéré comme chronique à partir de quelle durée ?",
+    choices:["1 mois","3 mois","6 mois","12 mois"],
+    answer:2,
+    explanation:"Un délire chronique dure <strong>≥ 6 mois</strong>, avec installation progressive."
+  },
+  {
+    type:"qcm",
+    tag:"Terrain",
+    q:"Avant 35 ans, quels diagnostics sont les plus fréquents ?",
+    choices:["Paranoïa, démences, PHC","BDA, schizophrénie, trouble bipolaire","Paraphrénie, érotomanie, PHC","Troubles délirants, schizophrénie tardive"],
+    answer:1,
+    explanation:"Avant 35 ans : <strong>BDA, schizophrénie, trouble bipolaire</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Terrain",
+    q:"Le délire de jalousie est plus fréquent chez :",
+    choices:["Les femmes après 50 ans","Les hommes","Les adolescents","Les femmes avant 35 ans"],
+    answer:1,
+    explanation:"Les délires de jalousie sont plus fréquents chez les <strong>hommes</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Terrain",
+    q:"L'érotomanie est plus fréquente chez :",
+    choices:["Les hommes jeunes","Les femmes","Les enfants","Les personnes âgées des deux sexes"],
+    answer:1,
+    explanation:"L'érotomanie est plus fréquente chez les <strong>femmes</strong> (classiquement 40-55 ans)."
+  },
+
+  // ====== CLASSIFICATION DSM ======
+  {
+    type:"qcm",
+    tag:"Classification DSM",
+    q:"Dans le spectre psychotique du DSM, quel est le critère clé du diagnostic différentiel ?",
+    choices:["Le type d'hallucination","La durée","L'âge de début","Le sexe du patient"],
+    answer:1,
+    explanation:"La <strong>durée</strong> est souvent le critère clé du diagnostic différentiel dans le spectre psychotique."
+  },
+  {
+    type:"qcm",
+    tag:"Classification DSM",
+    q:"Quel est l'ordre correct du spectre psychotique, du plus bref au plus chronique ?",
+    choices:["Schizophrénie → Schizophréniforme → BDA → Troubles délirants","BDA → Schizophréniforme → Schizophrénie → Troubles délirants","Troubles délirants → Schizophrénie → BDA → Schizophréniforme","Schizophréniforme → BDA → Troubles délirants → Schizophrénie"],
+    answer:1,
+    explanation:"Du plus bref au plus chronique : <strong>Troubles psychotiques brefs (BDA) < 1 mois → Schizophréniforme < 6 mois → Schizophrénie ≥ 6 mois → Troubles délirants</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Classification DSM",
+    q:"Le trouble schizophréniforme a une durée :",
+    choices:["< 1 mois","Entre 1 et 6 mois","≥ 6 mois","≥ 12 mois"],
+    answer:1,
+    explanation:"Le trouble schizophréniforme dure entre <strong>1 et 6 mois</strong>. C'est la durée qui le différencie de la schizophrénie (≥ 6 mois)."
+  },
+
+  // ====== BDA ======
+  {
+    type:"qcm",
+    tag:"BDA",
+    q:"Qui a décrit la BDA comme un « coup de tonnerre dans un ciel serein » ?",
+    choices:["Henri Ey","Magnan","Kraepelin","Bleuler"],
+    answer:1,
+    explanation:"C'est <strong>Magnan</strong> qui a décrit la BDA comme un « coup de tonnerre dans un ciel serein »."
+  },
+  {
+    type:"qcm",
+    tag:"BDA",
+    q:"Selon le DSM-5, la durée d'un trouble psychotique bref (BDA) est :",
+    choices:["< 1 jour","> 1 jour mais < 1 mois","> 1 mois mais < 6 mois","≥ 6 mois"],
+    answer:1,
+    explanation:"Le DSM-5 définit le trouble psychotique bref comme durant <strong>> 1 jour mais < 1 mois</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"BDA",
+    q:"La tranche d'âge typique de survenue d'une BDA est :",
+    choices:["10-15 ans","18-25/30 ans","40-50 ans","> 60 ans"],
+    answer:1,
+    explanation:"La BDA survient typiquement chez l'adulte jeune, entre <strong>18 et 25/30 ans</strong>."
+  },
+  {
+    type:"vf",
+    tag:"BDA",
+    q:"Dans une BDA, on observe un trouble de la conscience et une désorientation temporo-spatiale.",
+    answer:1,
+    explanation:"Faux. Dans la BDA, il n'y a <strong>PAS</strong> de trouble de la conscience, PAS de désorientation temporo-spatiale et PAS de troubles mnésiques. La vigilance est préservée. C'est ce qui la distingue de la confusion mentale."
+  },
+  {
+    type:"qcm",
+    tag:"BDA",
+    q:"Quel est le pronostic évolutif de la BDA (les 3 chiffres) ?",
+    choices:["50% épisode unique, 30% bipolaire, 20% schizophrénie","40% épisode unique, 35% trouble bipolaire, 25% schizophrénie","33% chacun","60% épisode unique, 25% bipolaire, 15% schizophrénie"],
+    answer:1,
+    explanation:"Pronostic BDA : <strong>40%</strong> épisode unique, <strong>35%</strong> → trouble bipolaire, <strong>25%</strong> → schizophrénie."
+  },
+  {
+    type:"vf",
+    tag:"BDA",
+    q:"Un épisode de BDA est souvent suivi d'un épisode dépressif post-psychotique.",
+    answer:0,
+    explanation:"Vrai. L'évolution est transitoire et résolutive en quelques semaines, mais souvent suivie d'un <strong>épisode dépressif post-psychotique</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"BDA",
+    q:"Parmi ces éléments, lequel N'est PAS un facteur de bon pronostic de la BDA ?",
+    choices:["Début brutal","Antécédents familiaux de psychose","Facteurs déclenchants identifiables","Délire riche et variable"],
+    answer:1,
+    explanation:"L'<strong>absence</strong> d'antécédents familiaux est un facteur de bon pronostic. Leur présence est un facteur défavorable."
+  },
+  {
+    type:"qcm",
+    tag:"BDA",
+    q:"Quelle opposition Henri Ey utilise-t-il pour décrire la BDA ?",
+    choices:["Folie d'un moment vs folie de l'existence","Folie aiguë vs folie chronique","Folie primaire vs folie secondaire","Folie maniaque vs folie dépressive"],
+    answer:0,
+    explanation:"Henri Ey parlait de « <strong>folie d'un moment vs folie de l'existence</strong> » pour opposer la BDA à la schizophrénie."
+  },
+  {
+    type:"vf",
+    tag:"BDA",
+    q:"Dans la BDA, l'adhésion au délire est partielle.",
+    answer:1,
+    explanation:"Faux. L'adhésion au délire dans la BDA est <strong>totale</strong>."
+  },
+
+  // ====== PSYCHOSE PUERPÉRALE ======
+  {
+    type:"qcm",
+    tag:"Psychose puerpérale",
+    q:"Le pic de survenue de la psychose puerpérale se situe au :",
+    choices:["3e jour post-partum","10e jour post-partum","21e jour post-partum","45e jour post-partum"],
+    answer:1,
+    explanation:"Le pic de la psychose puerpérale se situe au <strong>10e jour</strong> post-partum, dans les 3 premières semaines."
+  },
+  {
+    type:"qcm",
+    tag:"Psychose puerpérale",
+    q:"La recrudescence vespérale dans la psychose puerpérale signifie que les symptômes s'aggravent :",
+    choices:["Le matin","L'après-midi","Le soir","La nuit profonde"],
+    answer:2,
+    explanation:"Recrudescence <strong>vespérale</strong> = aggravation <strong>le soir</strong>."
+  },
+  {
+    type:"vf",
+    tag:"Psychose puerpérale",
+    q:"Dans la psychose puerpérale, le risque d'infanticide est considéré comme majeur.",
+    answer:0,
+    explanation:"Vrai. Le risque suicidaire ET le risque d'<strong>infanticide</strong> sont majeurs. C'est une <strong>urgence psychiatrique absolue</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Psychose puerpérale",
+    q:"Quel signe fait partie de la phase prodromique de la psychose puerpérale ?",
+    choices:["Explosion délirante","Hallucinations massives","Désintérêt pour l'enfant","Délire oniroïde"],
+    answer:2,
+    explanation:"Phase prodromique : pleurs, plaintes somatiques, asthénie, rumination anxieuse, confusion progressive et <strong>désintérêt pour l'enfant</strong>."
+  },
+
+  // ====== TROUBLE PSYCHOTIQUE INDUIT PAR SUBSTANCE ======
+  {
+    type:"qcm",
+    tag:"Psychose et substances",
+    q:"Par rapport à la BDA, le trouble psychotique induit par substance se distingue par :",
+    choices:["Moins d'hallucinations visuelles","Plus d'hallucinations visuelles, de déjà-vu et de dépersonnalisation","Une durée plus longue","L'absence de délire"],
+    answer:1,
+    explanation:"Le trouble induit par substance présente <strong>plus d'hallucinations visuelles</strong>, de déjà-vu et de dépersonnalisation que la BDA classique."
+  },
+  {
+    type:"qcm",
+    tag:"Psychose et substances",
+    q:"Parmi ces substances, laquelle peut provoquer une psychose pendant le SEVRAGE (et non l'intoxication) ?",
+    choices:["Cannabis","LSD","Alcool","Cocaïne"],
+    answer:2,
+    explanation:"L'<strong>alcool</strong> peut provoquer une psychose tant pendant l'intoxication que pendant le <strong>sevrage</strong> (de même que les sédatifs/hypnotiques/anxiolytiques)."
+  },
+  {
+    type:"vf",
+    tag:"Psychose et substances",
+    q:"Le trouble psychotique induit par substance peut être une porte d'entrée vers la schizophrénie.",
+    answer:0,
+    explanation:"Vrai. Il y a un risque de rechute et cela peut constituer une <strong>porte d'entrée vers la schizophrénie</strong>."
+  },
+
+  // ====== CANNABIS ET PSYCHOSE ======
+  {
+    type:"qcm",
+    tag:"Cannabis et psychose",
+    q:"L'ivresse cannabique apparaît typiquement combien de temps après la consommation ?",
+    choices:["Immédiatement","1h à 1h30 après","6h après","24h après"],
+    answer:1,
+    explanation:"L'ivresse cannabique apparaît <strong>1h à 1h30</strong> après la consommation."
+  },
+  {
+    type:"qcm",
+    tag:"Cannabis et psychose",
+    q:"Quel est le risque de diagnostic de schizophrénie dans les 8 ans après un premier épisode psychotique lié au cannabis ?",
+    choices:["15%","25%","46%","61%"],
+    answer:2,
+    explanation:"Le risque de diagnostic de schizophrénie dans les 8 ans est de <strong>46%</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Cannabis et psychose",
+    q:"Dans l'étude de Linszen et al. (1994), quel pourcentage de gros consommateurs de cannabis récidivait à 1 an ?",
+    choices:["16%","17%","46%","61%"],
+    answer:3,
+    explanation:"Suivi à 1 an : <strong>61%</strong> de récidive chez les gros consommateurs, 17% chez les petits, 16% chez les non-consommateurs."
+  },
+  {
+    type:"qcm",
+    tag:"Cannabis et psychose",
+    q:"Qui a décrit les effets psychotiques du cannabis dès 1845 ?",
+    choices:["Bleuler","Moreau de Tours","Kraepelin","Magnan"],
+    answer:1,
+    explanation:"<strong>Moreau de Tours</strong> a décrit les effets du cannabis en 1845."
+  },
+  {
+    type:"vf",
+    tag:"Cannabis et psychose",
+    q:"La consommation de cannabis avant 15 ans est un facteur de risque de psychose.",
+    answer:0,
+    explanation:"Vrai. La consommation <strong>avant 15 ans</strong> est un facteur de risque reconnu, tout comme la prédisposition génétique et la relation dose-effet."
+  },
+  {
+    type:"qcm",
+    tag:"Cannabis et psychose",
+    q:"Jusqu'à quel pourcentage de consommateurs de cannabis développent des symptômes psychotiques ?",
+    choices:["5%","10%","15%","25%"],
+    answer:2,
+    explanation:"Jusqu'à <strong>15%</strong> des consommateurs développent des symptômes psychotiques."
+  },
+
+  // ====== SCHIZOPHRÉNIE — GÉNÉRALITÉS ======
+  {
+    type:"qcm",
+    tag:"Schizophrénie",
+    q:"Quelle est l'étymologie du mot « schizophrénie » ?",
+    choices:["schizein (fractionnement) + phren (esprit)","psyche (esprit) + osis (anomalie)","demos (peuple) + mania (folie)","neuro (nerf) + logos (étude)"],
+    answer:0,
+    explanation:"Du grec <strong>schizein</strong> (fractionnement) + <strong>phren</strong> (esprit) = l'esprit fractionné."
+  },
+  {
+    type:"qcm",
+    tag:"Schizophrénie",
+    q:"Quelle est la prévalence de la schizophrénie ?",
+    choices:["0,1-0,3%","0,8-1,3%","3-5%","8-10%"],
+    answer:1,
+    explanation:"Prévalence : <strong>0,8 à 1,3%</strong>. En Belgique, environ 110 000 personnes (≈ 1/100)."
+  },
+  {
+    type:"qcm",
+    tag:"Schizophrénie",
+    q:"La répartition homme/femme dans la schizophrénie est :",
+    choices:["50% / 50%","57% hommes / 43% femmes","70% hommes / 30% femmes","43% hommes / 57% femmes"],
+    answer:1,
+    explanation:"<strong>57% hommes</strong> et <strong>43% femmes</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Schizophrénie",
+    q:"L'âge de début typique de la schizophrénie se situe entre :",
+    choices:["10-15 ans","18-30 ans","35-45 ans","> 50 ans"],
+    answer:1,
+    explanation:"Début typique entre <strong>18 et 30 ans</strong>, avec 85% des cas entre 15 et 25 ans."
+  },
+  {
+    type:"vf",
+    tag:"Schizophrénie",
+    q:"80% des cas de schizophrénie s'améliorent dès qu'ils sont traités.",
+    answer:0,
+    explanation:"Vrai. C'est une donnée encourageante : <strong>80%</strong> des cas s'améliorent dès la mise en place du traitement."
+  },
+
+  // ====== CRITÈRES DSM-5 SCZ ======
+  {
+    type:"qcm",
+    tag:"Critères DSM-5",
+    q:"Selon le DSM-5, combien de symptômes sont nécessaires pour diagnostiquer la schizophrénie ?",
+    choices:["≥ 1 symptôme pendant ≥ 6 mois","≥ 2 symptômes pendant ≥ 1 mois","≥ 3 symptômes pendant ≥ 1 mois","≥ 2 symptômes pendant ≥ 6 mois"],
+    answer:1,
+    explanation:"Le DSM-5 exige <strong>≥ 2 symptômes pendant ≥ 1 mois</strong> (ou moins si traités), dont au moins un parmi les trois premiers (idées délirantes, hallucinations, discours désorganisé)."
+  },
+  {
+    type:"qcm",
+    tag:"Critères DSM-5",
+    q:"Parmi les 5 critères symptomatiques de la schizophrénie (DSM-5), lequel est un symptôme négatif ?",
+    choices:["Idées délirantes","Hallucinations","Discours désorganisé","Avolition"],
+    answer:3,
+    explanation:"L'<strong>avolition</strong> (et l'expression émotionnelle diminuée) fait partie des symptômes négatifs (critère 5)."
+  },
+  {
+    type:"vf",
+    tag:"Critères DSM-5",
+    q:"Selon le DSM-5, il suffit d'avoir uniquement des symptômes négatifs et un comportement catatonique pour diagnostiquer la schizophrénie.",
+    answer:1,
+    explanation:"Faux. Au moins l'un des symptômes doit être parmi les trois premiers : <strong>idées délirantes, hallucinations ou discours désorganisé</strong>."
+  },
+
+  // ====== TRÉPIED SYMPTOMATIQUE — DISSOCIATION ======
+  {
+    type:"qcm",
+    tag:"Syndrome dissociatif",
+    q:"Le syndrome dissociatif (désorganisation) touche trois domaines. Lesquels ?",
+    choices:["Mémoire, attention, langage","Pensée, affectivité, comportement","Perception, conscience, motricité","Sommeil, appétit, libido"],
+    answer:1,
+    explanation:"Le syndrome dissociatif = perte de l'unité dans 3 domaines : <strong>pensée, affectivité, comportement</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Syndrome dissociatif",
+    q:"Les barrages et le fading mental sont des troubles :",
+    choices:["Du contenu de la pensée","Du cours de la pensée","De la perception","De la mémoire"],
+    answer:1,
+    explanation:"Les barrages et le fading mental sont des troubles du <strong>cours de la pensée</strong> (le flux de pensée s'interrompt brutalement ou s'estompe)."
+  },
+  {
+    type:"qcm",
+    tag:"Syndrome dissociatif",
+    q:"La schizophasie comprend tous ces troubles SAUF :",
+    choices:["Paralogisme","Néologisme","Acataphasie","Échopraxie"],
+    answer:3,
+    explanation:"L'<strong>échopraxie</strong> appartient à la sphère comportementale (imitation des gestes), pas à la schizophasie qui concerne le langage."
+  },
+  {
+    type:"qcm",
+    tag:"Syndrome dissociatif",
+    q:"L'alexithymie dans le syndrome dissociatif désigne :",
+    choices:["L'incapacité à identifier et exprimer ses émotions","L'incapacité à lire","La perte de mémoire émotionnelle","L'hyperexpressivité émotionnelle"],
+    answer:0,
+    explanation:"L'<strong>alexithymie</strong> est l'incapacité à identifier et exprimer ses émotions (sphère émotionnelle du syndrome dissociatif)."
+  },
+  {
+    type:"qcm",
+    tag:"Syndrome dissociatif",
+    q:"L'écholalie, l'échopraxie et l'échomimie sont des manifestations de :",
+    choices:["Négativisme","Inertie psychomotrice","Catalepsie","Catatonie pure"],
+    answer:1,
+    explanation:"L'écholalie (répétition des mots), l'échopraxie (des gestes), l'échomimie (des mimiques) sont des manifestations d'<strong>inertie</strong> psychomotrice."
+  },
+  {
+    type:"vf",
+    tag:"Syndrome dissociatif",
+    q:"La flexibilité cireuse est une caractéristique du syndrome dissociatif dans sa sphère comportementale.",
+    answer:0,
+    explanation:"Vrai. La <strong>flexibilité cireuse</strong> (le patient maintient passivement les postures imposées) fait partie de la sphère comportementale, associée à la catalepsie et à la catatonie."
+  },
+  {
+    type:"qcm",
+    tag:"Syndrome dissociatif",
+    q:"Le rationalisme morbide est un trouble :",
+    choices:["Du cours de la pensée","Du contenu de la pensée","De l'affectivité","Du comportement moteur"],
+    answer:1,
+    explanation:"Le rationalisme morbide est un trouble du <strong>contenu de la pensée</strong>, au même titre que la pensée magique."
+  },
+
+  // ====== TRÉPIED — SYNDROME DÉLIRANT ======
+  {
+    type:"qcm",
+    tag:"Syndrome délirant",
+    q:"Dans la schizophrénie, le délire paranoïde est caractérisé par :",
+    choices:["Une systématisation rigoureuse et un thème unique","Des mécanismes multiples, une organisation non systématisée et des thèmes polymorphes","L'absence totale d'hallucinations","Une congruence à l'humeur"],
+    answer:1,
+    explanation:"Le délire paranoïde schizophrénique est <strong>non systématisé</strong>, avec des mécanismes multiples, des thèmes polymorphes et il est <strong>non congruent à l'humeur</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Syndrome délirant",
+    q:"L'automatisme mental dans la schizophrénie correspond à :",
+    choices:["Des mouvements répétitifs involontaires","Des hallucinations psychiques (voix intérieures, pensées imposées, vol de pensée)","Un réflexe moteur pathologique","Une perte de conscience transitoire"],
+    answer:1,
+    explanation:"L'automatisme mental = <strong>hallucinations psychiques</strong> : voix intérieures, pensées imposées, vol de pensée, devinement de pensée."
+  },
+  {
+    type:"qcm",
+    tag:"Syndrome délirant",
+    q:"Les hallucinations les plus fréquentes dans la schizophrénie sont :",
+    choices:["Visuelles et olfactives","Auditives et cénesthésiques","Gustatives et tactiles","Olfactives et visuelles"],
+    answer:1,
+    explanation:"Dans la schizophrénie, les hallucinations sont surtout <strong>auditives</strong> et <strong>cénesthésiques</strong> (sensations corporelles)."
+  },
+
+  // ====== TRÉPIED — SYNDROME DÉFICITAIRE ======
+  {
+    type:"qcm",
+    tag:"Syndrome déficitaire",
+    q:"Lequel de ces éléments N'appartient PAS au syndrome déficitaire ?",
+    choices:["Repli sur soi","Hallucinations auditives","Apragmatisme","Incurie"],
+    answer:1,
+    explanation:"Les <strong>hallucinations</strong> font partie du syndrome délirant (symptômes positifs), pas du syndrome déficitaire (symptômes négatifs)."
+  },
+  {
+    type:"vf",
+    tag:"Syndrome déficitaire",
+    q:"La clinophilie (rester couché) fait partie du syndrome déficitaire.",
+    answer:0,
+    explanation:"Vrai. La <strong>clinophilie</strong> (tendance à rester couché) est un symptôme négatif faisant partie du syndrome déficitaire."
+  },
+
+  // ====== ÉTIOLOGIE ======
+  {
+    type:"qcm",
+    tag:"Étiologie",
+    q:"Quel pourcentage de patients schizophrènes présentent une personnalité prémorbide schizoïde ?",
+    choices:["25%","50%","75%","90%"],
+    answer:1,
+    explanation:"<strong>50%</strong> des patients schizophrènes présentent une personnalité prémorbide schizoïde."
+  },
+  {
+    type:"qcm",
+    tag:"Étiologie",
+    q:"Le modèle vulnérabilité-stress (Barbès-Morin & Lalonde, 2016) stipule que :",
+    choices:["La vulnérabilité génétique suffit à elle seule","Le stress seul provoque la schizophrénie","Il faut la combinaison de vulnérabilité ET de stresseurs","Seuls les facteurs sociaux comptent"],
+    answer:2,
+    explanation:"Le modèle vulnérabilité-stress : la vulnérabilité seule ne suffit pas, le stress seul ne suffit pas. Il faut <strong>les deux</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Étiologie",
+    q:"Parmi ces éléments, lequel est un facteur de PROTECTION dans le modèle vulnérabilité-stress ?",
+    choices:["Complications obstétricales","Consommation de drogues","Psychoéducation","Événements de vie stressants"],
+    answer:2,
+    explanation:"Les facteurs de protection incluent : antipsychotiques, <strong>psychoéducation</strong>, psychothérapie cognitive, habiletés sociales, réadaptation."
+  },
+
+  // ====== MODE D'ENTRÉE ET ÉVOLUTION ======
+  {
+    type:"qcm",
+    tag:"Évolution",
+    q:"Le début insidieux de la schizophrénie concerne quel pourcentage des cas ?",
+    choices:["20%","40%","60%","80%"],
+    answer:2,
+    explanation:"Le début insidieux concerne <strong>60%</strong> des cas (symptômes négatifs d'abord, puis positifs)."
+  },
+  {
+    type:"qcm",
+    tag:"Évolution",
+    q:"Les 4 phases de la schizophrénie sont, dans l'ordre :",
+    choices:["Prodromique → Prémorbide → Phase d'état → Résiduelle","Prémorbide → Prodromique → Phase d'état → Résiduelle","Phase d'état → Prodromique → Prémorbide → Résiduelle","Prémorbide → Phase d'état → Prodromique → Résiduelle"],
+    answer:1,
+    explanation:"Les 4 phases : <strong>Prémorbide → Prodromique → Phase d'état → Résiduelle</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Évolution",
+    q:"Selon la chronologie typique, les déficits cognitifs apparaissent vers quel âge ?",
+    choices:["8 ans","12 ans","15 ans","18 ans"],
+    answer:1,
+    explanation:"Chronologie : vers <strong>12 ans</strong> déficits cognitifs → 15 ans symptômes négatifs → 18 ans symptômes positifs atténués → symptômes positifs avérés."
+  },
+  {
+    type:"qcm",
+    tag:"Évolution",
+    q:"Quel est le pronostic de la schizophrénie (règle des tiers) ?",
+    choices:["33% favorable, 33% intermédiaire, 33% péjoratif","25% péjoratif, 50% intermédiaire, 25% favorable","40% favorable, 40% intermédiaire, 20% péjoratif","10% favorable, 60% intermédiaire, 30% péjoratif"],
+    answer:1,
+    explanation:"Règle des tiers : <strong>25%</strong> péjoratif, <strong>50%</strong> intermédiaire, <strong>25%</strong> favorable."
+  },
+  {
+    type:"qcm",
+    tag:"Évolution",
+    q:"Parmi ces facteurs, lequel est de BON pronostic pour la schizophrénie ?",
+    choices:["Début dans l'enfance","Personnalité prémorbide schizoïde","Antécédents familiaux de schizophrénie","Traitement précoce et bonne alliance thérapeutique"],
+    answer:3,
+    explanation:"Le <strong>traitement précoce</strong> et une bonne alliance thérapeutique sont des facteurs de bon pronostic."
+  },
+
+  // ====== FORMES CLINIQUES ======
+  {
+    type:"qcm",
+    tag:"Formes cliniques",
+    q:"La schizophrénie paranoïde se caractérise par :",
+    choices:["Le déficit intellectuel prédominant","Le DÉLIRE prédominant, début brutal souvent par BDA","Le repli majeur et la stupeur","Les conduites antisociales"],
+    answer:1,
+    explanation:"SCZ paranoïde : début brutal après 20 ans (souvent par BDA), <strong>DÉLIRE prédominant</strong>, dissociation ++."
+  },
+  {
+    type:"qcm",
+    tag:"Formes cliniques",
+    q:"La schizophrénie hébéphrénique se distingue par :",
+    choices:["Un délire riche et prédominant","Le DÉFICIT intellectuel et émotionnel prédominant, peu de délire","La stupeur catatonique","Les symptômes thymiques au premier plan"],
+    answer:1,
+    explanation:"SCZ hébéphrénique : trouble de la pensée → <strong>DÉFICIT</strong>, peu de délire, dissociation intellectuelle/émotionnelle marquée."
+  },
+  {
+    type:"qcm",
+    tag:"Formes cliniques",
+    q:"La forme dysthymique (schizo-affective) associe :",
+    choices:["Symptômes psychotiques + symptômes thymiques","Symptômes cognitifs + symptômes moteurs","Symptômes psychotiques + conduites antisociales","Symptômes négatifs uniquement"],
+    answer:0,
+    explanation:"La forme dysthymique associe des <strong>symptômes thymiques</strong> (dépression/manie) et des symptômes psychotiques."
+  },
+  {
+    type:"qcm",
+    tag:"Formes cliniques",
+    q:"Qu'est-ce que le DSM-5 a changé concernant les sous-types de schizophrénie par rapport au DSM-IV ?",
+    choices:["Il a ajouté 3 nouveaux sous-types","Il a SUPPRIMÉ les sous-types pour une approche dimensionnelle","Il a gardé les mêmes sous-types","Il a réduit à 2 sous-types"],
+    answer:1,
+    explanation:"Le DSM-5 a <strong>supprimé les 5 sous-types</strong> du DSM-IV (paranoïde, désorganisé, catatonique, indifférencié, résiduel) au profit d'une approche dimensionnelle avec 8 dimensions."
+  },
+  {
+    type:"qcm",
+    tag:"Formes cliniques",
+    q:"Combien de sous-types de schizophrénie le DSM-IV distinguait-il ?",
+    choices:["3","5","7","8"],
+    answer:1,
+    explanation:"Le DSM-IV distinguait <strong>5 sous-types</strong> : paranoïde, désorganisé, catatonique, indifférencié et résiduel."
+  },
+
+  // ====== TROUBLE SCHIZOPHRÉNIFORME ======
+  {
+    type:"qcm",
+    tag:"Trouble schizophréniforme",
+    q:"Le critère discriminant essentiel du trouble schizophréniforme est :",
+    choices:["Le type d'hallucinations","La durée (entre 1 et 6 mois)","L'âge de début","Le sexe du patient"],
+    answer:1,
+    explanation:"La <strong>durée</strong> est le critère discriminant essentiel : entre 1 et 6 mois (vs. ≥ 6 mois pour la schizophrénie)."
+  },
+  {
+    type:"qcm",
+    tag:"Trouble schizophréniforme",
+    q:"Concernant le trouble schizophréniforme, quelle affirmation est correcte ?",
+    choices:["Les femmes sont touchées plus tard que les hommes","Les femmes sont touchées plus tôt (18-24 ans) que les hommes (24-35 ans)","L'âge de début est identique pour les deux sexes","Il touche exclusivement les hommes"],
+    answer:1,
+    explanation:"Femmes : <strong>18-24 ans</strong> (plus tôt). Hommes : <strong>24-35 ans</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Trouble schizophréniforme",
+    q:"La prévalence du trouble schizophréniforme est de :",
+    choices:["0,03-0,1%","0,5-1%","1-3%","5-8%"],
+    answer:1,
+    explanation:"Prévalence du trouble schizophréniforme : <strong>0,5 à 1%</strong>."
+  },
+
+  // ====== TROUBLES DÉLIRANTS ======
+  {
+    type:"qcm",
+    tag:"Troubles délirants",
+    q:"Les troubles délirants (DSM-5) se caractérisent par des idées délirantes :",
+    choices:["Bizarres avec hallucinations massives","Non bizarres, avec fonctionnement non significativement altéré","Toujours associées à une dissociation psychique","De durée < 1 mois"],
+    answer:1,
+    explanation:"Les troubles délirants = idées délirantes <strong>non bizarres</strong>, hallucinations non massives, fonctionnement <strong>non significativement altéré</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Troubles délirants",
+    q:"Quel sous-type de trouble délirant est le plus fréquent ?",
+    choices:["Érotomaniaque (1%)","Jalousie (8%)","Somatique (2%)","Persécutoire (71%)"],
+    answer:3,
+    explanation:"Le type <strong>persécutoire</strong> est le plus fréquent avec <strong>71%</strong> des cas."
+  },
+  {
+    type:"qcm",
+    tag:"Troubles délirants",
+    q:"Les troubles délirants débutent typiquement après quel âge ?",
+    choices:["18 ans","25 ans","35 ans","50 ans"],
+    answer:2,
+    explanation:"Les troubles délirants débutent typiquement après <strong>35 ans</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Troubles délirants",
+    q:"La classification des troubles délirants par mécanisme donne : interprétation → ___ ; hallucination → ___ ; imagination → ___",
+    choices:["Paranoïa ; PHC ; Paraphrénie","PHC ; Paraphrénie ; Paranoïa","Paraphrénie ; Paranoïa ; PHC","Paranoïa ; Paraphrénie ; PHC"],
+    answer:0,
+    explanation:"Interprétation → <strong>Délire paranoïaque</strong> ; Hallucination → <strong>PHC</strong> ; Imagination → <strong>Paraphrénie</strong>."
+  },
+  {
+    type:"vf",
+    tag:"Troubles délirants",
+    q:"Dans les troubles délirants, on retrouve une dissociation psychique marquée.",
+    answer:1,
+    explanation:"Faux. Les troubles délirants se caractérisent par l'<strong>absence de dissociation psychique</strong>."
+  },
+
+  // ====== DÉLIRES PARANOÏAQUES ======
+  {
+    type:"qcm",
+    tag:"Délires paranoïaques",
+    q:"L'érotomanie a été décrite par Clérambault en :",
+    choices:["1843","1909","1919","1921"],
+    answer:3,
+    explanation:"L'érotomanie a été décrite par <strong>Clérambault en 1921</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Délires paranoïaques",
+    q:"Les 3 phases de l'érotomanie sont, dans l'ordre :",
+    choices:["Rancune → Dépit → Espoir","Espoir → Dépit → Rancune","Dépit → Espoir → Rancune","Espoir → Rancune → Dépit"],
+    answer:1,
+    explanation:"Les 3 phases : <strong>Espoir → Dépit → Rancune</strong>. Le risque d'acte meurtrier est maximal en phase de Rancune."
+  },
+  {
+    type:"qcm",
+    tag:"Délires paranoïaques",
+    q:"Le délire de jalousie est souvent associé à :",
+    choices:["La toxicomanie aux opiacés","L'alcoolisme chronique","L'anorexie mentale","Le trouble obsessionnel-compulsif"],
+    answer:1,
+    explanation:"Le délire de jalousie est souvent associé à l'<strong>alcoolisme chronique</strong>. Risque de crime passionnel."
+  },
+  {
+    type:"qcm",
+    tag:"Délires paranoïaques",
+    q:"Le délire d'interprétation a été décrit par :",
+    choices:["Clérambault (1921)","Kretschmer (1919)","Sérieux et Capgras (1909)","Ballet (1911)"],
+    answer:2,
+    explanation:"Le délire d'interprétation a été décrit par <strong>Sérieux et Capgras en 1909</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Délires paranoïaques",
+    q:"Le quérulent processif, l'idéaliste passionné et l'inventeur méconnu sont des variantes du délire :",
+    choices:["D'interprétation","De jalousie","De revendication","De référence"],
+    answer:2,
+    explanation:"Ce sont des variantes du <strong>délire de revendication</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Délires paranoïaques",
+    q:"Le délire de relation (référence) décrit par Kretschmer concerne une personnalité :",
+    choices:["Paranoïaque classique","Sensitive","Schizoïde","Histrionique"],
+    answer:1,
+    explanation:"Kretschmer (1919) a décrit le délire de relation chez des personnalités <strong>sensitives</strong> : peu étendu, sans agressivité."
+  },
+
+  // ====== PHC ======
+  {
+    type:"qcm",
+    tag:"PHC",
+    q:"La Psychose Hallucinatoire Chronique (PHC) a été décrite par :",
+    choices:["Clérambault (1921)","Ballet (1911)","Kraepelin (1896)","Sérieux et Capgras (1909)"],
+    answer:1,
+    explanation:"La PHC a été décrite par <strong>Ballet en 1911</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"PHC",
+    q:"Le sex-ratio de la PHC est :",
+    choices:["1 homme pour 1 femme","7 femmes pour 1 homme","3 hommes pour 1 femme","Exclusivement masculine"],
+    answer:1,
+    explanation:"<strong>7 femmes pour 1 homme</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"PHC",
+    q:"L'âge de début de la PHC se situe typiquement entre :",
+    choices:["15-25 ans","25-30 ans","30-50 ans","> 60 ans"],
+    answer:2,
+    explanation:"Début soudain entre <strong>30 et 50 ans</strong>."
+  },
+  {
+    type:"vf",
+    tag:"PHC",
+    q:"Dans la PHC, les hallucinations cénesthésiques et olfactives sont PLUS fréquentes que dans les autres troubles psychotiques.",
+    answer:0,
+    explanation:"Vrai. La PHC se distingue par des hallucinations <strong>cénesthésiques et olfactives</strong> plus fréquentes que dans les autres troubles."
+  },
+  {
+    type:"qcm",
+    tag:"PHC",
+    q:"Dans le DSM, la PHC correspond à :",
+    choices:["Un trouble délirant","Un trouble psychotique bref","Une schizophrénie d'apparition tardive","Un trouble schizophréniforme"],
+    answer:2,
+    explanation:"Dans la classification DSM, la PHC correspond à une <strong>schizophrénie d'apparition tardive</strong>."
+  },
+
+  // ====== PARAPHRÉNIE ======
+  {
+    type:"qcm",
+    tag:"Paraphrénie",
+    q:"Le mécanisme principal de la paraphrénie est :",
+    choices:["L'interprétation","L'hallucination","L'imagination","L'intuition"],
+    answer:2,
+    explanation:"Le mécanisme principal de la paraphrénie est <strong>l'imagination</strong> (imaginatif), avec une thématique grandiose/fantastique."
+  },
+  {
+    type:"qcm",
+    tag:"Paraphrénie",
+    q:"La particularité de la paraphrénie est :",
+    choices:["Une détérioration intellectuelle rapide","Une contradiction entre le caractère aberrant du délire et l'adaptation du sujet à la réalité","Une dissociation psychique majeure","Des hallucinations exclusivement auditives"],
+    answer:1,
+    explanation:"Paradoxe de la paraphrénie : le patient peut sembler <strong>normal au quotidien</strong> tout en ayant un <strong>délire fantastique</strong>."
+  },
+  {
+    type:"vf",
+    tag:"Paraphrénie",
+    q:"La paraphrénie s'accompagne d'un envahissement de la vie psychique et d'une détérioration intellectuelle.",
+    answer:1,
+    explanation:"Faux. La paraphrénie se caractérise par l'absence d'envahissement de la vie psychique et l'<strong>absence de détérioration intellectuelle</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Paraphrénie",
+    q:"La paraphrénie débute typiquement entre :",
+    choices:["15-25 ans","30-45 ans","50-60 ans","> 65 ans"],
+    answer:1,
+    explanation:"Début lent entre <strong>30 et 45 ans</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Paraphrénie",
+    q:"Dupré a qualifié la paraphrénie de :",
+    choices:["Psychose hallucinatoire","Mythomanie délirante","Délire d'interprétation","Folie lucide"],
+    answer:1,
+    explanation:"Dupré l'a qualifiée de <strong>mythomanie délirante</strong>. Ey parlait de « psychose fantastique »."
+  },
+  {
+    type:"qcm",
+    tag:"Paraphrénie",
+    q:"Les deux formes de paraphrénie sont :",
+    choices:["Imaginative (systématique) et fantastique","Simple et paranoïde","Aiguë et chronique","Hébéphrénique et catatonique"],
+    answer:0,
+    explanation:"Les 2 formes : <strong>paraphrénie imaginative</strong> (systématique, fabulation, filiation/puissance) et <strong>paraphrénie fantastique</strong> (imaginatif + hallucinatoire, thèmes fantastiques)."
+  },
+
+  // ====== DIAGNOSTIC DIFFÉRENTIEL ======
+  {
+    type:"qcm",
+    tag:"Diagnostic différentiel",
+    q:"Les 4 critères clés du diagnostic différentiel dans le spectre psychotique sont :",
+    choices:["Âge, sexe, ethnie, classe sociale","Durée, systématisation du délire, présence/absence de dissociation, symptômes thymiques","Type d'hallucination, QI, personnalité, traitement","Antécédents familiaux, consommation de drogues, traumatismes, culture"],
+    answer:1,
+    explanation:"Les 4 critères : <strong>durée, systématisation du délire, présence/absence de dissociation, symptômes thymiques associés</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Diagnostic différentiel",
+    q:"Comment distinguer un trouble psychotique bref d'un trouble schizophréniforme ?",
+    choices:["Par le type de délire","Par la durée : < 1 mois vs 1-6 mois","Par la présence d'hallucinations","Par l'âge du patient"],
+    answer:1,
+    explanation:"La distinction repose sur la <strong>durée</strong> : trouble psychotique bref < 1 mois ; schizophréniforme entre 1 et 6 mois."
+  },
+  {
+    type:"qcm",
+    tag:"Diagnostic différentiel",
+    q:"Un délire systématisé (paranoïaque) oriente vers quel type de trouble ?",
+    choices:["La schizophrénie","Un trouble délirant (paranoïa)","Un trouble psychotique bref","Un trouble schizophréniforme"],
+    answer:1,
+    explanation:"Un délire systématisé oriente vers un <strong>trouble délirant (paranoïa)</strong>. Le délire non systématisé oriente vers la schizophrénie."
+  },
+
+  // ====== OUTILS D'ÉVALUATION ======
+  {
+    type:"qcm",
+    tag:"Outils d'évaluation",
+    q:"La PANSS (Positive and Negative Syndrome Scale) mesure :",
+    choices:["Uniquement les symptômes positifs","Uniquement les symptômes négatifs","Les symptômes positifs, négatifs et la psychopathologie générale","Uniquement l'insight du patient"],
+    answer:2,
+    explanation:"La <strong>PANSS</strong> est l'échelle de référence pour une mesure globale : symptômes positifs, négatifs et psychopathologie générale."
+  },
+  {
+    type:"qcm",
+    tag:"Outils d'évaluation",
+    q:"Le couple d'échelles à retenir en priorité est :",
+    choices:["PSYRATS + Refer-o-scope","SANS/SAPS + PANSS","MINI + SCID","BDI + BAI"],
+    answer:1,
+    explanation:"À retenir : le couple <strong>SANS/SAPS</strong> (symptômes négatifs/positifs) + <strong>PANSS</strong> (mesure globale)."
+  },
+  {
+    type:"qcm",
+    tag:"Outils d'évaluation",
+    q:"L'échelle SANS mesure spécifiquement :",
+    choices:["Les symptômes positifs","Les symptômes négatifs","L'intensité des hallucinations","Le risque suicidaire"],
+    answer:1,
+    explanation:"<strong>SANS</strong> = Scale for Assessment of <strong>Negative</strong> Symptoms."
+  },
+  {
+    type:"qcm",
+    tag:"Outils d'évaluation",
+    q:"Le Refer-o-scope est un outil conçu pour :",
+    choices:["Les personnes âgées","Les jeunes","Les patients hospitalisés uniquement","Les soignants"],
+    answer:1,
+    explanation:"Le <strong>Refer-o-scope</strong> est conçu spécifiquement pour les <strong>jeunes</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Outils d'évaluation",
+    q:"La PSYRATS mesure :",
+    choices:["L'intensité des symptômes psychotiques","Les symptômes négatifs","La personnalité prémorbide","Le fonctionnement social"],
+    answer:0,
+    explanation:"<strong>PSYRATS</strong> mesure l'<strong>intensité des symptômes psychotiques</strong>."
+  },
+
+  // ====== QUESTIONS TRANSVERSALES / PIÈGES ======
+  {
+    type:"vf",
+    tag:"Diagnostic différentiel",
+    q:"Dans la schizophrénie, le délire est systématisé.",
+    answer:1,
+    explanation:"Faux. Dans la schizophrénie, le délire est <strong>non systématisé</strong> (paranoïde). Le délire systématisé (paranoïaque) caractérise les troubles délirants."
+  },
+  {
+    type:"vf",
+    tag:"Diagnostic différentiel",
+    q:"La PHC touche principalement les hommes jeunes.",
+    answer:1,
+    explanation:"Faux. La PHC touche <strong>7 femmes pour 1 homme</strong> et débute entre 30 et 50 ans."
+  },
+  {
+    type:"qcm",
+    tag:"Diagnostic différentiel",
+    q:"Un patient de 42 ans présente un délire interprétatif systématisé, monothématique, sans hallucination ni dissociation. Le diagnostic le plus probable est :",
+    choices:["Schizophrénie paranoïde","Trouble délirant (paranoïa)","PHC","Paraphrénie"],
+    answer:1,
+    explanation:"Délire interprétatif, systématisé, monothématique, sans hallucination ni dissociation, après 35 ans → <strong>Trouble délirant (paranoïa)</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Diagnostic différentiel",
+    q:"Une femme de 45 ans présente des hallucinations auditives et cénesthésiques avec automatisme mental, un délire partiellement systématisé et des hallucinations olfactives. Le diagnostic le plus probable est :",
+    choices:["Schizophrénie","Paraphrénie","PHC","Trouble délirant"],
+    answer:2,
+    explanation:"Femme, 30-50 ans, hallucinations (auditives, cénesthésiques, olfactives), automatisme mental, délire partiellement systématisé → <strong>PHC</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Diagnostic différentiel",
+    q:"Un homme de 38 ans a un délire fantastique à mécanisme imaginatif mais fonctionne normalement au quotidien, sans détérioration intellectuelle. Le diagnostic le plus probable est :",
+    choices:["Schizophrénie hébéphrénique","PHC","Trouble délirant","Paraphrénie"],
+    answer:3,
+    explanation:"Délire fantastique, imaginatif, adaptation conservée, pas de détérioration → <strong>Paraphrénie</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Diagnostic différentiel",
+    q:"Un jeune de 22 ans présente depuis 8 mois un délire paranoïde non systématisé avec hallucinations auditives, dissociation et repli sur soi. Le diagnostic le plus probable est :",
+    choices:["BDA","Trouble schizophréniforme","Schizophrénie","Trouble délirant"],
+    answer:2,
+    explanation:"Durée ≥ 6 mois, délire paranoïde non systématisé, hallucinations, dissociation, symptômes négatifs → <strong>Schizophrénie</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Diagnostic différentiel",
+    q:"Un patient présente des symptômes schizophréniques depuis 4 mois. Quel est le diagnostic le plus approprié à ce stade ?",
+    choices:["Schizophrénie","Trouble schizophréniforme","Trouble psychotique bref","Trouble délirant"],
+    answer:1,
+    explanation:"Symptômes de schizophrénie mais durée entre 1 et 6 mois → <strong>Trouble schizophréniforme</strong>."
+  },
+  {
+    type:"vf",
+    tag:"BDA",
+    q:"La BDA est toujours précédée d'un prodrome.",
+    answer:1,
+    explanation:"Faux. La BDA est d'installation <strong>brutale</strong>, <strong>parfois</strong> précédée d'un prodrome, mais pas toujours."
+  },
+  {
+    type:"vf",
+    tag:"Schizophrénie",
+    q:"La schizophrénie est une maladie universelle, présente dans toutes les cultures.",
+    answer:0,
+    explanation:"Vrai. La schizophrénie est <strong>universelle</strong>, présente dans toutes les cultures et à toutes les époques."
+  },
+  {
+    type:"qcm",
+    tag:"Formes cliniques",
+    q:"La catatonie se caractérise principalement par :",
+    choices:["Un délire riche et polymorphe","Un repli majeur et une dissociation motrice avec stupeur","Des conduites antisociales","Un déficit intellectuel prédominant"],
+    answer:1,
+    explanation:"La catatonie = <strong>repli majeur</strong>, dissociation motrice, <strong>stupeur</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Formes cliniques",
+    q:"La forme pseudo-psychopathique de schizophrénie se caractérise par :",
+    choices:["Des hallucinations auditives massives","Des conduites antisociales/bizarres avec risque de suicide et toxicomanie","Un délire systématisé","Un émoussement affectif isolé"],
+    answer:1,
+    explanation:"Forme pseudo-psychopathique : <strong>conduites antisociales/bizarres</strong>, risque de suicide et toxicomanie."
+  },
+  {
+    type:"vf",
+    tag:"Délires paranoïaques",
+    q:"Dans l'érotomanie, la phase la plus dangereuse (risque d'acte meurtrier) est la phase d'Espoir.",
+    answer:1,
+    explanation:"Faux. Le risque d'acte meurtrier est maximal dans la phase de <strong>Rancune</strong>, la dernière phase."
+  },
+  {
+    type:"qcm",
+    tag:"Évolution",
+    q:"Quel pourcentage de patients développe une schizophrénie avant 10 ans ?",
+    choices:["1%","4%","10%","20%"],
+    answer:0,
+    explanation:"Seulement <strong>1%</strong> avant 10 ans, 4% avant 15 ans, 20% avant 19 ans."
+  },
+  {
+    type:"vf",
+    tag:"Troubles délirants",
+    q:"La prévalence des troubles délirants est de 0,03 à 0,1%, ce qui en fait un trouble très rare.",
+    answer:0,
+    explanation:"Vrai. Prévalence de <strong>0,03 à 0,1%</strong>, ce qui est très rare comparé à la schizophrénie (0,8-1,3%)."
+  },
+  {
+    type:"qcm",
+    tag:"Paraphrénie",
+    q:"L'évolution possible de la paraphrénie comprend :",
+    choices:["Toujours une guérison complète","Un enkystement ou une évolution vers la schizophrénie","Un passage systématique vers la démence","Une rémission spontanée rapide"],
+    answer:1,
+    explanation:"Évolution de la paraphrénie : <strong>enkystement</strong> (le délire reste isolé) ou <strong>évolution vers la schizophrénie</strong>."
+  },
+  {
+    type:"qcm",
+    tag:"Délires paranoïaques",
+    q:"La sinistrose délirante est une variante du délire de :",
+    choices:["Persécution","Jalousie","Revendication","Référence"],
+    answer:2,
+    explanation:"La sinistrose délirante est une variante du <strong>délire de revendication</strong>, aux côtés du quérulent processif, l'idéaliste passionné et l'inventeur méconnu."
+  },
+  {
+    type:"qcm",
+    tag:"Délire",
+    q:"Le délire zoopathique est un délire de :",
+    choices:["Persécution par des animaux","Transformation en animal","Phobie des animaux","Communication avec les animaux"],
+    answer:1,
+    explanation:"Le délire zoopathique fait partie des délires de <strong>transformation</strong> (le sujet croit se transformer en animal)."
+  }
+];
+
+// ============================================================
+//  GAME ENGINE
+// ============================================================
+const QUESTIONS_PER_SESSION = 20;
+const app = document.getElementById('app');
+
+let sessionQuestions = [];
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+let userAnswers = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startGame() {
+  sessionQuestions = shuffle(ALL_QUESTIONS).slice(0, QUESTIONS_PER_SESSION);
+  currentIndex = 0;
+  score = 0;
+  userAnswers = [];
+  answered = false;
+  renderQuestion();
+}
+
+function renderStart() {
+  app.innerHTML = `
+    <div class="start-screen">
+      <div class="icon">👻</div>
+      <h1>Le Spectre</h1>
+      <p class="subtitle">Chapitre 8 : Les Troubles Schizophréniques</p>
+      <p style="color:#6b7280;margin-bottom:2rem;font-size:.95rem;">${ALL_QUESTIONS.length} questions en banque — ${QUESTIONS_PER_SESSION} tirées au hasard par session</p>
+      <button class="btn btn-primary" onclick="startGame()">Commencer le quiz</button>
+    </div>
+  `;
+}
+
+function renderQuestion() {
+  const q = sessionQuestions[currentIndex];
+  answered = false;
+
+  // Build choices
+  let choices, correctIdx;
+  if (q.type === 'vf') {
+    choices = ['Vrai', 'Faux'];
+    correctIdx = q.answer;
+  } else {
+    // Shuffle QCM choices
+    const indexed = q.choices.map((c, i) => ({ text: c, origIdx: i }));
+    const shuffled = shuffle(indexed);
+    choices = shuffled.map(c => c.text);
+    correctIdx = shuffled.findIndex(c => c.origIdx === q.answer);
+  }
+
+  const progress = ((currentIndex) / QUESTIONS_PER_SESSION) * 100;
+
+  app.innerHTML = `
+    <div class="quiz-header">
+      <span>Question ${currentIndex + 1} / ${QUESTIONS_PER_SESSION}</span>
+      <span class="score-display">Score : ${score} / ${currentIndex}</span>
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" style="width:${progress}%"></div>
+    </div>
+    <div class="question-card">
+      <span class="question-tag">${q.tag} — ${q.type === 'vf' ? 'Vrai / Faux' : 'QCM'}</span>
+      <div class="question-text">${q.q}</div>
+      <div class="choices" id="choices">
+        ${choices.map((c, i) => `<button class="choice-btn" data-idx="${i}" onclick="selectAnswer(${i}, ${correctIdx})">${c}</button>`).join('')}
+      </div>
+      <div id="feedback"></div>
+    </div>
+  `;
+
+  // Store for review
+  window._currentCorrectIdx = correctIdx;
+  window._currentChoices = choices;
+}
+
+function selectAnswer(selected, correct) {
+  if (answered) return;
+  answered = true;
+
+  const q = sessionQuestions[currentIndex];
+  const btns = document.querySelectorAll('.choice-btn');
+  const isCorrect = selected === correct;
+
+  if (isCorrect) score++;
+
+  btns.forEach((btn, i) => {
+    btn.classList.add('disabled');
+    if (i === correct) btn.classList.add('correct');
+    if (i === selected && !isCorrect) btn.classList.add('wrong');
+  });
+
+  // Update score display
+  document.querySelector('.score-display').textContent = `Score : ${score} / ${currentIndex + 1}`;
+
+  userAnswers.push({
+    question: q.q,
+    correct: isCorrect,
+    correctAnswer: window._currentChoices[correct],
+    yourAnswer: window._currentChoices[selected]
+  });
+
+  const feedback = document.getElementById('feedback');
+  feedback.innerHTML = `
+    <div class="explanation">
+      <strong>${isCorrect ? '✓ Correct !' : '✗ Incorrect.'}</strong> ${q.explanation}
+    </div>
+    <div class="next-btn-wrap">
+      <button class="btn btn-primary" onclick="${currentIndex < QUESTIONS_PER_SESSION - 1 ? 'nextQuestion()' : 'showResults()'}">
+        ${currentIndex < QUESTIONS_PER_SESSION - 1 ? 'Question suivante →' : 'Voir les résultats →'}
+      </button>
+    </div>
+  `;
+}
+
+function nextQuestion() {
+  currentIndex++;
+  renderQuestion();
+}
+
+function showResults() {
+  const pct = Math.round((score / QUESTIONS_PER_SESSION) * 100);
+  let msg;
+  if (pct >= 90) msg = 'Exceptionnel ! Vous maîtrisez parfaitement le spectre schizophrénique.';
+  else if (pct >= 75) msg = 'Très bien ! Quelques détails à revoir, mais solide maîtrise.';
+  else if (pct >= 60) msg = 'Pas mal ! Revoyez les points faibles et vous y êtes presque.';
+  else if (pct >= 40) msg = 'Des bases présentes, mais il faut approfondir.';
+  else msg = 'Il est temps de relire le chapitre 8 en profondeur !';
+
+  const wrongOnes = userAnswers.filter(a => !a.correct);
+  const correctOnes = userAnswers.filter(a => a.correct);
+
+  app.innerHTML = `
+    <div class="results">
+      <div class="big-score">${pct}%</div>
+      <div class="label">${score} / ${QUESTIONS_PER_SESSION} bonnes réponses</div>
+      <div class="message">${msg}</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="startGame()">Rejouer</button>
+        <button class="btn btn-secondary" onclick="renderStart()">Accueil</button>
+      </div>
+      ${wrongOnes.length > 0 ? `
+      <div class="review-section">
+        <h3 style="color:var(--wrong);">Réponses incorrectes (${wrongOnes.length})</h3>
+        ${wrongOnes.map(a => `
+          <div class="review-item was-wrong">
+            <div class="review-q">${a.question}</div>
+            <div class="review-a">Votre réponse : ${a.yourAnswer}<br>Réponse correcte : <span>${a.correctAnswer}</span></div>
+          </div>
+        `).join('')}
+      </div>` : ''}
+      ${correctOnes.length > 0 ? `
+      <div class="review-section">
+        <h3 style="color:var(--correct);">Réponses correctes (${correctOnes.length})</h3>
+        ${correctOnes.map(a => `
+          <div class="review-item was-correct">
+            <div class="review-q">${a.question}</div>
+            <div class="review-a">Réponse : <span>${a.correctAnswer}</span></div>
+          </div>
+        `).join('')}
+      </div>` : ''}
+    </div>
+  `;
+}
+
+// INIT
+renderStart();
+</script>
+</body>
+</html>

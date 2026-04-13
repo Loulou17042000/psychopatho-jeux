@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tri Express - Psychopathologie</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+@keyframes neonPulse{0%,100%{text-shadow:0 0 10px #0ff,0 0 20px #0ff;}50%{text-shadow:0 0 20px #0ff,0 0 40px #0ff,0 0 60px #0ff;}}
+@keyframes celebrate{0%{transform:scale(1);opacity:1;}50%{transform:scale(1.3);opacity:.7;}100%{transform:scale(0);opacity:0;}}
+@keyframes shakeX{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+@keyframes fadeUp{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-60px);}}
+@keyframes popIn{0%{transform:scale(0);opacity:0;}60%{transform:scale(1.2);}100%{transform:scale(1);opacity:1;}}
+body{background:#0a0a1a;color:#eee;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;overflow:hidden;height:100vh;width:100vw;user-select:none;}
+#game-container{position:relative;width:100%;height:100%;overflow:hidden;}
+
+/* HUD */
+#hud{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(0,0,0,.6);border-bottom:2px solid #333;z-index:100;}
+#hud .hud-item{font-size:16px;font-weight:bold;}
+.hud-label{color:#888;margin-right:6px;}
+.hud-value{color:#0ff;}
+#lives-display span{color:#f44;font-size:20px;margin-left:2px;}
+#combo-display{color:#ff0;font-size:14px;margin-left:15px;}
+#level-title{position:absolute;top:55px;left:0;right:0;text-align:center;font-size:14px;color:#aaa;padding:4px;background:rgba(0,0,0,.4);z-index:99;}
+
+/* Deadline line */
+#deadline-line{position:absolute;left:0;right:0;height:2px;background:repeating-linear-gradient(90deg,#f44 0,#f44 10px,transparent 10px,transparent 20px);z-index:50;pointer-events:none;}
+#deadline-label{position:absolute;right:10px;transform:translateY(-18px);font-size:11px;color:#f44;letter-spacing:1px;}
+
+/* Falling area */
+#fall-area{position:absolute;top:50px;left:0;right:0;z-index:60;}
+
+/* Items */
+.fall-item{position:absolute;padding:10px 18px;border-radius:25px;font-size:14px;font-weight:600;cursor:grab;white-space:nowrap;text-align:center;z-index:70;transition:box-shadow .15s;border:2px solid rgba(255,255,255,.3);pointer-events:auto;}
+.fall-item:hover{box-shadow:0 0 20px rgba(255,255,255,.4);z-index:80;}
+.fall-item.dragging{opacity:.7;cursor:grabbing;z-index:200;transition:none;}
+
+/* Buckets */
+#buckets-bar{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:12px;padding:10px 10px 15px;z-index:90;flex-wrap:wrap;}
+.bucket{flex:1;min-width:120px;max-width:260px;min-height:90px;border:3px dashed #555;border-radius:16px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:14px;font-weight:bold;padding:10px 8px;transition:border-color .2s,background .2s,transform .2s;background:rgba(20,20,40,.7);}
+.bucket.hover{border-color:#0ff;background:rgba(0,255,255,.08);transform:scale(1.04);}
+.bucket.correct{border-color:#0f0;background:rgba(0,255,0,.12);animation:none;}
+.bucket.wrong{border-color:#f44;background:rgba(255,0,0,.12);animation:shakeX .4s;}
+
+/* Screens */
+.screen-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,5,20,.92);z-index:500;text-align:center;padding:20px;}
+.screen-overlay h1{font-size:48px;margin-bottom:10px;animation:neonPulse 2s infinite;}
+.screen-overlay h2{font-size:28px;margin-bottom:15px;color:#0ff;}
+.screen-overlay p{font-size:18px;color:#ccc;margin:5px 0;max-width:600px;}
+.screen-overlay .subtitle{font-size:16px;color:#888;margin-bottom:30px;}
+.btn{padding:14px 36px;font-size:18px;font-weight:bold;border:2px solid #0ff;background:transparent;color:#0ff;border-radius:30px;cursor:pointer;margin:8px;transition:all .2s;}
+.btn:hover{background:#0ff;color:#000;}
+.btn-secondary{border-color:#888;color:#888;}
+.btn-secondary:hover{background:#888;color:#000;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 30px;margin:20px 0;text-align:left;}
+.stats-grid .stat-label{color:#888;}
+.stats-grid .stat-value{color:#0ff;font-weight:bold;}
+
+/* Floating text */
+.float-text{position:absolute;font-size:22px;font-weight:bold;pointer-events:none;z-index:300;animation:fadeUp .8s forwards;}
+
+/* Particles */
+.particle{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:400;animation:celebrate .8s forwards;}
+
+/* Level complete overlay */
+#level-complete{display:none;}
+#level-complete h2{color:#0f0;font-size:36px;margin-bottom:10px;}
+#level-complete .level-stats{font-size:16px;color:#ccc;margin:10px 0;}
+
+/* Progress bar */
+#progress-bar{position:absolute;top:50px;left:0;right:0;height:3px;z-index:98;background:rgba(255,255,255,.1);}
+#progress-fill{height:100%;background:linear-gradient(90deg,#0ff,#0f0);width:0%;transition:width .3s;}
+</style>
+</head>
+<body>
+<div id="game-container">
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-item"><span class="hud-label">Score:</span><span class="hud-value" id="score-val">0</span><span id="combo-display"></span></div>
+    <div class="hud-item"><span class="hud-label">Niveau:</span><span class="hud-value" id="level-val">1</span><span style="color:#888;font-size:13px;" id="level-name-short"></span></div>
+    <div class="hud-item" id="lives-display"><span class="hud-label">Vies:</span></div>
+  </div>
+  <div id="level-title"></div>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+
+  <!-- Deadline -->
+  <div id="deadline-line"><span id="deadline-label">LIMITE</span></div>
+
+  <!-- Fall area (items spawn here) -->
+  <div id="fall-area"></div>
+
+  <!-- Buckets -->
+  <div id="buckets-bar"></div>
+
+  <!-- Start screen -->
+  <div class="screen-overlay" id="start-screen">
+    <h1>Tri Express</h1>
+    <p class="subtitle">Psychopathologie - Jeu de classement</p>
+    <p>Les items tombent du haut de l'ecran. Glisse-les dans le bon panier avant qu'ils ne depassent la ligne limite !</p>
+    <p style="margin-top:10px;font-size:14px;color:#f88;">3 vies - Ne te trompe pas !</p>
+    <br>
+    <button class="btn" onclick="Game.start()">Jouer</button>
+  </div>
+
+  <!-- Level complete -->
+  <div class="screen-overlay" id="level-complete" style="display:none;">
+    <h2 id="lc-title">Niveau termine !</h2>
+    <div class="level-stats" id="lc-stats"></div>
+    <button class="btn" id="lc-btn">Niveau suivant</button>
+  </div>
+
+  <!-- Game over -->
+  <div class="screen-overlay" id="game-over" style="display:none;">
+    <h2 style="color:#f44;font-size:42px;">Game Over</h2>
+    <div class="stats-grid" id="go-stats"></div>
+    <br>
+    <button class="btn" onclick="Game.start()">Recommencer</button>
+    <button class="btn btn-secondary" onclick="Game.showStart()">Menu</button>
+  </div>
+</div>
+
+<script>
+const LEVELS = [
+  {
+    name: "Trier les Troubles de la Personnalite par Cluster",
+    buckets: ["Cluster A (bizarre)","Cluster B (dramatique)","Cluster C (anxieux)"],
+    items: [
+      {text:"Paranoiaque",answer:0},{text:"Schizoide",answer:0},{text:"Schizotypique",answer:0},
+      {text:"Antisociale",answer:1},{text:"Borderline",answer:1},{text:"Histrionique",answer:1},{text:"Narcissique",answer:1},
+      {text:"Evitante",answer:2},{text:"Dependante",answer:2},{text:"Obsessionnelle-compulsive",answer:2}
+    ],
+    speed:0.4, spawnInterval:3200
+  },
+  {
+    name: "Trier par categorie diagnostique",
+    buckets: ["Troubles anxieux","Troubles de l'humeur","Troubles psychotiques","Troubles dissociatifs"],
+    items: [
+      {text:"TAG",answer:0},{text:"Phobie specifique",answer:0},{text:"Trouble panique",answer:0},{text:"Anxiete sociale",answer:0},
+      {text:"Depression majeure",answer:1},{text:"Trouble bipolaire",answer:1},{text:"Cyclothymie",answer:1},
+      {text:"Schizophrenie",answer:2},{text:"BDA",answer:2},{text:"Trouble schizophreniforme",answer:2},
+      {text:"Amnesie dissociative",answer:3},{text:"TDI",answer:3},{text:"Fugue dissociative",answer:3},{text:"Depersonnalisation",answer:3}
+    ],
+    speed:0.5, spawnInterval:2800
+  },
+  {
+    name: "Symptomes positifs vs negatifs (schizophrenie)",
+    buckets: ["Symptomes positifs","Symptomes negatifs"],
+    items: [
+      {text:"Hallucinations",answer:0},{text:"Idees delirantes",answer:0},{text:"Discours desorganise",answer:0},{text:"Comportement desorganise",answer:0},
+      {text:"Emoussement affectif",answer:1},{text:"Alogie",answer:1},{text:"Avolition",answer:1},{text:"Anhedonie",answer:1},{text:"Retrait social",answer:1},{text:"Alexithymie",answer:1}
+    ],
+    speed:0.55, spawnInterval:2600
+  },
+  {
+    name: "Duree diagnostique",
+    buckets: ["< 1 mois","1-6 mois","\u2265 6 mois"],
+    items: [
+      {text:"BDA",answer:0},{text:"Etat de stress aigu",answer:0},{text:"Attaque panique",answer:0},
+      {text:"Trouble schizophreniforme",answer:1},
+      {text:"Schizophrenie",answer:2},{text:"TAG",answer:2},{text:"Dysthymie",answer:2}
+    ],
+    speed:0.6, spawnInterval:2800
+  },
+  {
+    name: "Mecanismes du delire",
+    buckets: ["Interpretation","Hallucination","Imagination"],
+    items: [
+      {text:"Delire paranoiaque",answer:0},{text:"Erotomanie",answer:0},{text:"Delire de jalousie",answer:0},{text:"Delire de revendication",answer:0},
+      {text:"Psychose hallucinatoire chronique",answer:1},
+      {text:"Paraphrenie",answer:2}
+    ],
+    speed:0.65, spawnInterval:2400
+  }
+];
+
+const ITEM_COLORS = [
+  {bg:"#1a0a3e",border:"#8b5cf6",text:"#c4b5fd"},
+  {bg:"#0a2a3e",border:"#06b6d4",text:"#a5f3fc"},
+  {bg:"#3e0a2a",border:"#ec4899",text:"#f9a8d4"},
+  {bg:"#0a3e1a",border:"#22c55e",text:"#bbf7d0"},
+  {bg:"#3e2a0a",border:"#f59e0b",text:"#fde68a"},
+  {bg:"#2a0a3e",border:"#a855f7",text:"#d8b4fe"},
+  {bg:"#0a3e3e",border:"#14b8a6",text:"#99f6e4"},
+  {bg:"#3e0a0a",border:"#ef4444",text:"#fca5a5"},
+];
+
+const BUCKET_COLORS = ["#8b5cf6","#06b6d4","#ec4899","#22c55e","#f59e0b"];
+
+const Game = {
+  currentLevel: 0,
+  score: 0,
+  lives: 3,
+  combo: 0,
+  maxCombo: 0,
+  totalCorrect: 0,
+  totalWrong: 0,
+  totalMissed: 0,
+  itemsInPlay: [],
+  itemQueue: [],
+  spawnTimer: null,
+  animFrame: null,
+  running: false,
+  levelItemsTotal: 0,
+  levelItemsDone: 0,
+
+  showStart(){
+    this.hideAll();
+    document.getElementById('start-screen').style.display='flex';
+  },
+
+  hideAll(){
+    ['start-screen','level-complete','game-over'].forEach(id=>{
+      document.getElementById(id).style.display='none';
+    });
+  },
+
+  start(){
+    this.currentLevel=0;this.score=0;this.lives=3;this.combo=0;this.maxCombo=0;
+    this.totalCorrect=0;this.totalWrong=0;this.totalMissed=0;
+    this.hideAll();
+    this.updateHUD();
+    this.loadLevel();
+  },
+
+  loadLevel(){
+    this.running=false;
+    cancelAnimationFrame(this.animFrame);
+    clearInterval(this.spawnTimer);
+    this.itemsInPlay=[];
+    this.levelItemsDone=0;
+
+    const lvl=LEVELS[this.currentLevel];
+    // Shuffle items, repeat them to have more to sort (at least double for short levels)
+    let q=[...lvl.items];
+    if(q.length<10){q=q.concat([...lvl.items]);}
+    this.itemQueue=this.shuffle(q);
+    this.levelItemsTotal=this.itemQueue.length;
+
+    document.getElementById('fall-area').innerHTML='';
+    this.buildBuckets(lvl);
+    this.positionDeadline();
+    this.updateHUD();
+    document.getElementById('level-title').textContent=`Niveau ${this.currentLevel+1}: ${lvl.name}`;
+
+    // Short countdown then start
+    this.running=true;
+    this.lastTime=performance.now();
+    this.spawnNext();
+    this.spawnTimer=setInterval(()=>this.spawnNext(), lvl.spawnInterval);
+    this.animFrame=requestAnimationFrame(t=>this.update(t));
+  },
+
+  buildBuckets(lvl){
+    const bar=document.getElementById('buckets-bar');
+    bar.innerHTML='';
+    lvl.buckets.forEach((name,i)=>{
+      const b=document.createElement('div');
+      b.className='bucket';
+      b.textContent=name;
+      b.dataset.index=i;
+      b.style.borderColor=BUCKET_COLORS[i%BUCKET_COLORS.length];
+      b.style.color=BUCKET_COLORS[i%BUCKET_COLORS.length];
+      bar.appendChild(b);
+
+      // Drop events
+      b.addEventListener('dragover',e=>{e.preventDefault();b.classList.add('hover');});
+      b.addEventListener('dragleave',()=>b.classList.remove('hover'));
+      b.addEventListener('drop',e=>{
+        e.preventDefault();b.classList.remove('hover');
+        const id=e.dataTransfer.getData('text/plain');
+        this.dropItem(id,i,b);
+      });
+      // Touch drop handled in touch move/end
+    });
+  },
+
+  positionDeadline(){
+    const dl=document.getElementById('deadline-line');
+    const bucketsH=document.getElementById('buckets-bar').offsetHeight||120;
+    dl.style.bottom=(bucketsH+20)+'px';
+  },
+
+  shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+    return arr;
+  },
+
+  spawnNext(){
+    if(!this.running)return;
+    if(this.itemQueue.length===0){
+      // Wait for remaining items to clear or be sorted
+      clearInterval(this.spawnTimer);
+      return;
+    }
+    const data=this.itemQueue.pop();
+    this.createFallingItem(data);
+  },
+
+  createFallingItem(data){
+    const area=document.getElementById('fall-area');
+    const el=document.createElement('div');
+    el.className='fall-item';
+    el.textContent=data.text;
+    const colorIdx=Math.floor(Math.random()*ITEM_COLORS.length);
+    const c=ITEM_COLORS[colorIdx];
+    el.style.background=c.bg;el.style.borderColor=c.border;el.style.color=c.text;
+    el.style.boxShadow=`0 0 12px ${c.border}44`;
+
+    const id='item_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    el.dataset.id=id;
+    el.dataset.answer=data.answer;
+    el.draggable=true;
+
+    // Random X position
+    const maxX=window.innerWidth-180;
+    const x=40+Math.random()*Math.max(maxX,100);
+    el.style.left=x+'px';
+    el.style.top='-50px';
+    el.style.animation='popIn .3s ease-out';
+
+    // Drag events
+    el.addEventListener('dragstart',e=>{
+      e.dataTransfer.setData('text/plain',id);
+      el.classList.add('dragging');
+      this._dragId=id;
+    });
+    el.addEventListener('dragend',()=>{el.classList.remove('dragging');this._dragId=null;});
+
+    // Touch events
+    el.addEventListener('touchstart',e=>this.touchStart(e,el,id),{passive:false});
+    el.addEventListener('touchmove',e=>this.touchMove(e,el),{passive:false});
+    el.addEventListener('touchend',e=>this.touchEnd(e,el,id),{passive:false});
+
+    area.appendChild(el);
+    this.itemsInPlay.push({el,id,answer:data.answer,y:-50,speed:LEVELS[this.currentLevel].speed});
+  },
+
+  // Touch handling
+  touchStart(e,el,id){
+    e.preventDefault();
+    const t=e.touches[0];
+    el._touchOffX=t.clientX-el.offsetLeft;
+    el._touchOffY=t.clientY-el.offsetTop;
+    el._origLeft=el.offsetLeft;
+    el._origTop=el.offsetTop;
+    el.classList.add('dragging');
+    el.style.zIndex=200;
+    el._dragging=true;
+  },
+  touchMove(e,el){
+    if(!el._dragging)return;
+    e.preventDefault();
+    const t=e.touches[0];
+    el.style.left=(t.clientX-el._touchOffX)+'px';
+    el.style.top=(t.clientY-el._touchOffY-50)+'px'; // offset for HUD
+    // Highlight bucket under finger
+    document.querySelectorAll('.bucket').forEach(b=>b.classList.remove('hover'));
+    const bel=document.elementFromPoint(t.clientX,t.clientY);
+    if(bel&&bel.classList.contains('bucket'))bel.classList.add('hover');
+  },
+  touchEnd(e,el,id){
+    if(!el._dragging)return;
+    el._dragging=false;
+    el.classList.remove('dragging');
+    el.style.zIndex='';
+    document.querySelectorAll('.bucket').forEach(b=>b.classList.remove('hover'));
+    const t=e.changedTouches[0];
+    const bel=document.elementFromPoint(t.clientX,t.clientY);
+    if(bel&&bel.classList.contains('bucket')){
+      this.dropItem(id,parseInt(bel.dataset.index),bel);
+    }
+  },
+
+  dropItem(id,bucketIdx,bucketEl){
+    const idx=this.itemsInPlay.findIndex(i=>i.id===id);
+    if(idx===-1)return;
+    const item=this.itemsInPlay[idx];
+    const correct=item.answer===bucketIdx;
+
+    if(correct){
+      this.score+=10*(1+Math.floor(this.combo/3));
+      this.combo++;
+      if(this.combo>this.maxCombo)this.maxCombo=this.combo;
+      this.totalCorrect++;
+      this.showFloatText('+'+10*(1+Math.floor((this.combo-1)/3)),item.el.offsetLeft,item.el.offsetTop,'#0f0');
+      bucketEl.classList.add('correct');
+      setTimeout(()=>bucketEl.classList.remove('correct'),400);
+      this.spawnParticles(item.el.offsetLeft+40,item.el.offsetTop+20,'#0f0');
+    } else {
+      this.lives--;
+      this.combo=0;
+      this.totalWrong++;
+      this.showFloatText('FAUX!',item.el.offsetLeft,item.el.offsetTop,'#f44');
+      bucketEl.classList.add('wrong');
+      setTimeout(()=>bucketEl.classList.remove('wrong'),400);
+      if(this.lives<=0){this.gameOver();return;}
+    }
+
+    item.el.remove();
+    this.itemsInPlay.splice(idx,1);
+    this.levelItemsDone++;
+    this.updateHUD();
+    this.checkLevelComplete();
+  },
+
+  update(timestamp){
+    if(!this.running)return;
+    const dt=Math.min(timestamp-(this.lastTime||timestamp),50);
+    this.lastTime=timestamp;
+
+    const dl=document.getElementById('deadline-line');
+    const deadlineY=dl.offsetTop-50; // relative to game area top
+
+    let missed=false;
+    for(let i=this.itemsInPlay.length-1;i>=0;i--){
+      const item=this.itemsInPlay[i];
+      if(item.el._dragging)continue; // don't move while being dragged
+      if(item.el.classList.contains('dragging'))continue;
+      item.y+=item.speed*dt*0.06;
+      item.el.style.top=item.y+'px';
+
+      if(item.y>deadlineY){
+        // Missed
+        this.lives--;
+        this.combo=0;
+        this.totalMissed++;
+        this.showFloatText('RATE!',item.el.offsetLeft,item.el.offsetTop,'#f80');
+        item.el.remove();
+        this.itemsInPlay.splice(i,1);
+        this.levelItemsDone++;
+        missed=true;
+        if(this.lives<=0){this.gameOver();return;}
+      }
+    }
+    if(missed)this.updateHUD();
+    this.checkLevelComplete();
+
+    // Update progress
+    const pct=Math.round((this.levelItemsDone/this.levelItemsTotal)*100);
+    document.getElementById('progress-fill').style.width=pct+'%';
+
+    this.animFrame=requestAnimationFrame(t=>this.update(t));
+  },
+
+  checkLevelComplete(){
+    if(this.itemQueue.length===0&&this.itemsInPlay.length===0&&this.running){
+      this.running=false;
+      clearInterval(this.spawnTimer);
+      cancelAnimationFrame(this.animFrame);
+
+      if(this.currentLevel<LEVELS.length-1){
+        this.showLevelComplete();
+      } else {
+        this.showVictory();
+      }
+    }
+  },
+
+  showLevelComplete(){
+    const lc=document.getElementById('level-complete');
+    document.getElementById('lc-title').textContent=`Niveau ${this.currentLevel+1} termine !`;
+    document.getElementById('lc-stats').innerHTML=`Score: <span style="color:#0ff">${this.score}</span> | Combo max: <span style="color:#ff0">${this.maxCombo}</span> | Vies: <span style="color:#f44">${'&#10084;'.repeat(this.lives)}</span>`;
+    const btn=document.getElementById('lc-btn');
+    btn.textContent='Niveau suivant';
+    btn.onclick=()=>{
+      lc.style.display='none';
+      this.currentLevel++;
+      this.loadLevel();
+    };
+    lc.style.display='flex';
+    this.celebrationBurst();
+  },
+
+  showVictory(){
+    const lc=document.getElementById('level-complete');
+    document.getElementById('lc-title').textContent='VICTOIRE !';
+    document.getElementById('lc-title').style.color='#ff0';
+    document.getElementById('lc-stats').innerHTML=`
+      Score final: <span style="color:#0ff;font-size:24px">${this.score}</span><br>
+      Corrects: ${this.totalCorrect} | Erreurs: ${this.totalWrong} | Rates: ${this.totalMissed}<br>
+      Combo max: <span style="color:#ff0">${this.maxCombo}</span>
+    `;
+    const btn=document.getElementById('lc-btn');
+    btn.textContent='Rejouer';
+    btn.onclick=()=>{lc.style.display='none';this.start();};
+    lc.style.display='flex';
+    this.celebrationBurst();
+    this.celebrationBurst();
+  },
+
+  gameOver(){
+    this.running=false;
+    clearInterval(this.spawnTimer);
+    cancelAnimationFrame(this.animFrame);
+    const go=document.getElementById('game-over');
+    document.getElementById('go-stats').innerHTML=`
+      <span class="stat-label">Score</span><span class="stat-value">${this.score}</span>
+      <span class="stat-label">Niveau atteint</span><span class="stat-value">${this.currentLevel+1} / ${LEVELS.length}</span>
+      <span class="stat-label">Corrects</span><span class="stat-value">${this.totalCorrect}</span>
+      <span class="stat-label">Erreurs</span><span class="stat-value">${this.totalWrong}</span>
+      <span class="stat-label">Rates</span><span class="stat-value">${this.totalMissed}</span>
+      <span class="stat-label">Combo max</span><span class="stat-value">${this.maxCombo}</span>
+    `;
+    go.style.display='flex';
+  },
+
+  updateHUD(){
+    document.getElementById('score-val').textContent=this.score;
+    document.getElementById('level-val').textContent=this.currentLevel+1;
+    const ld=document.getElementById('lives-display');
+    ld.innerHTML='<span class="hud-label">Vies:</span>'+'<span>&#10084;</span>'.repeat(Math.max(0,this.lives));
+    const cd=document.getElementById('combo-display');
+    cd.textContent=this.combo>1?`x${this.combo} combo`:'';
+  },
+
+  showFloatText(text,x,y,color){
+    const el=document.createElement('div');
+    el.className='float-text';
+    el.textContent=text;
+    el.style.left=x+'px';el.style.top=(y+50)+'px';el.style.color=color;
+    document.getElementById('game-container').appendChild(el);
+    setTimeout(()=>el.remove(),800);
+  },
+
+  spawnParticles(x,y,color){
+    for(let i=0;i<8;i++){
+      const p=document.createElement('div');
+      p.className='particle';
+      p.style.left=x+'px';p.style.top=(y+50)+'px';
+      p.style.background=color;
+      const angle=Math.random()*Math.PI*2;
+      const dist=30+Math.random()*50;
+      p.style.setProperty('--dx',Math.cos(angle)*dist+'px');
+      p.style.setProperty('--dy',Math.sin(angle)*dist+'px');
+      p.style.animation='none';
+      document.getElementById('game-container').appendChild(p);
+      requestAnimationFrame(()=>{
+        p.style.transition='all .6s ease-out';
+        p.style.transform=`translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px) scale(0)`;
+        p.style.opacity='0';
+      });
+      setTimeout(()=>p.remove(),700);
+    }
+  },
+
+  celebrationBurst(){
+    const colors=['#0ff','#0f0','#ff0','#f0f','#f80','#8b5cf6'];
+    for(let i=0;i<30;i++){
+      setTimeout(()=>{
+        const p=document.createElement('div');
+        p.className='particle';
+        const x=Math.random()*window.innerWidth;
+        const y=Math.random()*window.innerHeight*0.6;
+        p.style.left=x+'px';p.style.top=y+'px';
+        p.style.background=colors[Math.floor(Math.random()*colors.length)];
+        p.style.width=(6+Math.random()*10)+'px';
+        p.style.height=p.style.width;
+        document.getElementById('game-container').appendChild(p);
+        requestAnimationFrame(()=>{
+          p.style.transition='all 1s ease-out';
+          p.style.transform=`translateY(${-40-Math.random()*80}px) scale(0)`;
+          p.style.opacity='0';
+        });
+        setTimeout(()=>p.remove(),1100);
+      },i*40);
+    }
+  }
+};
+
+// Handle window resize
+window.addEventListener('resize',()=>{
+  if(Game.running)Game.positionDeadline();
+});
+
+// Init
+Game.showStart();
+</script>
+</body>
+</html>

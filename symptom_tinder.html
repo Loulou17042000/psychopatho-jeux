@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symptom Tinder - Psychopathologie</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f0f1a;--card:#1a1a2e;--accent:#e94560;--green:#00e676;--red:#ff1744;
+  --text:#eee;--muted:#888;--gold:#ffd700;
+}
+body{
+  font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;user-select:none;-webkit-user-select:none;
+}
+#app{width:100%;max-width:440px;padding:12px;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+
+/* Header */
+.header{text-align:center;margin-bottom:8px;width:100%}
+.disorder-label{
+  font-size:1.35rem;font-weight:700;color:var(--accent);
+  background:rgba(233,69,96,.12);border:1px solid rgba(233,69,96,.3);
+  border-radius:12px;padding:10px 18px;display:inline-block;margin-bottom:6px;
+}
+.round-info{font-size:.85rem;color:var(--muted)}
+
+/* Stats bar */
+.stats{
+  display:flex;justify-content:space-between;width:100%;padding:6px 0;
+  font-size:.9rem;color:var(--muted);
+}
+.streak{color:var(--gold);font-weight:700}
+.combo{color:var(--green);font-size:.8rem}
+
+/* Progress bar */
+.progress-wrap{width:100%;height:5px;background:#222;border-radius:3px;margin:4px 0 10px}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),#ff6b6b);border-radius:3px;transition:width .3s}
+
+/* Card area */
+.card-area{
+  position:relative;width:100%;height:320px;margin:10px 0;
+  display:flex;align-items:center;justify-content:center;
+}
+.card{
+  position:absolute;width:92%;max-width:380px;height:280px;
+  background:var(--card);border-radius:20px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:30px;text-align:center;
+  box-shadow:0 8px 30px rgba(0,0,0,.4);
+  cursor:grab;touch-action:none;
+  transition:box-shadow .2s;
+}
+.card:active{cursor:grabbing}
+.card .symptom-text{font-size:1.6rem;font-weight:600;line-height:1.3}
+.card .hint{font-size:.8rem;color:var(--muted);margin-top:14px}
+.card .swipe-indicator{
+  position:absolute;top:20px;font-size:2.2rem;font-weight:900;
+  opacity:0;transition:opacity .15s;pointer-events:none;
+}
+.card .swipe-indicator.left{left:20px;color:var(--red)}
+.card .swipe-indicator.right{right:20px;color:var(--green)}
+
+/* Feedback flash */
+.flash{
+  position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;
+  opacity:0;transition:opacity .35s;z-index:100;
+}
+.flash.correct{background:radial-gradient(circle,rgba(0,230,118,.2),transparent 70%)}
+.flash.wrong{background:radial-gradient(circle,rgba(255,23,68,.2),transparent 70%)}
+.flash.show{opacity:1}
+
+/* Buttons */
+.btn-row{display:flex;gap:20px;margin-top:6px}
+.btn-swipe{
+  width:68px;height:68px;border-radius:50%;border:3px solid;
+  background:transparent;font-size:1.8rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .15s,background .15s;
+}
+.btn-swipe:hover{transform:scale(1.12)}
+.btn-swipe.no{border-color:var(--red);color:var(--red)}
+.btn-swipe.no:hover{background:rgba(255,23,68,.15)}
+.btn-swipe.yes{border-color:var(--green);color:var(--green)}
+.btn-swipe.yes:hover{background:rgba(0,230,118,.15)}
+
+/* Keyboard hint */
+.kb-hint{font-size:.75rem;color:#555;margin-top:8px}
+
+/* Start / End screens */
+.screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;min-height:80vh;width:100%;
+}
+.screen h1{font-size:2.2rem;margin-bottom:6px}
+.screen .subtitle{color:var(--muted);margin-bottom:30px;font-size:1rem}
+.btn-main{
+  background:var(--accent);color:#fff;border:none;border-radius:14px;
+  padding:16px 48px;font-size:1.15rem;font-weight:700;cursor:pointer;
+  transition:transform .15s,box-shadow .15s;
+}
+.btn-main:hover{transform:scale(1.05);box-shadow:0 4px 20px rgba(233,69,96,.4)}
+
+/* Results */
+.results{width:100%;max-width:440px}
+.results h2{margin:20px 0 10px;font-size:1.3rem}
+.score-big{font-size:3.5rem;font-weight:900;color:var(--green);margin:10px 0}
+.score-big.bad{color:var(--red)}
+.score-big.mid{color:var(--gold)}
+.mistakes-list{width:100%;margin:16px 0}
+.mistake-item{
+  background:var(--card);border-radius:10px;padding:12px 16px;margin:6px 0;
+  font-size:.9rem;display:flex;justify-content:space-between;align-items:center;
+}
+.mistake-item .disorder-tag{
+  font-size:.75rem;background:rgba(233,69,96,.2);color:var(--accent);
+  padding:3px 8px;border-radius:6px;white-space:nowrap;margin-left:10px;
+}
+.mistake-item .wrong-tag{color:var(--red);font-weight:600;font-size:.8rem}
+.mistake-item .right-tag{color:var(--green);font-weight:600;font-size:.8rem}
+
+.hidden{display:none!important}
+
+/* Animations */
+@keyframes flyLeft{
+  to{transform:translateX(-150vw) rotate(-30deg);opacity:0}
+}
+@keyframes flyRight{
+  to{transform:translateX(150vw) rotate(30deg);opacity:0}
+}
+.fly-left{animation:flyLeft .4s ease-in forwards}
+.fly-right{animation:flyRight .4s ease-in forwards}
+
+@keyframes popIn{
+  0%{transform:scale(.7);opacity:0}
+  100%{transform:scale(1);opacity:1}
+}
+.pop-in{animation:popIn .3s ease-out}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- START SCREEN -->
+  <div id="startScreen" class="screen">
+    <h1>Symptom Tinder</h1>
+    <p class="subtitle">Swipe les symptomes vers le bon trouble !</p>
+    <p style="color:var(--muted);font-size:.85rem;max-width:320px;margin-bottom:24px">
+      Un trouble s'affiche en haut. Des symptomes apparaissent un par un.
+      <br><strong style="color:var(--green)">Swipe droite / clic &#10003;</strong> si le symptome appartient au trouble.
+      <br><strong style="color:var(--red)">Swipe gauche / clic &#10007;</strong> si non.
+    </p>
+    <button class="btn-main" onclick="startGame()">Jouer</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="hidden">
+    <div class="header">
+      <div class="disorder-label" id="disorderName"></div>
+      <div class="round-info" id="roundInfo"></div>
+    </div>
+    <div class="stats">
+      <span>Score : <strong id="scoreDisplay">0</strong></span>
+      <span class="streak" id="streakDisplay"></span>
+      <span>Carte <span id="cardNum">1</span>/<span id="cardTotal">7</span></span>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="card-area" id="cardArea">
+      <div class="card" id="card">
+        <div class="swipe-indicator left">&#10007;</div>
+        <div class="swipe-indicator right">&#10003;</div>
+        <div class="symptom-text" id="symptomText"></div>
+        <div class="hint">&#8592; N'appartient pas &nbsp;|&nbsp; Appartient &#8594;</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-swipe no" onclick="answer(false)">&#10007;</button>
+      <button class="btn-swipe yes" onclick="answer(true)">&#10003;</button>
+    </div>
+    <div class="kb-hint">Clavier : &#8592; Non &nbsp;&nbsp; &#8594; Oui</div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="endScreen" class="screen hidden">
+    <h1>Resultats</h1>
+    <div class="score-big" id="finalScore"></div>
+    <p id="finalMsg" style="color:var(--muted);margin-bottom:10px"></p>
+    <div class="results" id="resultsArea"></div>
+    <button class="btn-main" style="margin-top:24px" onclick="startGame()">Rejouer</button>
+  </div>
+</div>
+
+<div class="flash" id="flashCorrect"><div class="flash correct show" style="opacity:0"></div></div>
+<div class="flash correct" id="flashG"></div>
+<div class="flash wrong" id="flashR"></div>
+
+<script>
+// ==================== DATA ====================
+const DATA = [
+  {
+    disorder: "TP Borderline",
+    yes: ["Peur de l'abandon","Relations instables","Automutilations","Image de soi fluctuante","Impulsivite marquee","Coleres intenses","Sentiment chronique de vide","Dissociation transitoire","Idealisation / devalorisation"],
+    no: ["Pensee magique","Absence de remords","Grandiosite","Froideur emotionnelle","Mepris des normes","Suspicion d'infidelite","Rituels compulsifs","Hallucinations auditives","Logorrhee"]
+  },
+  {
+    disorder: "TP Antisociale",
+    yes: ["Manipulation","Impulsivite","Absence de remords","Mepris des normes","Irritabilite et agressivite","Irresponsabilite","Tromperie repetee","Indifference envers autrui"],
+    no: ["Peur du rejet","Perfectionnisme","Recherche d'attention theatrale","Peur de l'abandon","Sentiment de vide","Dissociation","Anhédonie","Obsessions intrusives"]
+  },
+  {
+    disorder: "Schizophrenie",
+    yes: ["Hallucinations","Idees delirantes","Discours desorganise","Symptomes negatifs","Emoussement affectif","Alogie","Avolition","Comportement catatonique","Retrait social"],
+    no: ["Peur intense soudaine","Rituels compulsifs","Peur de l'abandon","Euphorie","Logorrhee","Grandiosite expansive","Compulsions","Automutilations"]
+  },
+  {
+    disorder: "Depression (EDM)",
+    yes: ["Anhedonie","Tristesse constante","Insomnie ou hypersomnie","Idees suicidaires","Perte d'appetit","Fatigue quotidienne","Culpabilite excessive","Ralentissement psychomoteur","Difficultes de concentration"],
+    no: ["Tachypsychie","Hypersexualite","Logorrhee","Grandiosite","Euphorie","Insomnie sans fatigue","Fuite des idees","Hallucinations auditives"]
+  },
+  {
+    disorder: "Episode maniaque",
+    yes: ["Euphorie","Tachypsychie","Logorrhee","Insomnie sans fatigue","Megalomanie","Fuite des idees","Augmentation activite","Desinhibition","Hypersexualite"],
+    no: ["Bradypsychie","Anhedonie","Ralentissement psychomoteur","Tristesse constante","Fatigue quotidienne","Culpabilite excessive","Hypersomnie","Retrait social"]
+  },
+  {
+    disorder: "TAG (Trouble anxieux generalise)",
+    yes: ["Soucis excessifs","Tension musculaire","Irritabilite","Troubles du sommeil","Fatigue","Difficulte de concentration","Agitation","Anxiete flottante"],
+    no: ["Flashbacks","Compulsions","Hallucinations","Palpitations soudaines","Idees delirantes","Euphorie","Dissociation","Grandiosite"]
+  },
+  {
+    disorder: "TOC",
+    yes: ["Obsessions intrusives","Compulsions ritualisees","Ego-dystonique","Verification repetee","Lavage excessif","Pensees indesirables","Besoin de symetrie","Detresse si rituel empeche"],
+    no: ["Peur sociale","Amnesie dissociative","Hallucinations","Flashbacks","Grandiosite","Absence de remords","Euphorie","Mepris des normes"]
+  },
+  {
+    disorder: "ESPT",
+    yes: ["Flashbacks","Evitement","Hypervigilance","Cauchemars","Reactivite au stimulus","Amnesie de l'evenement","Detachement emotionnel","Sursaut exagere"],
+    no: ["Pensee magique","Grandiosite","Compulsions ritualisees","Logorrhee","Euphorie","Megalomanie","Rituels de lavage","Absence de remords"]
+  },
+  {
+    disorder: "Trouble panique",
+    yes: ["Palpitations","Sensation d'etouffement","Peur de mourir","Debut soudain","Tremblements","Douleur thoracique","Derealisation","Peur de perdre le controle"],
+    no: ["Duree 6+ mois continue","Rituels","Hallucinations","Idees delirantes","Flashbacks","Grandiosite","Anhedonie","Emoussement affectif"]
+  },
+  {
+    disorder: "TP Paranoiaque",
+    yes: ["Mefiance","Rancune","Suspicion infidelite","Interpretation hostile","Reticence a se confier","Perception d'attaques","Doutes sur la loyaute","Rigidite"],
+    no: ["Hallucinations","Froideur emotionnelle","Excentricite","Pensee magique","Automutilations","Impulsivite marquee","Compulsions","Euphorie"]
+  },
+  {
+    disorder: "TP Narcissique",
+    yes: ["Grandiosite","Besoin d'admiration","Manque d'empathie","Sentiment d'etre special","Fantasmes de succes illimite","Exploitation d'autrui","Envie","Arrogance"],
+    no: ["Peur de l'abandon","Automutilations","Hallucinations","Obsessions intrusives","Flashbacks","Cauchemars","Compulsions","Hypervigilance"]
+  },
+  {
+    disorder: "TP Histrionique",
+    yes: ["Recherche d'attention theatrale","Seduction inappropriee","Emotions superficielles","Suggestibilite","Dramatisation","Langage impressionniste","Inconfort si pas centre d'attention","Expression emotionnelle exageree"],
+    no: ["Absence de remords","Mepris des normes","Idees delirantes","Mefiance","Rancune","Compulsions","Hallucinations","Retrait social"]
+  },
+  {
+    disorder: "TP Evitante",
+    yes: ["Peur du rejet","Inhibition sociale","Sentiment d'inferiorite","Evitement des activites sociales","Reticence relationnelle","Perception d'inadequation","Crainte de la critique","Timidite extreme"],
+    no: ["Grandiosite","Manipulation","Absence de remords","Recherche d'attention","Impulsivite","Logorrhee","Idees delirantes","Euphorie"]
+  },
+  {
+    disorder: "TP Schizotypique",
+    yes: ["Pensee magique","Experiences perceptives inhabituelles","Ideation de reference","Croyances bizarres","Comportement excentrique","Mecanisme paranoide","Discours vague","Affect inapproprie"],
+    no: ["Peur de l'abandon","Automutilations","Absence de remords","Grandiosite","Compulsions","Peur de mourir soudaine","Anhedonie severe","Logorrhee"]
+  },
+  {
+    disorder: "Anorexie mentale",
+    yes: ["Restriction alimentaire","Peur de grossir","Distorsion image corporelle","IMC bas","Amenorrhee","Hyperactivite physique","Deni de maigreur","Preoccupation alimentaire"],
+    no: ["Hallucinations","Idees delirantes","Flashbacks","Grandiosite","Euphorie","Absence de remords","Logorrhee","Compulsions ritualisees"]
+  }
+];
+
+// ==================== GAME STATE ====================
+let rounds=[], currentRound=0, currentCard=0, cards=[];
+let score=0, total=0, streak=0, bestStreak=0, mistakes=[];
+let dragging=false, startX=0, currentX=0, cardEl, locked=false;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*i+1|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function buildRounds(){
+  let pool=shuffle([...DATA]);
+  // pick 10 rounds
+  rounds=pool.slice(0,10);
+  if(rounds.length<10){
+    // duplicate if needed
+    while(rounds.length<10) rounds.push(pool[rounds.length%pool.length]);
+  }
+}
+
+function buildCards(round){
+  // pick 3-4 yes and 3-4 no for ~7 cards
+  let yPool=shuffle([...round.yes]);
+  let nPool=shuffle([...round.no]);
+  let yCount=Math.min(4,yPool.length);
+  let nCount=Math.min(4,nPool.length);
+  // ensure at least 3 each
+  if(yCount<3)yCount=yPool.length;
+  if(nCount<3)nCount=nPool.length;
+  let c=[];
+  for(let i=0;i<yCount;i++) c.push({text:yPool[i],belongs:true});
+  for(let i=0;i<nCount;i++) c.push({text:nPool[i],belongs:false});
+  return shuffle(c);
+}
+
+// ==================== SCREENS ====================
+function showScreen(id){
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('endScreen').classList.add('hidden');
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function startGame(){
+  score=0;total=0;streak=0;bestStreak=0;mistakes=[];
+  buildRounds();
+  currentRound=0;
+  showScreen('gameScreen');
+  startRound();
+}
+
+function startRound(){
+  let r=rounds[currentRound];
+  cards=buildCards(r);
+  currentCard=0;
+  document.getElementById('disorderName').textContent=r.disorder;
+  document.getElementById('roundInfo').textContent='Manche '+(currentRound+1)+' / '+rounds.length;
+  document.getElementById('cardTotal').textContent=cards.length;
+  updateUI();
+  showCard();
+}
+
+function updateUI(){
+  document.getElementById('scoreDisplay').textContent=score;
+  document.getElementById('streakDisplay').textContent=streak>1?streak+'x combo':'';
+  document.getElementById('cardNum').textContent=Math.min(currentCard+1,cards.length);
+  let pct=0;
+  // overall progress
+  let totalCards=rounds.reduce((s,r,i)=>{
+    if(i<currentRound) return s+(buildCardsCount(r));
+    if(i===currentRound) return s+currentCard;
+    return s;
+  },0);
+  let allCards=rounds.reduce((s,r)=>s+buildCardsCount(r),0);
+  document.getElementById('progressBar').style.width=(totalCards/allCards*100)+'%';
+}
+function buildCardsCount(r){return Math.min(4,r.yes.length)+Math.min(4,r.no.length)}
+
+function showCard(){
+  if(currentCard>=cards.length){
+    currentRound++;
+    if(currentRound>=rounds.length){endGame();return}
+    startRound();
+    return;
+  }
+  cardEl=document.getElementById('card');
+  cardEl.className='card pop-in';
+  cardEl.style.transform='';
+  document.getElementById('symptomText').textContent=cards[currentCard].text;
+  updateUI();
+  locked=false;
+}
+
+// ==================== ANSWER LOGIC ====================
+function answer(swipedYes){
+  if(locked)return;
+  locked=true;
+  let c=cards[currentCard];
+  let correct=(swipedYes===c.belongs);
+  total++;
+  if(correct){
+    score+=10*(1+Math.floor(streak/3));
+    streak++;
+    if(streak>bestStreak)bestStreak=streak;
+    flash('correct');
+  } else {
+    streak=0;
+    flash('wrong');
+    mistakes.push({
+      symptom:c.text,
+      disorder:rounds[currentRound].disorder,
+      belongs:c.belongs,
+      playerSaid:swipedYes
+    });
+  }
+  // animate card
+  cardEl.classList.add(swipedYes?'fly-right':'fly-left');
+  setTimeout(()=>{
+    currentCard++;
+    showCard();
+  },350);
+}
+
+function flash(type){
+  let el=type==='correct'?document.getElementById('flashG'):document.getElementById('flashR');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),350);
+}
+
+// ==================== DRAG/SWIPE ====================
+function initDrag(){
+  const area=document.getElementById('cardArea');
+  // pointer events
+  area.addEventListener('pointerdown',onDown);
+  area.addEventListener('pointermove',onMove);
+  area.addEventListener('pointerup',onUp);
+  area.addEventListener('pointercancel',onUp);
+}
+
+function onDown(e){
+  if(locked)return;
+  cardEl=document.getElementById('card');
+  dragging=true;startX=e.clientX;currentX=0;
+  cardEl.style.transition='none';
+  e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId);
+}
+function onMove(e){
+  if(!dragging)return;
+  currentX=e.clientX-startX;
+  let rot=currentX*0.08;
+  cardEl.style.transform='translateX('+currentX+'px) rotate('+rot+'deg)';
+  // show indicators
+  let li=cardEl.querySelector('.swipe-indicator.left');
+  let ri=cardEl.querySelector('.swipe-indicator.right');
+  li.style.opacity=currentX<-30?Math.min(1,(-currentX-30)/60):'0';
+  ri.style.opacity=currentX>30?Math.min(1,(currentX-30)/60):'0';
+}
+function onUp(e){
+  if(!dragging)return;
+  dragging=false;
+  cardEl.style.transition='transform .25s';
+  let li=cardEl.querySelector('.swipe-indicator.left');
+  let ri=cardEl.querySelector('.swipe-indicator.right');
+  li.style.opacity='0';ri.style.opacity='0';
+  if(Math.abs(currentX)>80){
+    answer(currentX>0);
+  } else {
+    cardEl.style.transform='';
+  }
+}
+
+// ==================== KEYBOARD ====================
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('gameScreen').classList.contains('hidden'))return;
+  if(e.key==='ArrowRight')answer(true);
+  if(e.key==='ArrowLeft')answer(false);
+});
+
+// ==================== END GAME ====================
+function endGame(){
+  showScreen('endScreen');
+  let pct=total?Math.round((total-mistakes.length)/total*100):0;
+  let el=document.getElementById('finalScore');
+  el.textContent=pct+'%';
+  el.className='score-big'+(pct>=80?'':pct>=50?' mid':' bad');
+
+  let msg='';
+  if(pct===100) msg='Parfait ! Tu maitrises la psychopatho !';
+  else if(pct>=85) msg='Excellent ! Quelques details a revoir.';
+  else if(pct>=70) msg='Bien joue ! Continue de reviser.';
+  else if(pct>=50) msg='Pas mal, mais il y a du travail !';
+  else msg='Il faut reviser davantage !';
+  document.getElementById('finalMsg').innerHTML=msg+'<br><span style="font-size:.85rem;color:var(--muted)">Score : '+score+' pts &bull; Meilleur combo : '+bestStreak+'x &bull; '+total+' cartes</span>';
+
+  let area=document.getElementById('resultsArea');
+  if(mistakes.length===0){
+    area.innerHTML='<p style="color:var(--green);text-align:center;margin:20px 0">Aucune erreur !</p>';
+  } else {
+    let html='<h2>Erreurs ('+mistakes.length+')</h2>';
+    for(let m of mistakes){
+      let yours=m.playerSaid?'Tu as dit OUI':'Tu as dit NON';
+      let reality=m.belongs?'Appartient bien au trouble':'N\'appartient PAS au trouble';
+      html+='<div class="mistake-item"><div><strong>'+m.symptom+'</strong><br>'
+        +'<span class="wrong-tag">'+yours+'</span> &rarr; <span class="right-tag">'+reality+'</span>'
+        +'</div><span class="disorder-tag">'+m.disorder+'</span></div>';
+    }
+    area.innerHTML=html;
+  }
+}
+
+// ==================== INIT ====================
+initDrag();
+</script>
+</body>
+</html>

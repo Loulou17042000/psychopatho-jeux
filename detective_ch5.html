@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Détective — Chapitre 5</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Special+Elite&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f1a;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .glow { text-shadow: 0 0 20px rgba(234,88,12,0.5), 0 0 40px rgba(234,88,12,0.2); }
+
+  header {
+    text-align: center;
+    padding: 28px 20px 8px;
+  }
+  header h1 { font-size: 2.2rem; font-weight: 800; color: #ea580c; letter-spacing: -1px; }
+  header h2 { font-size: 1rem; font-weight: 400; color: #64748b; margin-top: 4px; }
+
+  /* Stats */
+  .stats-bar {
+    display: flex; justify-content: center; gap: 24px; padding: 14px 20px; flex-wrap: wrap;
+  }
+  .stat {
+    background: rgba(234,88,12,0.08);
+    border: 1px solid rgba(234,88,12,0.2);
+    border-radius: 12px;
+    padding: 10px 22px;
+    text-align: center;
+    min-width: 110px;
+  }
+  .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #64748b; }
+  .stat-value { font-size: 1.4rem; font-weight: 700; color: #ea580c; margin-top: 2px; }
+
+  /* Dossier */
+  .dossier-container {
+    max-width: 700px;
+    margin: 16px auto 30px;
+    padding: 0 20px;
+  }
+  .dossier {
+    background: linear-gradient(145deg, #1e1b2e, #1a1830);
+    border: 2px solid rgba(234,88,12,0.2);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  .dossier-header {
+    background: linear-gradient(135deg, rgba(234,88,12,0.15), rgba(234,88,12,0.05));
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid rgba(234,88,12,0.15);
+  }
+  .dossier-icon {
+    width: 52px; height: 52px;
+    background: rgba(234,88,12,0.15);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+  }
+  .dossier-title { font-size: 1.1rem; font-weight: 700; color: #ea580c; }
+  .dossier-subtitle { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+
+  .dossier-body { padding: 24px 28px; }
+
+  /* Clue cards */
+  .clues-list { display: flex; flex-direction: column; gap: 12px; }
+  .clue-card {
+    background: rgba(15,15,26,0.6);
+    border: 1px solid rgba(234,88,12,0.12);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    animation: slideIn 0.4s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+  .clue-num {
+    background: rgba(234,88,12,0.15);
+    color: #ea580c;
+    min-width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .clue-text {
+    font-family: 'Special Elite', cursive;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #cbd5e1;
+  }
+
+  /* Points badge */
+  .points-badge {
+    display: inline-block;
+    background: rgba(234,88,12,0.15);
+    border: 1px solid rgba(234,88,12,0.3);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ea580c;
+    margin-bottom: 16px;
+  }
+
+  /* Guess area */
+  .guess-area {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(234,88,12,0.1);
+  }
+  .guess-label { font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px; }
+  .guess-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+  }
+  .guess-btn {
+    background: rgba(30,30,50,0.8);
+    border: 1.5px solid rgba(100,116,139,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+  }
+  .guess-btn:hover {
+    border-color: #ea580c;
+    background: rgba(234,88,12,0.08);
+    transform: translateY(-1px);
+  }
+  .guess-btn.correct {
+    border-color: #10b981;
+    background: rgba(16,185,129,0.15);
+    color: #10b981;
+    animation: pulse 0.5s ease;
+  }
+  .guess-btn.wrong {
+    border-color: #ef4444;
+    background: rgba(239,68,68,0.1);
+    color: #ef4444;
+    animation: shake 0.4s ease;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 13px 28px; border-radius: 12px; border: none;
+    font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: all 0.25s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #ea580c, #f97316);
+    color: #0f0f1a;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(234,88,12,0.4); }
+  .btn-secondary {
+    background: rgba(234,88,12,0.1);
+    border: 1px solid rgba(234,88,12,0.3);
+    color: #ea580c;
+  }
+  .btn-secondary:hover { background: rgba(234,88,12,0.2); }
+
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; justify-content: center; }
+
+  /* Fiche */
+  .fiche {
+    display: none;
+    background: rgba(234,88,12,0.06);
+    border: 1px solid rgba(234,88,12,0.2);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-top: 18px;
+    animation: fadeIn 0.5s ease;
+  }
+  .fiche.active { display: block; }
+  .fiche h4 { color: #ea580c; font-size: 1.1rem; margin-bottom: 10px; }
+  .fiche-row { display: flex; gap: 8px; margin-bottom: 6px; font-size: 0.9rem; }
+  .fiche-label { color: #64748b; min-width: 100px; }
+  .fiche-value { color: #cbd5e1; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Screens */
+  .screen { display: none; text-align: center; padding: 50px 20px; }
+  .screen.active { display: block; }
+  .screen p { color: #94a3b8; max-width: 500px; margin: 8px auto; line-height: 1.6; }
+
+  .final-score { font-size: 3rem; font-weight: 800; color: #ea580c; margin: 16px 0 6px; }
+  .rank { font-size: 1.3rem; font-weight: 700; color: #f59e0b; margin-bottom: 8px; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .guess-grid { grid-template-columns: 1fr; }
+    header h1 { font-size: 1.6rem; }
+    .dossier-body { padding: 18px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Start -->
+<div class="screen active" id="startScreen">
+  <header>
+    <h1 class="glow">🔍 Le Détective</h1>
+    <h2>Chapitre 5 : Les Troubles de la Personnalité</h2>
+  </header>
+  <div style="margin-top:28px;">
+    <p>Vous êtes un détective clinicien. Des indices progressifs vous sont révélés un par un. Identifiez le trouble de la personnalité le plus tôt possible pour marquer un maximum de points !</p>
+    <p style="color:#ea580c; font-weight:600;">10 dossiers par session · 6 indices par dossier · 5 pts max par dossier</p>
+    <br>
+    <button class="btn btn-primary" onclick="startGame()">Ouvrir les dossiers</button>
+  </div>
+</div>
+
+<!-- Game -->
+<div class="screen" id="gameScreen">
+  <header>
+    <h1 class="glow">🔍 Le Détective</h1>
+    <h2>Chapitre 5 : Les Troubles de la Personnalité</h2>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-label">Dossier</div><div class="stat-value" id="caseNum">1/10</div></div>
+    <div class="stat"><div class="stat-label">Score</div><div class="stat-value" id="scoreVal">0</div></div>
+    <div class="stat"><div class="stat-label">Max possible</div><div class="stat-value" id="maxPts">50</div></div>
+  </div>
+
+  <div class="dossier-container">
+    <div class="dossier">
+      <div class="dossier-header">
+        <div class="dossier-icon">📂</div>
+        <div>
+          <div class="dossier-title" id="dossierTitle">Dossier #1</div>
+          <div class="dossier-subtitle" id="dossierSub">Identifiez le trouble de la personnalité</div>
+        </div>
+      </div>
+      <div class="dossier-body">
+        <div class="points-badge" id="pointsBadge">🏆 5 points possibles</div>
+        <div class="clues-list" id="cluesList"></div>
+
+        <div class="guess-area" id="guessArea">
+          <div class="guess-label">Votre diagnostic :</div>
+          <div class="guess-grid" id="guessGrid"></div>
+        </div>
+
+        <div class="actions" id="actionsArea">
+          <button class="btn btn-secondary" id="nextClueBtn" onclick="revealClue()">Indice suivant 🔎</button>
+        </div>
+
+        <div class="fiche" id="ficheArea"></div>
+
+        <div class="actions" id="nextCaseArea" style="display:none;">
+          <button class="btn btn-primary" onclick="nextCase()">Dossier suivant →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- End -->
+<div class="screen" id="endScreen">
+  <header>
+    <h1 class="glow">🔍 Le Détective</h1>
+    <h2>Résultats de l'enquête</h2>
+  </header>
+  <div style="margin-top:20px;">
+    <div class="final-score" id="finalScore">0 / 50</div>
+    <div class="rank" id="rankText"></div>
+    <p id="finalDetails"></p>
+    <br>
+    <button class="btn btn-primary" onclick="restartGame()">Nouvelle enquête</button>
+  </div>
+</div>
+
+<script>
+// ===== DISORDERS & CASE BANK =====
+const disorders = [
+  "TP Paranoïaque",
+  "TP Schizoïde",
+  "TP Schizotypique",
+  "TP Narcissique",
+  "TP Antisociale",
+  "TP Borderline",
+  "TP Histrionique",
+  "TP Évitante",
+  "TP Dépendante",
+  "TP Obsessionnelle-compulsive"
+];
+
+const disorderInfo = {
+  "TP Paranoïaque": { cluster: "A", prevalence: "0,4 à 3,3%", ratio: "2H/1F", criteres: "Au moins 4/7 critères", desc: "Méfiance, suspicion envahissante envers les autres." },
+  "TP Schizoïde": { cluster: "A", prevalence: "1-5%", ratio: "Plus fréquent chez les hommes", criteres: "Au moins 4/7 critères", desc: "Détachement des relations sociales, restriction des affects." },
+  "TP Schizotypique": { cluster: "A", prevalence: "3%", ratio: "Prédominance masculine", criteres: "Au moins 5/9 critères", desc: "Déficit social, distorsions cognitives, excentricités." },
+  "TP Narcissique": { cluster: "B", prevalence: "0,5-1%", ratio: "50-75% d'hommes", criteres: "Au moins 5/9 critères", desc: "Grandiosité, besoin d'admiration, manque d'empathie." },
+  "TP Antisociale": { cluster: "B", prevalence: "2-5%", ratio: "Prédominance masculine", criteres: "Au moins 3/7 critères + TC avant 15 ans", desc: "Mépris des droits d'autrui, impulsivité, absence de remords." },
+  "TP Borderline": { cluster: "B", prevalence: "2% (gén.), 10% (consult.), 20% (hosp.)", ratio: "Majorité de femmes", criteres: "Au moins 5/9 critères", desc: "Instabilité des relations, de l'image de soi, des affects, impulsivité." },
+  "TP Histrionique": { cluster: "B", prevalence: "1,3-3%", ratio: "Surtout des femmes", criteres: "Au moins 5/8 critères", desc: "Quête d'attention, émotivité excessive, théâtralisme." },
+  "TP Évitante": { cluster: "C", prevalence: "1%", ratio: "Mixte", criteres: "Au moins 4/7 critères", desc: "Inhibition sociale, sentiment d'incompétence, hypersensibilité au jugement." },
+  "TP Dépendante": { cluster: "C", prevalence: "~1%", ratio: "Majorité de femmes", criteres: "Au moins 5/8 critères", desc: "Besoin excessif d'être pris en charge, soumission, peur de la séparation." },
+  "TP Obsessionnelle-compulsive": { cluster: "C", prevalence: "1% (gén.), 3-10% (psy.)", ratio: "2H/1F", criteres: "Au moins 4/8 critères", desc: "Perfectionnisme, rigidité, contrôle, ordre." }
+};
+
+const casesBank = [
+  // TP Paranoïaque
+  { answer: "TP Paranoïaque", clues: [
+    "Le patient est un homme de 39 ans, marié.",
+    "Il vérifie régulièrement le téléphone de sa femme.",
+    "Il interprète les comportements neutres de ses proches comme hostiles.",
+    "Un ami ne l'a pas salué : il en a déduit que c'était un ennemi.",
+    "Il est convaincu que sa femme le trompera un jour.",
+    "DSM-5 : au moins 4/7 critères, dont méfiance, rancune, suspicion d'infidélité."
+  ]},
+  { answer: "TP Paranoïaque", clues: [
+    "Cette personne a une très bonne adaptation professionnelle.",
+    "Elle a tendance à raisonner de façon logique mais à partir de postulats faux.",
+    "Son entourage la trouve orgueilleuse et autoritaire.",
+    "Elle se sent souvent exploitée ou trompée par les autres.",
+    "Elle est hypervigilante et utilise une 'analogie des œillères'.",
+    "4 traits centraux : surestimation de soi, méfiance, fausseté du jugement, inadaptation sociale."
+  ]},
+  { answer: "TP Paranoïaque", clues: [
+    "Ce patient a développé des difficultés relationnelles dès l'enfance.",
+    "Il a vécu beaucoup de solitude et d'anxiété sociale en grandissant.",
+    "Il ne confie jamais d'informations personnelles à ses collègues.",
+    "Il garde rancune pendant des années.",
+    "Il contre-attaque rapidement quand il se sent attaqué.",
+    "Prévalence : 0,4 à 3,3%. Ratio H/F : 2/1. Cluster A."
+  ]},
+  // TP Schizoïde
+  { answer: "TP Schizoïde", clues: [
+    "Le patient est un homme de 29 ans, célibataire.",
+    "Il vit encore chez ses parents et n'a pas d'amis proches.",
+    "Il passe la plupart de son temps dans des activités solitaires.",
+    "Quand le chien de la famille est mort, sa réaction a été : 'c'est la vie'.",
+    "Il n'a aucun intérêt pour les relations amoureuses ou sexuelles.",
+    "Terme de Bleuler. DSM-5 : au moins 4/7. Froideur affective, indifférence."
+  ]},
+  { answer: "TP Schizoïde", clues: [
+    "Cette personne est décrite comme un 'observateur' du monde.",
+    "Elle ne cherche pas la compagnie des autres et préfère la solitude.",
+    "Elle montre peu d'émotions, que ce soit de la joie ou de la tristesse.",
+    "Elle est indifférente aux éloges comme aux critiques.",
+    "Elle pourrait être confondue avec un TSA (Asperger).",
+    "Prévalence : 1-5%. Plus fréquent chez les hommes. Peut évoluer vers la schizophrénie."
+  ]},
+  { answer: "TP Schizoïde", clues: [
+    "Ce patient a des parents décrits comme froids et négligents.",
+    "Il a très peu de plaisirs dans la vie.",
+    "Il n'a jamais eu de relation amoureuse et ça ne le dérange pas.",
+    "En entretien, il répond par des phrases courtes et sans émotion.",
+    "Il investit sa vie intérieure au détriment de sa vie extérieure.",
+    "Diagnostic différentiel : schizophrénie, substances, TP schizotypique, TP évitante."
+  ]},
+  // TP Schizotypique
+  { answer: "TP Schizotypique", clues: [
+    "Le patient est un homme de 55 ans, SDF.",
+    "Il vit de la chiromancie et croit au paranormal.",
+    "Il affirme qu'un 'esprit a déjà habité en lui'.",
+    "Son langage est parfois bizarre et difficile à suivre.",
+    "Il n'a jamais été hospitalisé malgré ses croyances inhabituelles.",
+    "Schizotype = phénotype schizophrène. DSM-5 : au moins 5/9. Continuum avec la SCZ."
+  ]},
+  { answer: "TP Schizotypique", clues: [
+    "Cette personne a des idées de référence fréquentes.",
+    "Elle pratique la pensée magique et croit aux superstitions.",
+    "Son entourage la trouve excentrique et bizarre.",
+    "Elle vit dans un isolement social presque total.",
+    "Ses perceptions sont inhabituelles (sensations corporelles étranges).",
+    "Prévalence : 3%. Prédominance masculine. Cluster A."
+  ]},
+  { answer: "TP Schizotypique", clues: [
+    "Ce patient a une pauvreté des affects marquée.",
+    "Il s'exprime avec méfiance et suspicion.",
+    "Il a des croyances que les autres trouvent bizarres.",
+    "Il se situe sur un continuum avec une maladie mentale grave.",
+    "Il présente un déficit social et des distorsions cognitives.",
+    "À ne pas confondre avec la personnalité schizoïde (qui n'a pas de distorsions cognitives)."
+  ]},
+  // TP Narcissique
+  { answer: "TP Narcissique", clues: [
+    "Le patient est un homme de 49 ans, directeur d'équipe.",
+    "Il méprise ouvertement ses collègues.",
+    "Il parle souvent de ses connaissances en art comme si c'était exceptionnel.",
+    "Il est séducteur mais devient agacé si on lui résiste.",
+    "Il manque cruellement d'empathie envers les autres.",
+    "DSM-5 : au moins 5/9. Sens grandiose, besoin d'admiration, exploite l'autre."
+  ]},
+  { answer: "TP Narcissique", clues: [
+    "Cette personne se croit spéciale et unique.",
+    "Elle a des fantaisies de succès illimité et de pouvoir.",
+    "Elle s'attend à un traitement de faveur de la part de tous.",
+    "Elle envie les autres ou croit que les autres l'envient.",
+    "Elle est souvent décrite comme arrogante et hautaine.",
+    "Prévalence : 0,5-1%. 50-75% d'hommes. Le concept de 'pervers narcissique' N'EXISTE PAS dans les classifications."
+  ]},
+  { answer: "TP Narcissique", clues: [
+    "Ce patient croit que tout lui est dû.",
+    "Il exploite ses relations interpersonnelles sans remords.",
+    "Il a un sentiment de grandiosité permanent.",
+    "Il a besoin constant d'être admiré par son entourage.",
+    "Ses sentiments de grandeur masquent une estime de soi fragile.",
+    "Cluster B. Égocentrisme, besoin d'admiration, manque d'empathie."
+  ]},
+  // TP Antisociale
+  { answer: "TP Antisociale", clues: [
+    "Le patient a eu des problèmes de comportement avant l'âge de 15 ans.",
+    "Il ment fréquemment et manipule son entourage.",
+    "Il est impulsif et n'arrive pas à planifier à l'avance.",
+    "Il a été impliqué dans plusieurs bagarres.",
+    "Il ne montre aucun remords pour ses actes.",
+    "DSM-5 : au moins 3/7. Doit avoir 18 ans ET trouble des conduites avant 15 ans."
+  ]},
+  { answer: "TP Antisociale", clues: [
+    "Cette personne a une composante héréditaire dans son trouble.",
+    "Elle méprise la sécurité d'elle-même et des autres.",
+    "Elle est irresponsable dans ses obligations professionnelles et financières.",
+    "La triade MacDonald est un facteur prédictif incertain de ce trouble.",
+    "En prison, 50-80% ont ce trouble mais seulement 5-10% sont des psychopathes.",
+    "Prévalence : 2-5%. Prédominance masculine. Triade noire : narcissisme + psychopathie + machiavélisme."
+  ]},
+  { answer: "TP Antisociale", clues: [
+    "Ce patient ne respecte pas les normes sociales et légales.",
+    "Il trompe les autres par plaisir ou pour son profit personnel.",
+    "Il est agressif et s'énerve facilement.",
+    "Il avait un trouble des conduites dans l'enfance (colère, opposition, cruauté).",
+    "70% des alcooliques en prison ont ce trouble.",
+    "Triade MacDonald : énurésie, cruauté envers les animaux, pyromanie. Hare (PCL-R)."
+  ]},
+  // TP Borderline
+  { answer: "TP Borderline", clues: [
+    "La patiente est une femme de 20 ans.",
+    "Elle a fait une tentative de suicide après une dispute avec son copain de 3 mois.",
+    "Elle avait prévenu qu'elle se ferait du mal s'il la quittait.",
+    "Elle fait des achats inconsidérés et se scarifie quand elle se sent seule.",
+    "Elle oscille entre idéalisation et dévalorisation dans ses relations.",
+    "DSM-5 : au moins 5/9. 'À la lisière' entre névrose et psychose. Risque 10x chez apparentés."
+  ]},
+  { answer: "TP Borderline", clues: [
+    "Ce patient vit un vide intérieur chronique.",
+    "Il a des efforts frénétiques pour éviter l'abandon.",
+    "Ses relations sont intenses mais instables.",
+    "Il a une perturbation de l'identité (image de soi instable).",
+    "Il alterne entre des colères intenses et de l'idéation persécutoire.",
+    "Prévalence : 2% (générale), 10% (consultation), 20% (hospitalisés). 40-90% rapportent des maltraitances."
+  ]},
+  { answer: "TP Borderline", clues: [
+    "Ce patient a des automutilations récurrentes.",
+    "Il a une instabilité affective marquée avec des changements rapides.",
+    "Il passe de l'idéalisation à la dévalorisation de ses proches.",
+    "Son impulsivité le distingue du trouble narcissique.",
+    "Ses peurs abandonniques sont spécifiques à ce trouble.",
+    "Kernberg (1975) : organisation limite avec clivage. Bergeret (1975) : rapprochement avec la dépression."
+  ]},
+  // TP Histrionique
+  { answer: "TP Histrionique", clues: [
+    "La patiente est une femme de 30 ans.",
+    "Elle veut toujours être le centre de l'attention.",
+    "Elle est provocante et utilise son apparence physique pour attirer l'attention.",
+    "Elle pense que son psy et elle sont 'très bons amis' après 3 mois.",
+    "Son expression émotionnelle est superficielle et changeante.",
+    "Histrion = mauvais acteur. Anciennement 'névrose hystérique'. DSM-5 : au moins 5/8."
+  ]},
+  { answer: "TP Histrionique", clues: [
+    "Cette personne se sent mal à l'aise quand elle n'est pas au centre de l'attention.",
+    "Elle utilise la séduction de manière inappropriée.",
+    "Son langage est subjectif et manque de détails.",
+    "Elle est théâtrale et exagère l'expression de ses émotions.",
+    "Elle est très suggestible et influençable.",
+    "Prévalence : 1,3-3%. Surtout des femmes. Érotisation des relations."
+  ]},
+  { answer: "TP Histrionique", clues: [
+    "Ce patient cherche activement l'attention et la validation.",
+    "Il considère ses relations comme plus intimes qu'elles ne le sont.",
+    "Son expression émotionnelle change rapidement.",
+    "Il utilise son corps comme outil de communication.",
+    "Il fait preuve de théâtralisme dans ses interactions quotidiennes.",
+    "Cluster B. Recherche active de l'attention. Expression émotionnelle superficielle."
+  ]},
+  // TP Évitante
+  { answer: "TP Évitante", clues: [
+    "La patiente est une femme de 27 ans, très bonne élève.",
+    "Malgré son diplôme, elle n'ose pas demander une augmentation.",
+    "Elle ne s'oppose jamais aux gens de peur d'être rejetée.",
+    "Elle évite les situations sociales par crainte de critique.",
+    "Elle se perçoit comme incompétente et inférieure aux autres.",
+    "Trouble central de l'estime de soi. DSM-5 : au moins 4/7. Continuum : timidité → TAS → TP évitante."
+  ]},
+  { answer: "TP Évitante", clues: [
+    "Cette personne a une réticence marquée à prendre des risques.",
+    "Elle est réservée par peur de la honte et du ridicule.",
+    "Elle a un sentiment d'infériorité chronique.",
+    "Elle craint le rejet dans les nouvelles situations sociales.",
+    "Elle évite les activités impliquant des contacts interpersonnels significatifs.",
+    "Prévalence : 1%. Cluster C. À distinguer de la phobie sociale (plus situationnelle)."
+  ]},
+  { answer: "TP Évitante", clues: [
+    "Ce patient est inhibé dans ses relations interpersonnelles.",
+    "Il aimerait avoir des amis mais la peur du jugement l'en empêche.",
+    "Il se retient de s'impliquer par crainte de critique.",
+    "Il se sent inférieur dans presque toutes les situations.",
+    "Son trouble est centré sur l'estime de soi.",
+    "Continuum avec la timidité sévère et l'anxiété sociale."
+  ]},
+  // TP Dépendante
+  { answer: "TP Dépendante", clues: [
+    "La patiente est une femme de 55 ans, en couple depuis 35 ans.",
+    "C'est toujours son mari qui prend les décisions.",
+    "Elle est toujours d'accord avec tout le monde.",
+    "Elle fait ce qu'on lui demande même quand elle est fatiguée.",
+    "Elle se perçoit comme inutile et incapable de fonctionner seule.",
+    "DSM-5 : au moins 5/8. Dépendance affective, besoin de réassurance. ~1%, majorité de femmes."
+  ]},
+  { answer: "TP Dépendante", clues: [
+    "Cette personne ne peut pas initier de projets par elle-même.",
+    "Elle a besoin que d'autres assument les responsabilités pour elle.",
+    "Elle a une difficulté à exprimer un désaccord.",
+    "Elle fait des choses désagréables pour obtenir le soutien des autres.",
+    "Elle recherche urgemment une nouvelle relation quand une se termine.",
+    "Cluster C. Se perçoit comme inutile et incapable. Peur d'abandon."
+  ]},
+  { answer: "TP Dépendante", clues: [
+    "Ce patient se sent mal à l'aise quand il est seul.",
+    "Il a du mal à prendre des décisions quotidiennes sans aide.",
+    "Il craint excessivement d'être abandonné.",
+    "Il a besoin constant de réassurance de la part de ses proches.",
+    "Sa croyance centrale est : 'Je ne peux rien faire tout seul'.",
+    "Schéma/croyance : besoin de soutien. Prévalence : ~1%."
+  ]},
+  // TP Obsessionnelle-compulsive
+  { answer: "TP Obsessionnelle-compulsive", clues: [
+    "Le patient est un homme de 51 ans, comptable.",
+    "Il vérifie chaque détail méticuleusement.",
+    "Il travaille 12 heures par jour et personne ne peut toucher ses dossiers.",
+    "Sa devise : 'Un sou est un sou'.",
+    "Il est incapable de déléguer et est extrêmement rigide.",
+    "Forme 'stable' du TOC. DSM-5 : au moins 4/8. Perfectionnisme, rigidité, contrôle."
+  ]},
+  { answer: "TP Obsessionnelle-compulsive", clues: [
+    "Cette personne est préoccupée par les détails au point de perdre de vue l'objectif principal.",
+    "Son perfectionnisme entrave l'achèvement de ses tâches.",
+    "Elle est dévouée excessivement au travail au détriment des loisirs.",
+    "Elle est scrupuleuse et inflexible sur les questions de morale.",
+    "Elle est avare et considère l'argent comme devant être thésaurisé.",
+    "Prévalence : 1% (générale), 3-10% (psychiatrie). 2x plus fréquent chez les hommes."
+  ]},
+  { answer: "TP Obsessionnelle-compulsive", clues: [
+    "Ce patient est réticent à jeter des objets, même sans valeur sentimentale.",
+    "Il est réticent à déléguer des tâches par peur qu'elles ne soient pas faites correctement.",
+    "Il est rigide et têtu dans ses opinions.",
+    "Son perfectionnisme est envahissant et affecte sa productivité.",
+    "Ce trouble est la forme stable d'un trouble anxieux bien connu.",
+    "Cluster C. Le TOC est la forme 'instable', ce trouble est la forme 'stable'."
+  ]}
+];
+
+// ===== GAME STATE =====
+const CASES_PER_SESSION = 10;
+const MAX_CLUES = 6;
+let sessionCases = [];
+let currentCaseIdx = 0;
+let currentClueIdx = 0;
+let score = 0;
+let caseResolved = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  score = 0;
+  currentCaseIdx = 0;
+  // Pick 10 cases, trying to cover all disorders
+  const byDisorder = {};
+  casesBank.forEach((c, i) => {
+    if (!byDisorder[c.answer]) byDisorder[c.answer] = [];
+    byDisorder[c.answer].push(i);
+  });
+  // Pick 1 from each disorder
+  let picks = [];
+  for (const d of disorders) {
+    const pool = byDisorder[d] || [];
+    if (pool.length > 0) {
+      picks.push(pool[Math.floor(Math.random() * pool.length)]);
+    }
+  }
+  // All 10 picked, shuffle order
+  sessionCases = shuffle(picks);
+  showScreen('gameScreen');
+  loadCase();
+}
+
+function restartGame() { startGame(); }
+
+function loadCase() {
+  currentClueIdx = 0;
+  caseResolved = false;
+  const c = casesBank[sessionCases[currentCaseIdx]];
+
+  document.getElementById('caseNum').textContent = (currentCaseIdx + 1) + '/' + CASES_PER_SESSION;
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('dossierTitle').textContent = 'Dossier #' + (currentCaseIdx + 1);
+  document.getElementById('dossierSub').textContent = 'Identifiez le trouble de la personnalité';
+
+  const cluesList = document.getElementById('cluesList');
+  cluesList.innerHTML = '';
+  updatePointsBadge();
+
+  // Build guess buttons
+  const grid = document.getElementById('guessGrid');
+  grid.innerHTML = '';
+  const shuffledDisorders = shuffle([...disorders]);
+  shuffledDisorders.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'guess-btn';
+    btn.textContent = d;
+    btn.addEventListener('click', () => makeGuess(btn, d));
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('guessArea').style.display = 'block';
+  document.getElementById('actionsArea').style.display = 'flex';
+  document.getElementById('nextClueBtn').style.display = 'inline-flex';
+  document.getElementById('nextCaseArea').style.display = 'none';
+  document.getElementById('ficheArea').classList.remove('active');
+  document.getElementById('ficheArea').innerHTML = '';
+
+  // Reveal first clue automatically
+  revealClue();
+}
+
+function revealClue() {
+  if (caseResolved) return;
+  const c = casesBank[sessionCases[currentCaseIdx]];
+  if (currentClueIdx >= MAX_CLUES) return;
+
+  const cluesList = document.getElementById('cluesList');
+  const card = document.createElement('div');
+  card.className = 'clue-card';
+  card.innerHTML = `
+    <div class="clue-num">${currentClueIdx + 1}</div>
+    <div class="clue-text">"${c.clues[currentClueIdx]}"</div>
+  `;
+  cluesList.appendChild(card);
+  currentClueIdx++;
+  updatePointsBadge();
+
+  if (currentClueIdx >= MAX_CLUES) {
+    document.getElementById('nextClueBtn').style.display = 'none';
+  }
+}
+
+function updatePointsBadge() {
+  const pts = Math.max(1, MAX_CLUES - currentClueIdx + 1);
+  document.getElementById('pointsBadge').textContent = `🏆 ${pts} point${pts > 1 ? 's' : ''} possible${pts > 1 ? 's' : ''}`;
+}
+
+function makeGuess(btn, guess) {
+  if (caseResolved) return;
+  const c = casesBank[sessionCases[currentCaseIdx]];
+
+  if (guess === c.answer) {
+    // Correct
+    const pts = Math.max(1, MAX_CLUES - currentClueIdx + 1);
+    score += pts;
+    btn.classList.add('correct');
+    btn.textContent += ` ✓ (+${pts})`;
+    caseResolved = true;
+    document.getElementById('scoreVal').textContent = score;
+    document.getElementById('dossierSub').textContent = `Correct ! +${pts} point${pts > 1 ? 's' : ''}`;
+
+    // Disable all buttons
+    document.querySelectorAll('.guess-btn').forEach(b => { b.style.pointerEvents = 'none'; });
+    document.getElementById('nextClueBtn').style.display = 'none';
+
+    // Reveal remaining clues
+    revealRemainingClues();
+    showFiche(c.answer);
+    showNextCaseBtn();
+  } else {
+    // Wrong
+    btn.classList.add('wrong');
+    btn.style.pointerEvents = 'none';
+    setTimeout(() => { btn.style.opacity = '0.4'; }, 500);
+
+    // If all clues shown and wrong, reveal answer
+    if (currentClueIdx >= MAX_CLUES) {
+      // Check if many wrong guesses — auto-reveal after this wrong guess
+      const remaining = document.querySelectorAll('.guess-btn:not(.wrong):not(.correct)');
+      // Keep letting them guess unless it's really obvious
+    }
+  }
+}
+
+function revealRemainingClues() {
+  const c = casesBank[sessionCases[currentCaseIdx]];
+  const cluesList = document.getElementById('cluesList');
+  while (currentClueIdx < MAX_CLUES) {
+    const card = document.createElement('div');
+    card.className = 'clue-card';
+    card.innerHTML = `
+      <div class="clue-num">${currentClueIdx + 1}</div>
+      <div class="clue-text">"${c.clues[currentClueIdx]}"</div>
+    `;
+    cluesList.appendChild(card);
+    currentClueIdx++;
+  }
+}
+
+function showFiche(disorderName) {
+  const info = disorderInfo[disorderName];
+  const fiche = document.getElementById('ficheArea');
+  fiche.innerHTML = `
+    <h4>📋 Fiche : ${disorderName}</h4>
+    <div class="fiche-row"><span class="fiche-label">Cluster</span><span class="fiche-value">${info.cluster}</span></div>
+    <div class="fiche-row"><span class="fiche-label">Prévalence</span><span class="fiche-value">${info.prevalence}</span></div>
+    <div class="fiche-row"><span class="fiche-label">Ratio H/F</span><span class="fiche-value">${info.ratio}</span></div>
+    <div class="fiche-row"><span class="fiche-label">Critères DSM-5</span><span class="fiche-value">${info.criteres}</span></div>
+    <div class="fiche-row"><span class="fiche-label">Description</span><span class="fiche-value">${info.desc}</span></div>
+  `;
+  fiche.classList.add('active');
+}
+
+function showNextCaseBtn() {
+  const area = document.getElementById('nextCaseArea');
+  area.style.display = 'flex';
+  if (currentCaseIdx + 1 >= CASES_PER_SESSION) {
+    area.innerHTML = '<button class="btn btn-primary" onclick="showEnd()">Voir les résultats →</button>';
+  }
+}
+
+function nextCase() {
+  currentCaseIdx++;
+  if (currentCaseIdx >= CASES_PER_SESSION) {
+    showEnd();
+  } else {
+    loadCase();
+  }
+}
+
+function showEnd() {
+  showScreen('endScreen');
+  const maxScore = CASES_PER_SESSION * MAX_CLUES; // theoretical max is actually 5*10=50 if guessed after clue 1 each time
+  // Real max = 5 pts * 10 cases = 50
+  document.getElementById('finalScore').textContent = score + ' / 50';
+
+  let rank, rankColor;
+  if (score >= 45) { rank = "Détective Légendaire"; }
+  else if (score >= 38) { rank = "Inspecteur en Chef"; }
+  else if (score >= 30) { rank = "Détective Confirmé"; }
+  else if (score >= 22) { rank = "Enquêteur Junior"; }
+  else if (score >= 14) { rank = "Stagiaire Prometteur"; }
+  else { rank = "Apprenti Détective"; }
+
+  document.getElementById('rankText').textContent = '🏅 ' + rank;
+  document.getElementById('finalDetails').textContent =
+    `Vous avez identifié les troubles de la personnalité avec un score de ${score} sur 50 possibles.`;
+}
+
+// Handle case where all clues are shown but no correct guess yet — reveal after 6th clue + next wrong guess or timeout
+// We add a "Voir la réponse" button after all 6 clues
+const origRevealClue = revealClue;
+// Override to add reveal button logic
+const origNextClueBtn = document.getElementById('nextClueBtn');
+setInterval(() => {
+  if (!caseResolved && currentClueIdx >= MAX_CLUES) {
+    const actionsArea = document.getElementById('actionsArea');
+    if (!document.getElementById('revealBtn')) {
+      const btn = document.createElement('button');
+      btn.id = 'revealBtn';
+      btn.className = 'btn btn-secondary';
+      btn.textContent = 'Voir la réponse';
+      btn.onclick = () => {
+        caseResolved = true;
+        const c = casesBank[sessionCases[currentCaseIdx]];
+        document.getElementById('dossierSub').textContent = `Réponse : ${c.answer}`;
+        document.querySelectorAll('.guess-btn').forEach(b => {
+          b.style.pointerEvents = 'none';
+          if (b.textContent === c.answer) {
+            b.classList.add('correct');
+            b.textContent += ' ✓';
+          }
+        });
+        showFiche(c.answer);
+        showNextCaseBtn();
+        btn.remove();
+      };
+      actionsArea.appendChild(btn);
+    }
+  }
+}, 300);
+</script>
+</body>
+</html>

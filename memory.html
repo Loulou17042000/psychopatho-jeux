@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory - Psychopathologie</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Segoe UI',system-ui,sans-serif;
+    background:#0f0f1a;
+    color:#e0e0e0;
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;
+    overflow-x:hidden;
+  }
+  h1{
+    margin:20px 0 5px;
+    font-size:1.8rem;
+    background:linear-gradient(135deg,#a78bfa,#60a5fa);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .subtitle{font-size:.9rem;color:#888;margin-bottom:12px}
+  .stats{
+    display:flex;gap:24px;align-items:center;
+    background:#1a1a2e;border-radius:12px;padding:10px 28px;margin-bottom:14px;
+    font-size:.95rem;
+  }
+  .stats span{display:flex;align-items:center;gap:6px}
+  .round-info{
+    font-size:1rem;margin-bottom:10px;
+    color:#c4b5fd;font-weight:600;
+  }
+  .board{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    max-width:720px;width:94%;
+    perspective:1000px;
+    margin-bottom:20px;
+  }
+  .card{
+    position:relative;
+    height:130px;
+    cursor:pointer;
+    transform-style:preserve-3d;
+    transition:transform .5s cubic-bezier(.4,.2,.2,1);
+  }
+  .card.flipped{transform:rotateY(180deg)}
+  .card.matched{pointer-events:none}
+  .card.matched .front{
+    box-shadow:0 0 18px rgba(74,222,128,.5);
+    border-color:#4ade80;
+  }
+  .card .front,.card .back{
+    position:absolute;inset:0;
+    border-radius:14px;
+    backface-visibility:hidden;
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;padding:10px;
+    font-size:.82rem;line-height:1.25;
+    border:2px solid transparent;
+  }
+  .card .back{
+    background:linear-gradient(145deg,#2d1b69,#1b1b4b);
+    border-color:#4c3a99;
+    flex-direction:column;gap:6px;
+  }
+  .card .back .icon{font-size:2.2rem}
+  .card .back .label{font-size:.65rem;color:#9988cc;letter-spacing:1px;text-transform:uppercase}
+  .card .front{
+    transform:rotateY(180deg);
+    font-weight:600;
+  }
+  .card.type-disorder .front{background:linear-gradient(145deg,#1e3a5f,#162447);border-color:#3b82f6;color:#93c5fd}
+  .card.type-desc .front{background:linear-gradient(145deg,#3b1f4e,#2a1338);border-color:#a855f7;color:#d8b4fe}
+
+  /* overlay */
+  .overlay{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,.75);
+    justify-content:center;align-items:center;z-index:100;
+  }
+  .overlay.show{display:flex}
+  .modal{
+    background:#1a1a2e;border-radius:20px;padding:36px 44px;text-align:center;
+    border:1px solid #333;max-width:420px;width:90%;
+    animation:popIn .4s ease;
+  }
+  @keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal h2{font-size:1.5rem;margin-bottom:10px;color:#c4b5fd}
+  .modal p{margin:8px 0;color:#bbb;font-size:.95rem}
+  .stars{font-size:2.4rem;margin:14px 0}
+  .stars .on{color:#facc15}
+  .stars .off{color:#333}
+  .btn{
+    display:inline-block;margin-top:16px;
+    padding:12px 32px;border:none;border-radius:10px;
+    font-size:1rem;font-weight:600;cursor:pointer;
+    background:linear-gradient(135deg,#7c3aed,#3b82f6);color:#fff;
+    transition:transform .15s;
+  }
+  .btn:hover{transform:scale(1.05)}
+  .btn+.btn{margin-left:10px}
+
+  /* confetti */
+  .confetti-piece{
+    position:fixed;width:10px;height:10px;border-radius:2px;
+    z-index:200;pointer-events:none;
+    animation:confettiFall 1.8s ease forwards;
+  }
+  @keyframes confettiFall{
+    0%{opacity:1;transform:translateY(0) rotate(0deg)}
+    100%{opacity:0;transform:translateY(100vh) rotate(720deg)}
+  }
+
+  @media(max-width:500px){
+    .board{grid-template-columns:repeat(3,1fr);gap:8px}
+    .card{height:110px}
+    .card .front{font-size:.72rem}
+    h1{font-size:1.3rem}
+  }
+</style>
+</head>
+<body>
+
+<h1>Memory Psychopathologie</h1>
+<p class="subtitle">Associe chaque trouble a sa description</p>
+
+<div class="stats">
+  <span id="timer">&#9201; 0:00</span>
+  <span id="moves">&#9997; 0 coups</span>
+  <span id="roundLabel">&#127922; Manche 1/4</span>
+</div>
+<div class="round-info" id="roundTitle">Troubles de la personnalite</div>
+
+<div class="board" id="board"></div>
+
+<!-- Round complete overlay -->
+<div class="overlay" id="roundOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Manche terminee !</h2>
+    <div class="stars" id="modalStars"></div>
+    <p id="modalStats"></p>
+    <button class="btn" id="modalBtn">Manche suivante</button>
+  </div>
+</div>
+
+<!-- Game complete overlay -->
+<div class="overlay" id="endOverlay">
+  <div class="modal">
+    <h2>Felicitations !</h2>
+    <div class="stars" id="endStars"></div>
+    <p id="endStats"></p>
+    <button class="btn" id="restartBtn">Rejouer</button>
+  </div>
+</div>
+
+<script>
+const ROUNDS = [
+  {
+    title:"Troubles de la personnalite (Cluster A-B)",
+    pairs:[
+      ["TP paranoiaque","Mefiance et suspicion envahissantes"],
+      ["TP schizoide","Detachement social et froideur emotionnelle"],
+      ["TP schizotypique","Pensee magique et excentricite"],
+      ["TP antisociale","Manipulation et absence de remords"],
+      ["TP borderline","Instabilite relationnelle et peur de l'abandon"],
+      ["TP narcissique","Grandiosite et besoin d'admiration"],
+    ]
+  },
+  {
+    title:"Troubles de la personnalite (suite)",
+    pairs:[
+      ["TP histrionique","Recherche d'attention et theatralisme"],
+      ["TP evitante","Inhibition sociale et peur du rejet"],
+      ["TP dependante","Besoin excessif d'etre pris en charge"],
+      ["TP obsessionnelle-compulsive","Perfectionnisme et rigidite"],
+      ["Cluster A","Bizarre/excentrique (paranoiaque, schizoide, schizotypique)"],
+      ["Cluster B","Dramatique/emotionnel (antisociale, borderline, histrionique, narcissique)"],
+    ]
+  },
+  {
+    title:"Troubles anxieux et autres",
+    pairs:[
+      ["Attaque de panique","Peur intense soudaine avec symptomes somatiques"],
+      ["Agoraphobie","Peur des endroits d'ou on ne peut s'echapper"],
+      ["Phobie specifique","Peur intense d'un objet/situation precis"],
+      ["TAG","Soucis excessifs et incontrolables depuis 6+ mois"],
+      ["TOC","Obsessions intrusives + compulsions ritualisees"],
+      ["ESPT","Flashbacks, evitement et hypervigilance apres trauma"],
+    ]
+  },
+  {
+    title:"Troubles de l'humeur et schizophrenie",
+    pairs:[
+      ["Depression (EDM)","Humeur basse min 2 semaines + anhedonie"],
+      ["Trouble bipolaire I","Alternance phases maniaques et depressives"],
+      ["Schizophrenie","Delire + hallucinations + duree \u2265 6 mois"],
+      ["BDA (Bouffee delirante)","Episode psychotique bref < 1 mois"],
+      ["Trouble schizo-affectif","Symptomes psychotiques persistant entre episodes thymiques"],
+      ["Cyclothymie","Alternance depression moderee et hypomanie"],
+    ]
+  }
+];
+
+let currentRound=0, moves=0, matchedCount=0, timerInterval=null, seconds=0;
+let firstCard=null, secondCard=null, lockBoard=false;
+let totalMoves=0, totalSeconds=0;
+
+const board=document.getElementById('board');
+const timerEl=document.getElementById('timer');
+const movesEl=document.getElementById('moves');
+const roundLabel=document.getElementById('roundLabel');
+const roundTitle=document.getElementById('roundTitle');
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}
+
+function startTimer(){
+  seconds=0;
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    seconds++;
+    const m=Math.floor(seconds/60),s=seconds%60;
+    timerEl.textContent='\u23F1 '+m+':'+(s<10?'0':'')+s;
+  },1000);
+}
+
+function buildRound(idx){
+  currentRound=idx;
+  moves=0;matchedCount=0;firstCard=null;secondCard=null;lockBoard=false;
+  movesEl.textContent='\u270D 0 coups';
+  roundLabel.textContent='\u{1F3B2} Manche '+(idx+1)+'/4';
+  roundTitle.textContent=ROUNDS[idx].title;
+  board.innerHTML='';
+
+  let cards=[];
+  ROUNDS[idx].pairs.forEach((p,i)=>{
+    cards.push({text:p[0],pairId:i,type:'disorder'});
+    cards.push({text:p[1],pairId:i,type:'desc'});
+  });
+  shuffle(cards);
+
+  cards.forEach(c=>{
+    const el=document.createElement('div');
+    el.className='card type-'+c.type;
+    el.dataset.pairId=c.pairId;
+    el.innerHTML=`
+      <div class="front">${c.text}</div>
+      <div class="back"><span class="icon">\u{1F9E0}</span><span class="label">Psychopatho</span></div>
+    `;
+    el.addEventListener('click',()=>flipCard(el));
+    board.appendChild(el);
+  });
+
+  startTimer();
+}
+
+function flipCard(card){
+  if(lockBoard||card===firstCard||card.classList.contains('flipped'))return;
+  card.classList.add('flipped');
+
+  if(!firstCard){firstCard=card;return}
+  secondCard=card;
+  lockBoard=true;
+  moves++;
+  movesEl.textContent='\u270D '+moves+' coup'+(moves>1?'s':'');
+
+  if(firstCard.dataset.pairId===secondCard.dataset.pairId){
+    firstCard.classList.add('matched');
+    secondCard.classList.add('matched');
+    matchedCount++;
+    resetSelection();
+    if(matchedCount===6)setTimeout(roundComplete,600);
+  } else {
+    setTimeout(()=>{
+      firstCard.classList.remove('flipped');
+      secondCard.classList.remove('flipped');
+      resetSelection();
+    },900);
+  }
+}
+
+function resetSelection(){firstCard=null;secondCard=null;lockBoard=false}
+
+function getStars(m){return m<=8?3:m<=14?2:1}
+
+function starsHTML(count){
+  let h='';
+  for(let i=0;i<3;i++) h+='<span class="'+(i<count?'on':'off')+'">\u2B50</span>';
+  return h;
+}
+
+function roundComplete(){
+  clearInterval(timerInterval);
+  totalMoves+=moves;totalSeconds+=seconds;
+  const stars=getStars(moves);
+  const ov=document.getElementById('roundOverlay');
+  document.getElementById('modalStars').innerHTML=starsHTML(stars);
+  document.getElementById('modalStats').textContent=moves+' coups en '+formatTime(seconds);
+
+  if(currentRound<3){
+    document.getElementById('modalTitle').textContent='Manche '+(currentRound+1)+' terminee !';
+    document.getElementById('modalBtn').textContent='Manche suivante';
+    document.getElementById('modalBtn').onclick=()=>{ov.classList.remove('show');buildRound(currentRound+1)};
+  } else {
+    document.getElementById('modalTitle').textContent='Toutes les manches terminees !';
+    document.getElementById('modalBtn').textContent='Voir le bilan';
+    document.getElementById('modalBtn').onclick=()=>{ov.classList.remove('show');showEnd()};
+  }
+  confetti();
+  ov.classList.add('show');
+}
+
+function showEnd(){
+  const avg=Math.round(totalMoves/4);
+  const stars=getStars(avg);
+  document.getElementById('endStars').innerHTML=starsHTML(stars);
+  document.getElementById('endStats').textContent=
+    'Total : '+totalMoves+' coups en '+formatTime(totalSeconds)+' (moy. '+avg+' coups/manche)';
+  document.getElementById('endOverlay').classList.add('show');
+}
+
+document.getElementById('restartBtn').onclick=()=>{
+  document.getElementById('endOverlay').classList.remove('show');
+  totalMoves=0;totalSeconds=0;
+  buildRound(0);
+};
+
+function formatTime(s){const m=Math.floor(s/60),sec=s%60;return m+':'+(sec<10?'0':'')+sec}
+
+function confetti(){
+  const colors=['#facc15','#a78bfa','#60a5fa','#4ade80','#fb7185','#f97316'];
+  for(let i=0;i<50;i++){
+    const p=document.createElement('div');
+    p.className='confetti-piece';
+    p.style.left=Math.random()*100+'vw';
+    p.style.top=-10+'px';
+    p.style.background=colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDelay=Math.random()*.8+'s';
+    p.style.width=(6+Math.random()*8)+'px';
+    p.style.height=(6+Math.random()*8)+'px';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),2600);
+  }
+}
+
+buildRound(0);
+</script>
+</body>
+</html>

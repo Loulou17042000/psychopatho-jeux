@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les Montagnes Russes — Quiz Chapitre 7</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:#0f0f1a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .container{max-width:780px;width:100%;margin:auto}
+  h1{font-size:2.2rem;font-weight:800;text-align:center;background:linear-gradient(135deg,#4f46e5,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+  .subtitle{text-align:center;font-size:1rem;color:#94a3b8;margin-bottom:30px}
+  .score-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:.9rem;color:#cbd5e1}
+  .progress-track{width:100%;height:8px;background:#1e1e2e;border-radius:99px;overflow:hidden;margin-bottom:24px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#4f46e5,#818cf8);border-radius:99px;transition:width .4s ease}
+  .card{background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:28px 24px;margin-bottom:18px;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+  .q-number{font-size:.75rem;color:#4f46e5;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  .question{font-size:1.1rem;font-weight:600;line-height:1.5;margin-bottom:20px}
+  .options{display:flex;flex-direction:column;gap:10px}
+  .opt-btn{background:#16162a;border:2px solid #2a2a3e;border-radius:12px;padding:14px 18px;font-size:1rem;color:#e2e8f0;cursor:pointer;text-align:left;transition:all .2s;font-family:inherit}
+  .opt-btn:hover:not(.locked){border-color:#4f46e5;background:#1f1f35}
+  .opt-btn.correct{border-color:#22c55e;background:rgba(34,197,94,.12);color:#4ade80}
+  .opt-btn.wrong{border-color:#ef4444;background:rgba(239,68,68,.1);color:#f87171}
+  .opt-btn.reveal{border-color:#22c55e;background:rgba(34,197,94,.08)}
+  .explanation{margin-top:14px;padding:14px 16px;background:#12121f;border-left:3px solid #4f46e5;border-radius:0 8px 8px 0;font-size:.9rem;color:#94a3b8;line-height:1.5;display:none}
+  .explanation.show{display:block}
+  .next-btn{display:none;margin:18px auto 0;padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#3730a3);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .next-btn:hover{transform:scale(1.04)}
+  .result{text-align:center;padding:40px 20px}
+  .result h2{font-size:2rem;margin-bottom:8px}
+  .result .big-score{font-size:3.5rem;font-weight:800;background:linear-gradient(135deg,#4f46e5,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .result p{color:#94a3b8;margin:8px 0}
+  .replay-btn{margin-top:24px;padding:14px 40px;background:linear-gradient(135deg,#4f46e5,#3730a3);color:#fff;border:none;border-radius:12px;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .replay-btn:hover{transform:scale(1.05)}
+  .start-screen{text-align:center;padding:50px 20px}
+  .start-screen p{color:#94a3b8;margin:10px 0 28px}
+  .start-btn{padding:16px 48px;background:linear-gradient(135deg,#4f46e5,#3730a3);color:#fff;border:none;border-radius:14px;font-size:1.15rem;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .start-btn:hover{transform:scale(1.05)}
+  .tag{display:inline-block;background:rgba(79,70,229,.15);color:#818cf8;font-size:.75rem;padding:3px 10px;border-radius:99px;font-weight:600;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<script>
+const ALL_QUESTIONS=[
+// === NOTION D'HUMEUR ===
+{q:"L'humeur (thymie) est une fonction psychophysiologique réglant :",o:["Le tonus affectif","La mémoire de travail","Le rythme cardiaque","La motricité fine"],a:0,e:"L'humeur (thymie) est définie comme une fonction psychophysiologique qui régule le tonus affectif."},
+{q:"L'euthymie désigne :",o:["Une humeur normale, sans euphorie ni dépression","Une humeur euphorique","Une humeur dépressive légère","Un état de stress aigu"],a:0,e:"L'euthymie (humeur euthymique) correspond à une humeur normale, en l'absence d'euphorie et de dépression."},
+{q:"Les émotions (joie, peur, colère) sont réactionnelles, contrairement à l'humeur.",o:["Vrai","Faux"],a:0,e:"Les émotions sont des réponses réactionnelles à des événements, alors que l'humeur est un état de fond plus stable."},
+// === RÉACTION ÉMOTIONNELLE ===
+{q:"Les 3 paramètres de la réaction émotionnelle sont :",o:["Réactivité, intensité, persistance","Fréquence, durée, amplitude","Latence, amplitude, décroissance","Début, pic, résolution"],a:0,e:"La réaction émotionnelle se caractérise par sa réactivité (déclenchement), son intensité (pic) et sa persistance (durée de retour à la normale)."},
+{q:"La persistance émotionnelle mesure :",o:["La durée de retour à la normale","L'intensité maximale","La vitesse de déclenchement","Le nombre de récurrences"],a:0,e:"La persistance émotionnelle mesure le temps nécessaire pour revenir à l'état de base après un pic émotionnel."},
+// === VARIATIONS PATHOLOGIQUES ===
+{q:"L'humeur euphorique est aussi appelée humeur :",o:["Maniaque","Hypomaniaque","Dysphorique","Euthymique"],a:0,e:"L'humeur euphorique (sentiment exagéré de bien-être) est caractéristique des états maniaques."},
+{q:"L'humeur expansive se caractérise par :",o:["Un manque de retenue dans l'expression","Une tristesse profonde","Une irritabilité constante","Un émoussement affectif"],a:0,e:"L'humeur expansive (hypomaniaque) se manifeste par un manque de retenue dans l'expression des émotions."},
+{q:"La dysphorie désigne :",o:["Une tonalité désagréable menant à l'humeur dépressive","Un état d'euphorie légère","L'absence d'émotions","Une alternance rapide d'humeurs"],a:0,e:"La dysphorie est une tonalité affective désagréable qui évolue vers l'humeur dépressive."},
+{q:"Les hypothymies correspondent à :",o:["Un émoussement affectif (pôle bas)","Une exaltation de l'humeur","Des variations rapides","L'absence de toute émotion"],a:0,e:"Les hypothymies désignent un émoussement affectif, au pôle bas du spectre thymique."},
+{q:"Les hyperthymies incluent :",o:["L'humeur expansive/euphorique ET dysphorique/dépressive intense","Uniquement l'euphorie","Uniquement la dépression","L'émoussement affectif"],a:0,e:"Les hyperthymies regroupent les extrêmes : pôle haut (expansif/euphorique) et pôle bas intense (dysphorique/dépressif)."},
+// === RÈGLES PRATIQUES ===
+{q:"Une humeur basse persistant au moins 2 semaines évoque :",o:["Un épisode dépressif","Un trouble bipolaire","Un état maniaque","Une dysthymie"],a:0,e:"Selon les règles pratiques, une humeur basse d'au moins 2 semaines oriente vers un épisode dépressif."},
+{q:"Une humeur élevée persistant au moins 1 semaine évoque :",o:["Un épisode (hypo)maniaque","Un TAG","Une dépression atypique","Un ESPT"],a:0,e:"Une humeur élevée d'au moins 1 semaine évoque un épisode maniaque ou hypomaniaque."},
+{q:"Un trouble unipolaire comporte des phases dépressives SANS épisode maniaque.",o:["Vrai","Faux"],a:0,e:"Par définition, le trouble unipolaire ne comprend que des épisodes dépressifs, sans jamais d'épisode maniaque."},
+// === EDC ===
+{q:"Selon la CIM-10, un EDC nécessite au moins ____ symptômes principaux :",o:["2","1","3","4"],a:0,e:"La CIM-10 exige au moins 2 symptômes principaux parmi : humeur dépressive, perte d'intérêt/abattement, perte d'énergie/fatigabilité."},
+{q:"Lequel n'est PAS un symptôme principal de l'EDC selon la CIM-10 ?",o:["Concentration réduite","Humeur dépressive","Perte d'intérêt","Perte d'énergie"],a:0,e:"La concentration réduite fait partie des symptômes additionnels, pas des 3 symptômes principaux (humeur dépressive, perte d'intérêt, perte d'énergie)."},
+{q:"La prévalence du trouble dépressif est de :",o:["15,4 %","5 %","30 %","1 %"],a:0,e:"Le trouble dépressif a une prévalence de 15,4 %, le trouble dysthymique de 6,3 %."},
+{q:"Le premier épisode dépressif survient entre 15 et 35 ans dans ____ des cas :",o:["40 %","20 %","60 %","80 %"],a:0,e:"40 % des premiers épisodes dépressifs surviennent entre 15 et 35 ans."},
+{q:"Les femmes sont ____ fois plus touchées par la dépression que les hommes :",o:["2","3","5","Également"],a:0,e:"Les femmes sont environ 2 fois plus touchées par la dépression que les hommes."},
+// === SÉMIOLOGIE DÉPRESSIVE ===
+{q:"La triade cognitive de Beck porte sur les cognitions erronées concernant :",o:["Soi, l'environnement, l'avenir","Le passé, le présent, le futur","Le corps, l'esprit, les relations","L'enfance, l'adolescence, l'âge adulte"],a:0,e:"Beck décrit des cognitions négatives dans 3 domaines : sur soi ('je ne vaux rien'), sur l'environnement ('ce monde est pourri'), sur l'avenir ('rien ne s'améliorera')."},
+{q:"La métaphore des 'lunettes sombres' illustre :",o:["La vision négative du dépressif selon Beck","Le trouble de la vision dans la manie","L'effet des médicaments","La photophobie"],a:0,e:"Les 'lunettes sombres' est une métaphore de la triade de Beck : le dépressif perçoit tout à travers un filtre négatif."},
+{q:"L'anhédonie est :",o:["L'incapacité à ressentir joie ou plaisir","L'excès de plaisir","La peur de la joie","Un trouble du sommeil"],a:0,e:"L'anhédonie désigne l'incapacité à ressentir de la joie ou du plaisir, un symptôme central de la dépression."},
+{q:"L'hypothèse dopaminergique est associée à :",o:["L'anhédonie","L'insomnie","L'anorexie","La logorrhée"],a:0,e:"L'anhédonie est liée à l'hypothèse dopaminergique, la dopamine étant le neurotransmetteur du circuit de récompense."},
+{q:"La bradypsychie désigne :",o:["Une pensée ralentie","Une pensée accélérée","Un trouble du langage","Une amnésie"],a:0,e:"La bradypsychie est le ralentissement de la pensée, caractéristique de l'inhibition dépressive."},
+{q:"Le monoïdéisme dans la dépression désigne :",o:["La focalisation sur une seule idée négative","La multiplicité des pensées","L'absence de pensée","Des idées de grandeur"],a:0,e:"Le monoïdéisme est la tendance à se focaliser sur une seule idée, généralement négative, dans le cadre de la dépression."},
+{q:"La bradyphémie est un ralentissement :",o:["Du langage/parole","De la marche","Du rythme cardiaque","De la digestion"],a:0,e:"La bradyphémie désigne le ralentissement du débit de parole, lié à l'inhibition dépressive."},
+{q:"L'incurie désigne :",o:["Le manque de soin de soi","L'excès de propreté","La curiosité excessive","L'indifférence aux autres"],a:0,e:"L'incurie est le manque de soin de soi-même (hygiène, apparence), fréquent dans la dépression sévère."},
+{q:"L'hypomimie/amimie se manifeste par :",o:["Une réduction ou absence d'expressions faciales","Des grimaces involontaires","Un excès de mimiques","Des tics faciaux"],a:0,e:"L'hypomimie (réduction) ou amimie (absence) des expressions faciales reflète l'inhibition motrice de la dépression."},
+{q:"La variation nycthémérale avec aggravation matinale oriente vers :",o:["Une dépression endogène","Une dépression psychogène","Un trouble bipolaire II","Un TAG"],a:0,e:"L'aggravation matinale est caractéristique de la dépression endogène, tandis que la dégradation progressive évoque une dépression psychogène."},
+{q:"L'insomnie avec réveil précoce touche ____ des dépressifs :",o:["90 %","50 %","30 %","10 %"],a:0,e:"L'insomnie avec réveil précoce est très fréquente dans la dépression, touchant environ 90 % des patients."},
+{q:"L'asthénie dépressive touche ____ des patients :",o:["80 %","40 %","20 %","100 %"],a:0,e:"La fatigue (asthénie) est un symptôme quasi constant de la dépression, présent chez environ 80 % des patients."},
+{q:"Le mentisme est associé à l'insomnie dépressive.",o:["Vrai","Faux"],a:0,e:"Le mentisme (défilement incontrôlable de pensées) accompagne souvent les réveils précoces dans la dépression."},
+{q:"L'anorexie touche environ ____ des dépressifs, tandis que l'hyperphagie en touche ____ :",o:["90 % / 10 %","50 % / 50 %","70 % / 30 %","10 % / 90 %"],a:0,e:"L'anorexie est beaucoup plus fréquente (90 %) que l'hyperphagie (10 %) dans la dépression."},
+// === CONDUITES SUICIDAIRES ===
+{q:"La dépression est la première cause de suicide.",o:["Vrai","Faux"],a:0,e:"La dépression est effectivement la première cause de suicide."},
+{q:"____ des décès par suicide sont associés à une dépression :",o:["70 %","30 %","50 %","90 %"],a:0,e:"70 % des décès par suicide sont liés à une dépression, souvent non diagnostiquée ou non traitée."},
+{q:"Le taux de suicide est ____ fois plus élevé chez les patients dépressifs que dans la population générale :",o:["30","10","5","50"],a:0,e:"Le risque suicidaire est 30 fois plus élevé chez les patients dépressifs par rapport à la population générale."},
+{q:"15-20 % des patients avec EDM décèdent par suicide.",o:["Vrai","Faux"],a:0,e:"Selon l'OMS (2001), 15-20 % des patients avec EDM finissent par se suicider, avec 10-15 % de suicides 'réussis'."},
+{q:"Les comportements autodommageables (se couper, se brûler) sont la même chose que les conduites suicidaires.",o:["Faux","Vrai"],a:0,e:"Les comportements autodommageables (scarification, brûlures) sont distincts des conduites suicidaires : ils ne visent pas nécessairement la mort."},
+{q:"L'ordre du processus suicidaire est :",o:["Idéations passives → actives → conduites préparatoires → tentative","Tentative → idéations → préparation","Conduites préparatoires → idéations → tentative","Idéations actives → passives → tentative"],a:0,e:"Le processus suicidaire suit une progression : désir de mourir (passif) → idée de se tuer (actif) → préparation → passage à l'acte."},
+// === BIAIS COGNITIFS ===
+{q:"L'abstraction sélective consiste à :",o:["Ne percevoir que les aspects négatifs","Généraliser à partir d'un cas","Tirer des conclusions hâtives","Penser en tout ou rien"],a:0,e:"L'abstraction sélective est le fait de ne retenir que les aspects négatifs d'une situation, en ignorant le reste."},
+{q:"La pensée dichotomique consiste à :",o:["Voir tout en noir ou blanc","Minimiser les réussites","Se blâmer pour tout","Généraliser excessivement"],a:0,e:"La pensée dichotomique (tout ou rien) ne laisse pas de place aux nuances."},
+{q:"L'inférence arbitraire consiste à :",o:["Tirer des conclusions hâtives sans preuves","Filtrer les informations positives","Exagérer l'importance des échecs","Appliquer des étiquettes définitives"],a:0,e:"L'inférence arbitraire est le fait de tirer des conclusions négatives sans preuves suffisantes."},
+{q:"Le raisonnement émotionnel consiste à :",o:["Prendre ses émotions pour des preuves","Raisonner de façon logique","Ignorer ses émotions","Analyser rationnellement"],a:0,e:"Le raisonnement émotionnel fait que le patient considère ses émotions comme la preuve de la réalité ('je me sens nul, donc je suis nul')."},
+{q:"La personnalisation est :",o:["Surestimer le lien entre un événement et soi","Ignorer tout lien personnel","Attribuer tout aux autres","Minimiser son implication"],a:0,e:"La personnalisation consiste à se sentir responsable d'événements qui ne dépendent pas de soi."},
+{q:"La surgénéralisation consiste à :",o:["Faire une règle générale d'un événement isolé","Ne voir qu'un détail","Exiger la perfection","Tirer des conclusions hâtives"],a:0,e:"La surgénéralisation transforme un événement isolé en règle universelle ('ça arrive toujours')."},
+{q:"Dans la dépression, le biais d'attribution interne concerne les événements :",o:["Négatifs","Positifs","Neutres","Tous les événements"],a:0,e:"Les dépressifs ont un fort biais d'attribution interne pour les événements négatifs ('c'est ma faute') et externe pour les réussites ('c'est la chance')."},
+{q:"Le programme D-MCT consiste en :",o:["8 séances de 60 minutes en groupe","12 séances individuelles","Une séance unique de 3 heures","4 séances de 90 minutes"],a:0,e:"Le D-MCT (Depressive Metacognitive Training) comporte 8 séances de 60 minutes en format de groupe."},
+{q:"La maximisation/minimisation dans la dépression consiste à :",o:["Accorder plus de valeur aux échecs et moins aux réussites","Ignorer les échecs","Exagérer les réussites","Voir tout de manière équilibrée"],a:0,e:"Le dépressif maximise ses échecs et minimise ses réussites."},
+// === CLASSIFICATION DSM-5 ===
+{q:"Le trouble dépressif persistant correspond à :",o:["La dysthymie","L'EDM","Le trouble bipolaire II","La cyclothymie"],a:0,e:"Le trouble dépressif persistant est le nom du DSM-5 pour la dysthymie."},
+{q:"Le trouble disruptif avec dysrégulation émotionnelle concerne les enfants de :",o:["6 à 18 ans","0 à 5 ans","18 à 25 ans","Tout âge"],a:0,e:"Ce trouble spécifique aux enfants et adolescents de 6 à 18 ans se caractérise par des accès de colère fréquents."},
+{q:"Le trouble dysphorique prémenstruel touche :",o:["2-5 % des femmes","20 % des femmes","0,1 % des femmes","50 % des femmes"],a:0,e:"Le trouble dysphorique prémenstruel, forme sévère du syndrome prémenstruel, touche 2-5 % des femmes durant la phase lutéale."},
+// === EDM vs DYSTHYMIE ===
+{q:"L'EDM nécessite au moins ____ symptômes pendant ____ :",o:["5 symptômes, 2 semaines","3 symptômes, 1 mois","2 symptômes, 6 mois","7 symptômes, 1 semaine"],a:0,e:"L'EDM (forme aiguë) requiert au moins 5 symptômes pendant au moins 2 semaines."},
+{q:"La dysthymie exige une humeur dépressive depuis au moins :",o:["2 ans","6 mois","1 an","5 ans"],a:0,e:"La dysthymie (forme chronique) nécessite une humeur dépressive persistant depuis au moins 2 ans, avec 3 symptômes."},
+{q:"La durée moyenne d'un EDM est de :",o:["4-8 mois","1-2 semaines","1-2 ans","10-12 mois"],a:0,e:"La durée moyenne d'un EDM est de 4 à 8 mois, avec un taux de récidive supérieur à 56 %."},
+{q:"Le taux de récidive de l'EDM est supérieur à :",o:["56 %","20 %","80 %","10 %"],a:0,e:"Plus de 56 % des patients avec EDM connaîtront une récidive."},
+// === FORMES SPÉCIALES ===
+{q:"La dépression saisonnière débute typiquement en :",o:["Octobre (automne)","Janvier (hiver)","Avril (printemps)","Juillet (été)"],a:0,e:"La dépression saisonnière apparaît typiquement en automne (octobre), avec une hypomanie au printemps (avril)."},
+{q:"Le traitement principal de la dépression saisonnière est :",o:["La luminothérapie (5000-10000 Lux/jour)","Les antidépresseurs uniquement","La psychanalyse","L'hospitalisation"],a:0,e:"La luminothérapie à 5000-10000 Lux par jour est le traitement de référence, car la dépression saisonnière est liée au manque de lumière."},
+{q:"Les symptômes atypiques de la dépression saisonnière incluent :",o:["Fatigue, hypersomnie, appétence pour le sucre","Insomnie, anorexie, agitation","Hallucinations, délire, confusion","Amnésie, fugue, dépersonnalisation"],a:0,e:"Contrairement à la dépression classique, la forme saisonnière présente hypersomnie, fatigue et envie de sucre."},
+{q:"La dépression post-partum débute dans les ____ suivant l'accouchement :",o:["4 semaines","6 mois","1 an","48 heures"],a:0,e:"La dépression post-partum débute dans les 4 semaines suivant l'accouchement, à distinguer du baby-blues (3e jour)."},
+{q:"Le baby-blues survient typiquement au :",o:["3e jour post-partum","1er jour","2e semaine","2e mois"],a:0,e:"Le baby-blues est un état transitoire qui survient vers le 3e jour après l'accouchement, à distinguer de la dépression post-partum."},
+{q:"La dépression post-partum psychotique survient dans :",o:["1/500 à 1/1000 cas","1/10 cas","1/100 cas","Tous les cas"],a:0,e:"La forme psychotique de la dépression post-partum est rare, survenant dans 1/500 à 1/1000 cas."},
+{q:"Le trouble disruptif avec dysrégulation de l'humeur nécessite des accès de colère au moins :",o:["3 fois par semaine","1 fois par jour","1 fois par semaine","1 fois par mois"],a:0,e:"Le diagnostic requiert des accès de colère au moins 3 fois par semaine, avec une humeur irritable/colérique entre les accès."},
+// === FORMES SELON L'ÂGE ===
+{q:"Chez la personne âgée, le diagnostic différentiel principal de la dépression est :",o:["Le syndrome démentiel","La phobie sociale","Le TDAH","Le TOC"],a:0,e:"Chez la personne âgée, il est crucial de distinguer la dépression du syndrome démentiel."},
+{q:"Après 50 ans, la dépression se manifeste souvent par :",o:["Agitation anxieuse, hypocondrie, symptomatologie délirante","Isolation sociale uniquement","Uniquement de la tristesse","Des attaques de panique"],a:0,e:"Après 50 ans, la dépression prend souvent une forme avec agitation anxieuse, hypocondrie et symptomatologie délirante."},
+// === DEUIL vs DÉPRESSION ===
+{q:"Dans le DSM-IV, le deuil était un critère d'exclusion pour l'EDM.",o:["Vrai","Faux"],a:0,e:"Le DSM-IV excluait le diagnostic d'EDM en contexte de deuil. Le DSM-5 a supprimé cette exclusion."},
+{q:"Selon le DSM-5, une réaction de deuil peut devenir un EDM après :",o:["2 semaines","6 mois","1 an","Jamais"],a:0,e:"Le DSM-5 reconnaît qu'une réaction de deuil peut constituer un EDM si les critères sont remplis après 2 semaines."},
+{q:"Le deuil compliqué touche ____ de la population :",o:["2,4-4,8 %","10-15 %","0,1 %","20 %"],a:0,e:"Le deuil compliqué (prolongé > 1 an) touche 2,4 à 4,8 % de la population, plus fréquemment chez les femmes."},
+// === ÉPISODE MANIAQUE ===
+{q:"Un seul épisode maniaque inaugural suffit pour diagnostiquer un trouble bipolaire.",o:["Vrai","Faux"],a:0,e:"Un seul épisode maniaque suffit pour poser le diagnostic de trouble bipolaire."},
+{q:"L'épisode maniaque constitue :",o:["Une urgence psychiatrique nécessitant une hospitalisation","Un état bénin sans risque","Un trouble anxieux","Un trouble de la personnalité"],a:0,e:"La manie est une urgence psychiatrique qui nécessite généralement une hospitalisation."},
+{q:"La manie se caractérise par tous ces éléments SAUF :",o:["Bradypsychie","Excitation","Exaltation de l'humeur","Tachypsychie"],a:0,e:"La bradypsychie (pensée ralentie) est caractéristique de la dépression, pas de la manie. La manie se manifeste par la tachypsychie."},
+{q:"L'insomnie dans la manie se distingue de celle de la dépression par :",o:["L'absence de fatigue","La présence de fatigue intense","Sa durée plus courte","Son caractère intermittent"],a:0,e:"Dans la manie, le patient dort très peu mais ne ressent PAS de fatigue, contrairement à l'insomnie dépressive avec fatigue."},
+{q:"La logorrhée et le coq-à-l'âne sont des manifestations de :",o:["La tachypsychie maniaque","La bradypsychie dépressive","L'anxiété généralisée","Le trouble dissociatif"],a:0,e:"La logorrhée (débit verbal excessif) et le coq-à-l'âne (sauts d'un sujet à l'autre) reflètent la tachypsychie/fuite des idées maniaque."},
+{q:"La fureur maniaque est une forme extrême de :",o:["L'agitation motrice maniaque","La dépression","L'anxiété","La dissociation"],a:0,e:"La fureur maniaque représente le degré extrême de l'agitation motrice dans l'épisode maniaque."},
+{q:"L'hypomanie est :",o:["Une forme atténuée de la manie","Une forme sévère de la manie","Un état dépressif léger","Un trouble anxieux"],a:0,e:"L'hypomanie est une forme atténuée de la manie, avec les mêmes symptômes mais à un degré moindre."},
+{q:"Dans la manie délirante, les thématiques délirantes sont :",o:["Congruentes à l'humeur","Incongruentes à l'humeur","Absentes","De type persécutoire uniquement"],a:0,e:"Dans la manie délirante, les thèmes délirants sont congruents à l'humeur (idées de grandeur, de toute-puissance)."},
+// === DÉPRESSION vs MANIE ===
+{q:"Dans la dépression, on observe une perte de libido ; dans la manie, on observe :",o:["Une hypersexualité","Une perte de libido aussi","Une indifférence sexuelle","Aucun changement"],a:0,e:"La dépression et la manie sont des miroirs inversés : perte de libido/anorexie dans la dépression vs hypersexualité/hyperphagie dans la manie."},
+{q:"La dépression est associée à la bradypsychie, la manie à :",o:["La tachypsychie","La bradypsychie aussi","L'aphasie","L'amnésie"],a:0,e:"Dépression = bradypsychie (pensée ralentie) ; manie = tachypsychie (pensée accélérée), fuite des idées."},
+{q:"Dans la dépression, on observe l'anorexie ; dans la manie, on observe :",o:["L'hyperphagie","L'anorexie aussi","La boulimie nerveuse","Aucun trouble alimentaire"],a:0,e:"L'anorexie caractérise la dépression, tandis que l'hyperphagie est typique de la manie."},
+// === ÉPIDÉMIOLOGIE BIPOLAIRE ===
+{q:"L'ancienne appellation du trouble bipolaire était :",o:["Psychose maniaco-dépressive (PMD)","Névrose cyclique","Schizophrénie affective","Trouble de la personnalité cyclique"],a:0,e:"Le trouble bipolaire était anciennement appelé psychose maniaco-dépressive (PMD)."},
+{q:"Selon Pedinielli et Gimenez (2003), le terme 'psychose' dans PMD réfère à :",o:["L'intensité des symptômes, pas la structure","La structure de personnalité","La présence d'hallucinations","Un déficit cognitif"],a:0,e:"Pedinielli et Gimenez précisent que 'psychose' dans PMD renvoie à l'intensité des symptômes, non à la structure psychotique."},
+{q:"La prévalence du trouble bipolaire I est de :",o:["1-1,5 %","5 %","10 %","0,1 %"],a:0,e:"Le TB I touche 1-1,5 % de la population ; en incluant le TB II, on atteint 4 %, et jusqu'à 12 % avec les formes sub-syndromiques."},
+{q:"Le trouble bipolaire touche autant d'hommes que de femmes.",o:["Vrai","Faux"],a:0,e:"Contrairement à la dépression unipolaire, le trouble bipolaire présente un équilibre entre hommes et femmes."},
+{q:"Le trouble bipolaire débute typiquement entre :",o:["16 et 24 ans","30 et 40 ans","5 et 10 ans","Après 50 ans"],a:0,e:"Le trouble bipolaire débute généralement entre 16 et 24 ans."},
+{q:"Le risque suicidaire dans le trouble bipolaire est de :",o:["15-20 %","1-2 %","5 %","50 %"],a:0,e:"Le risque suicidaire est très élevé dans le TB : 15-20 % des patients."},
+// === SPECTRE BIPOLAIRE ===
+{q:"L'ordre correct du spectre bipolaire (du moins au plus sévère) est :",o:["Variations normales → instabilité → tempérament cyclothymique → cyclothymie → BP II → BP I","BP I → BP II → cyclothymie → normal","Cyclothymie → BP II → BP I → normal","Normal → BP I → BP II → cyclothymie"],a:0,e:"Le spectre va des variations normales → instabilité → tempérament cyclothymique → pré-bipolaire → cyclothymie → BP II → BP I."},
+// === TYPES DE TB ===
+{q:"Le trouble bipolaire de type I se caractérise par :",o:["Des phases maniaques et dépressives avec intervalles libres","Uniquement des phases dépressives","Des phases hypomaniaques seulement","Des cycles rapides exclusivement"],a:0,e:"Le TB I comprend des phases maniaques et dépressives franches, séparées par des intervalles libres."},
+{q:"Le trouble bipolaire de type II se distingue du type I par :",o:["Des phases HYPOmaniaques au lieu de maniaques","Des phases maniaques plus sévères","L'absence de phases dépressives","Un début plus tardif"],a:0,e:"Le TB II comprend des phases dépressives et hypomaniaques (pas de manie franche), avec intervalles libres."},
+{q:"Le trouble bipolaire de type III est caractérisé par :",o:["Des épisodes induits par antidépresseurs ou des antécédents familiaux","Des cycles ultrarapides","Uniquement de la manie","L'absence de tout traitement"],a:0,e:"Le TB III regroupe les épisodes thymiques induits par les antidépresseurs ou les patients ayant des antécédents familiaux de TB."},
+{q:"Les cycles rapides se définissent par au moins ____ épisodes par an :",o:["4","2","8","12"],a:0,e:"Les cycles rapides correspondent à au moins 4 épisodes thymiques par an, touchant 13-20 % des bipolaires, surtout les femmes."},
+// === TROUBLE SCHIZO-AFFECTIF ===
+{q:"Le trouble schizo-affectif associe :",o:["Des épisodes thymiques et des symptômes de schizophrénie","Uniquement des symptômes dépressifs","Des TOC et des phobies","Des troubles dissociatifs et anxieux"],a:0,e:"Le trouble schizo-affectif combine des épisodes de l'humeur avec des symptômes psychotiques de type schizophrénique."},
+{q:"Dans le trouble schizo-affectif, les délires/hallucinations persistent ≥ 2 semaines EN L'ABSENCE de symptômes thymiques.",o:["Vrai","Faux"],a:0,e:"C'est le critère B clé : les symptômes psychotiques doivent être présents pendant au moins 2 semaines sans épisode thymique concomitant."},
+{q:"La prévalence du trouble schizo-affectif est de :",o:["0,5-0,8 %","5 %","10 %","0,01 %"],a:0,e:"Le trouble schizo-affectif touche 0,5 à 0,8 % de la population."},
+{q:"Par rapport à la schizophrénie, le trouble schizo-affectif a :",o:["Moins de symptômes négatifs et un meilleur pronostic","Plus de symptômes négatifs","Un moins bon pronostic","Les mêmes caractéristiques"],a:0,e:"Le trouble schizo-affectif est globalement moins altérant que la schizophrénie, avec moins de symptômes négatifs et un meilleur pronostic."},
+{q:"Dans le TB, les symptômes psychotiques surviennent UNIQUEMENT pendant les épisodes thymiques, contrairement au trouble schizo-affectif.",o:["Vrai","Faux"],a:0,e:"C'est la distinction clé : dans le TB, la psychose ne survient que pendant les épisodes thymiques ; dans le trouble schizo-affectif, elle persiste aussi entre les épisodes."},
+// === CYCLOTHYMIE ===
+{q:"La cyclothymie est une forme ____ du trouble bipolaire :",o:["Atténuée","Sévère","Aiguë","Résolutive"],a:0,e:"La cyclothymie est une forme atténuée du TB, alternant dépression modérée et hypomanie."},
+{q:"La cyclothymie touche ____ de la population :",o:["5-6 %","0,5 %","15 %","1 %"],a:0,e:"La cyclothymie touche 5-6 % de la population, et plus de 50 % des dépressifs qui consultent."},
+{q:"Plus de 50 % des dépressifs qui consultent seraient en fait cyclothymiques.",o:["Vrai","Faux"],a:0,e:"C'est un chiffre important : plus de la moitié des patients dépressifs qui consultent présenteraient une cyclothymie."},
+// === TB SOUS-DIAGNOSTIQUÉ ===
+{q:"____ des patients diagnostiqués dépressifs seraient en réalité bipolaires :",o:["40 %","10 %","5 %","80 %"],a:0,e:"Le TB est largement sous-diagnostiqué : 40 % des patients 'dépressifs' seraient en réalité bipolaires."},
+{q:"Le TB est confondu avec un autre diagnostic dans ____ des cas :",o:["43-68 %","10-20 %","80-90 %","5-10 %"],a:0,e:"Le trouble bipolaire est confondu avec d'autres diagnostics dans 43 à 68 % des cas."},
+{q:"Le risque principal de prescrire des antidépresseurs à un patient bipolaire est :",o:["Un virage maniaque","Une amélioration trop rapide","Aucun risque","Une somnolence excessive"],a:0,e:"Les antidépresseurs chez un bipolaire risquent de provoquer un virage maniaque, d'où l'importance du diagnostic différentiel."},
+{q:"15-20 % des bipolaires non traités décèdent par suicide.",o:["Vrai","Faux"],a:0,e:"En l'absence de traitement, 15-20 % des bipolaires décèdent par suicide, et 40 % font une tentative."},
+// === DIAGNOSTIC DIFFÉRENTIEL ===
+{q:"Pour distinguer le TB du TDAH, on recherche :",o:["La présence nette d'épisodes d'humeur exaltée et la nature épisodique","L'hyperactivité motrice","Les troubles de l'attention","L'impulsivité"],a:0,e:"Le TB se distingue du TDAH par la présence nette d'épisodes d'humeur exaltée, d'idées de grandeur et le caractère épisodique."},
+{q:"Pour distinguer le TB du trouble borderline, on note que dans le TB :",o:["Il n'y a pas d'instabilité de l'image ni de peur du rejet/abandon","Il y a une peur intense de l'abandon","L'identité est instable","Les relations sont chaotiques"],a:0,e:"Le TB se distingue du borderline par l'absence d'instabilité de l'image de soi et de la peur du rejet et de l'abandon."},
+// === CRÉATIVITÉ ===
+{q:"Lequel de ces artistes N'EST PAS cité comme bipolaire présumé ?",o:["Sigmund Freud","Van Gogh","Virginia Woolf","Churchill"],a:0,e:"Parmi les personnalités citées : Van Gogh, Nietzsche, Virginia Woolf, Berlioz et Churchill. Freud n'est pas dans cette liste."},
+// === MODÈLES ÉTIOLOGIQUES ===
+{q:"L'impuissance apprise (learned helplessness) est un modèle de :",o:["Seligman (comportemental)","Beck (cognitif)","Freud (psychanalyse)","Klein (psychanalyse)"],a:0,e:"Seligman a proposé le modèle de l'impuissance apprise pour expliquer la dépression du point de vue comportemental."},
+{q:"La triade cognitive négative est un modèle de :",o:["Beck (cognitif)","Seligman (comportemental)","Freud (psychanalyse)","Rogers (humaniste)"],a:0,e:"Beck a décrit la triade cognitive négative (soi, monde, avenir) dans le cadre du modèle cognitif de la dépression."},
+{q:"Selon le modèle biologique, la dépression est liée à un déficit en :",o:["Sérotonine","Dopamine","Adrénaline","Acétylcholine"],a:0,e:"Le modèle biologique de la dépression met en avant un déficit en sérotonine."},
+{q:"Selon Klein (psychanalyse), la dépression renvoie à :",o:["La position dépressive","Le complexe d'Œdipe","Le stade oral","Le stade phallique"],a:0,e:"Melanie Klein a théorisé la position dépressive comme concept central dans la compréhension psychanalytique de la dépression."},
+{q:"Freud a lié la dépression au :",o:["Travail de deuil et à la défense maniaque","Complexe de castration","Stade anal","Principe de plaisir uniquement"],a:0,e:"Pour Freud, la dépression (mélancolie) est liée au travail de deuil, et la manie constitue une défense contre la dépression."},
+{q:"Le modèle humaniste parle de :",o:["Dépression réactionnelle","Impuissance apprise","Triade cognitive","Déficit sérotoninergique"],a:0,e:"L'approche humaniste conceptualise la dépression comme une réaction à des circonstances de vie."},
+// === OUTILS D'ÉVALUATION ===
+{q:"Le BDI (Beck Depression Inventory) évalue :",o:["La dépression","La manie","L'anxiété","La dissociation"],a:0,e:"L'inventaire de Beck (BDI) est un auto-questionnaire mesurant la sévérité de la dépression."},
+{q:"L'HDRS (Hamilton Depression Rating Scale) mesure :",o:["La sévérité de la dépression","Le risque suicidaire uniquement","La manie","L'anxiété sociale"],a:0,e:"L'échelle de Hamilton (HDRS) est une hétéro-évaluation de la sévérité dépressive."},
+// === QUESTIONS SUPPLÉMENTAIRES ===
+{q:"Le vécu pessimiste dans la dépression selon Guelfi concerne :",o:["Le passé, le présent et l'avenir","Uniquement l'avenir","Uniquement le passé","Le présent uniquement"],a:0,e:"Guelfi décrit un vécu pessimiste touchant le passé (reconstitution négative), le présent (culpabilité) et l'avenir (incurabilité)."},
+{q:"La mélancolie stuporeuse est associée à :",o:["L'anhédonie extrême","L'agitation maniaque","Les hallucinations","L'hyperphagie"],a:0,e:"La mélancolie stuporeuse est une forme extrême d'anhédonie où le patient est quasi immobile et mutique."},
+{q:"L'aboulie désigne :",o:["L'incapacité à prendre des décisions ou à agir","L'excès de volonté","La perte de mémoire","Un trouble du langage"],a:0,e:"L'aboulie est la perte de volonté et l'incapacité à prendre des décisions, caractéristique de l'inhibition dépressive."},
+{q:"Un état mixte bipolaire associe :",o:["Des symptômes maniaques et dépressifs simultanément","Uniquement de la manie","Uniquement de la dépression","De l'anxiété et de la dépression"],a:0,e:"L'état mixte combine des symptômes maniaques et dépressifs de manière simultanée."},
+{q:"La dépression saisonnière touche ____ fois plus de femmes que d'hommes :",o:["3-4","2","Égalité","5-6"],a:0,e:"La dépression saisonnière touche 3 à 4 fois plus de femmes que d'hommes."},
+{q:"La phase lutéale est associée au :",o:["Trouble dysphorique prémenstruel","Trouble bipolaire","EDM","Dysthymie"],a:0,e:"Le trouble dysphorique prémenstruel survient pendant la phase lutéale du cycle menstruel."},
+{q:"L'hypothèse de la dépression saisonnière implique un manque de lumière qui réduit :",o:["La mélatonine et la sérotonine","La dopamine et la noradrénaline","Le cortisol","L'adrénaline"],a:0,e:"Le manque de lumière en automne/hiver entraîne une baisse de la mélatonine et de la sérotonine."},
+{q:"4-6 % de la population souffre de vraie dépression saisonnière, tandis que ____ ont des symptômes variables :",o:["15-25 %","5 %","50 %","1 %"],a:0,e:"15-25 % ont des symptômes saisonniers variables, mais seulement 4-6 % présentent une vraie dépression saisonnière."},
+{q:"Dans la dépression, le délire d'indignité survient dans les cas de :",o:["Mélancolie (formes graves)","Dépression légère","Dysthymie","Hypomanie"],a:0,e:"Le délire d'indignité est un symptôme des formes graves de dépression, notamment la mélancolie."},
+{q:"Les fausses obligations (biais cognitif) consistent à :",o:["S'imposer des exigences arbitraires ('je devrais...')","Ignorer toute obligation","Déléguer excessivement","Refuser tout engagement"],a:0,e:"Les fausses obligations sont des exigences arbitraires que le dépressif s'impose ('je devrais', 'il faut que')."},
+{q:"L'étiquetage (biais cognitif) consiste à :",o:["Porter un jugement définitif sur soi ou les autres","Classer les objets","Organiser ses pensées","Faire une liste de tâches"],a:0,e:"L'étiquetage consiste à se définir de manière définitive et globale ('je suis un perdant')."},
+{q:"20 % des patients diagnostiqués schizo-affectifs conservent ce diagnostic au test-retest.",o:["Vrai","Faux"],a:0,e:"La stabilité diagnostique du trouble schizo-affectif est faible : seulement 20 % conservent le diagnostic lors du retest."},
+{q:"Le trouble bipolaire est plus fréquent en zone :",o:["Urbaine","Rurale","Côtière","Montagnarde"],a:0,e:"Le trouble bipolaire est plus fréquent en zone urbaine."},
+{q:"Les formes sub-syndromiques du spectre bipolaire touchent jusqu'à :",o:["12 %","1 %","4 %","20 %"],a:0,e:"En incluant les formes sub-syndromiques, le spectre bipolaire touche jusqu'à 12 % de la population."},
+{q:"La dépression post-partum est corrélée aux hormones :",o:["Corticotropes","Thyroïdiennes","Sexuelles uniquement","Hypophysaires"],a:0,e:"La dépression post-partum est corrélée avec les hormones corticotropes."},
+{q:"Les cycles rapides touchent surtout :",o:["Les femmes","Les hommes","Les enfants","Les personnes âgées"],a:0,e:"Les cycles rapides (≥ 4 épisodes/an) touchent 13-20 % des bipolaires et sont plus fréquents chez les femmes."},
+{q:"40 % des bipolaires font une tentative de suicide.",o:["Vrai","Faux"],a:0,e:"En plus des 15-20 % qui décèdent par suicide, 40 % des bipolaires font au moins une tentative de suicide."},
+];
+
+const TOTAL=20;
+let selected,current,score,answered;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startGame(){
+  selected=shuffle([...ALL_QUESTIONS]).slice(0,TOTAL);
+  current=0;score=0;answered=false;
+  render();
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(current>=TOTAL){showResult();return}
+  const q=selected[current];
+  const isVF=q.o.length===2&&(q.o[0]==="Vrai"||q.o[0]==="Faux")&&(q.o[1]==="Vrai"||q.o[1]==="Faux");
+  let indices=[...Array(q.o.length).keys()];
+  if(!isVF) indices=shuffle(indices);
+  const pct=Math.round((current/TOTAL)*100);
+  app.innerHTML=`
+    <h1>Les Montagnes Russes</h1>
+    <p class="subtitle">Chapitre 7 : Les Troubles de l'Humeur</p>
+    <div class="score-bar"><span>Question ${current+1}/${TOTAL}</span><span>Score : ${score}/${TOTAL}</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="card">
+      <span class="tag">${isVF?'Vrai / Faux':'QCM'}</span>
+      <div class="question">${q.q}</div>
+      <div class="options">${indices.map(i=>`<button class="opt-btn" data-idx="${i}">${q.o[i]}</button>`).join('')}</div>
+      <div class="explanation" id="expl">💡 ${q.e}</div>
+    </div>
+    <button class="next-btn" id="nextBtn">${current<TOTAL-1?'Question suivante ➜':'Voir le résultat ➜'}</button>`;
+  answered=false;
+  document.querySelectorAll('.opt-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>handleAnswer(parseInt(btn.dataset.idx),q.a,btn));
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{current++;render()});
+}
+
+function handleAnswer(chosen,correct,btn){
+  if(answered)return;answered=true;
+  document.querySelectorAll('.opt-btn').forEach(b=>{b.classList.add('locked');b.disabled=true});
+  if(chosen===correct){score++;btn.classList.add('correct')}
+  else{btn.classList.add('wrong');document.querySelectorAll('.opt-btn').forEach(b=>{if(parseInt(b.dataset.idx)===correct)b.classList.add('reveal')})}
+  document.getElementById('expl').classList.add('show');
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function showResult(){
+  const pct=Math.round((score/TOTAL)*100);
+  let msg='';
+  if(pct>=90)msg='Magistral ! Vous dominez les troubles de l\'humeur !';
+  else if(pct>=70)msg='Très bien ! Encore un effort pour la perfection.';
+  else if(pct>=50)msg='Correct, mais le chapitre 7 mérite une relecture.';
+  else msg='Il faut reprendre le chapitre 7 sérieusement !';
+  document.getElementById('app').innerHTML=`
+    <h1>Les Montagnes Russes</h1>
+    <p class="subtitle">Chapitre 7 : Les Troubles de l'Humeur</p>
+    <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="card result">
+      <h2>Résultat</h2>
+      <div class="big-score">${score} / ${TOTAL}</div>
+      <p>${pct}% de bonnes réponses</p>
+      <p>${msg}</p>
+      <button class="replay-btn" onclick="startGame()">🔄 Rejouer</button>
+    </div>`;
+}
+
+startGame();
+</script>
+</body>
+</html>

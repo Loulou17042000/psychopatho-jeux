@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qui veut gagner ses ECTS ?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Open+Sans:wght@400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background: radial-gradient(ellipse at center, #1a1a4e 0%, #0a0a2e 50%, #050520 100%);
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Starfield */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1px 1px at 15% 85%, rgba(255,255,255,0.2), transparent),
+      radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 45% 45%, rgba(255,255,255,0.2), transparent),
+      radial-gradient(1px 1px at 65% 30%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1px 1px at 25% 70%, rgba(255,255,255,0.3), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .game-container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    padding: 15px 0;
+  }
+
+  .header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2em;
+    background: linear-gradient(180deg, #ffd700, #ffaa00, #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 2px 4px rgba(255,215,0,0.4));
+    letter-spacing: 2px;
+  }
+
+  .header .subtitle {
+    font-size: 0.9em;
+    color: #8888cc;
+    margin-top: 3px;
+  }
+
+  /* LIFELINES */
+  .lifelines {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 10px 0;
+  }
+
+  .lifeline-btn {
+    background: linear-gradient(145deg, #2a2a6e, #1a1a4e);
+    border: 2px solid #5555aa;
+    border-radius: 50%;
+    width: 65px;
+    height: 65px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #ccc;
+    font-size: 0.65em;
+    font-weight: 600;
+    position: relative;
+  }
+
+  .lifeline-btn .icon { font-size: 1.8em; margin-bottom: 2px; }
+  .lifeline-btn:hover:not(.used) {
+    border-color: #ffd700;
+    color: #ffd700;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255,215,0,0.3);
+  }
+  .lifeline-btn.used {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: #333;
+  }
+  .lifeline-btn.used::after {
+    content: '✕';
+    position: absolute;
+    font-size: 2.5em;
+    color: #ff4444;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* MAIN AREA */
+  .main-area {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+    align-items: stretch;
+  }
+
+  /* QUESTION PANEL */
+  .question-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .question-box {
+    background: linear-gradient(145deg, rgba(20,20,80,0.9), rgba(10,10,50,0.95));
+    border: 2px solid #4444aa;
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 25px;
+    position: relative;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .question-box::before, .question-box::after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 2px solid #6666cc;
+  }
+  .question-box::before { top: -2px; left: -2px; border-right: none; border-bottom: none; border-radius: 20px 0 0 0; }
+  .question-box::after { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 20px 0; }
+
+  .question-text {
+    font-size: 1.2em;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* ANSWERS */
+  .answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .answer-btn {
+    background: linear-gradient(145deg, #1a1a5e, #0e0e3a);
+    border: 2px solid #4444aa;
+    border-radius: 30px;
+    padding: 15px 20px;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .answer-btn .letter {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: #ffd700;
+    font-size: 1.1em;
+    min-width: 25px;
+  }
+
+  .answer-btn:hover:not(.disabled):not(.correct):not(.wrong):not(.locked) {
+    border-color: #ffd700;
+    background: linear-gradient(145deg, #2a2a7e, #1a1a5e);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255,215,0,0.2);
+  }
+
+  .answer-btn.selected {
+    border-color: #ff8c00;
+    background: linear-gradient(145deg, #3a2a1e, #2a1a0e);
+    animation: pulse-orange 1s infinite;
+  }
+
+  .answer-btn.correct {
+    border-color: #00ff88;
+    background: linear-gradient(145deg, #0a3a1e, #062a12);
+    animation: pulse-green 0.5s ease 3;
+  }
+
+  .answer-btn.wrong {
+    border-color: #ff3333;
+    background: linear-gradient(145deg, #3a0a0a, #2a0505);
+    animation: shake 0.5s ease;
+  }
+
+  .answer-btn.disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .answer-btn.locked {
+    pointer-events: none;
+  }
+
+  @keyframes pulse-orange {
+    0%, 100% { box-shadow: 0 0 5px rgba(255,140,0,0.3); }
+    50% { box-shadow: 0 0 20px rgba(255,140,0,0.6); }
+  }
+  @keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 5px rgba(0,255,136,0.3); }
+    50% { box-shadow: 0 0 25px rgba(0,255,136,0.7); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-10px); }
+    80% { transform: translateX(10px); }
+  }
+
+  /* ECTS LADDER */
+  .ladder {
+    width: 230px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .ladder-step {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    font-weight: 600;
+    background: rgba(20,20,60,0.6);
+    border: 1px solid rgba(80,80,160,0.3);
+    transition: all 0.4s;
+    position: relative;
+  }
+
+  .ladder-step .step-num { color: #8888bb; min-width: 24px; }
+  .ladder-step .step-ects { color: #aaaadd; }
+
+  .ladder-step.safety {
+    border-color: rgba(255,215,0,0.4);
+    background: rgba(50,40,10,0.5);
+  }
+  .ladder-step.safety .step-ects { color: #ffd700; font-weight: 700; }
+
+  .ladder-step.current {
+    border-color: #ff8c00;
+    background: linear-gradient(90deg, rgba(255,140,0,0.2), rgba(255,140,0,0.1));
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(255,140,0,0.3);
+  }
+  .ladder-step.current .step-num,
+  .ladder-step.current .step-ects { color: #ff8c00; }
+
+  .ladder-step.passed {
+    border-color: rgba(0,255,136,0.3);
+    background: rgba(0,40,20,0.4);
+  }
+  .ladder-step.passed .step-num,
+  .ladder-step.passed .step-ects { color: #00cc66; }
+
+  .ladder-step.won {
+    border-color: #ffd700;
+    background: linear-gradient(90deg, rgba(255,215,0,0.3), rgba(255,215,0,0.15));
+    animation: glow-gold 1.5s infinite;
+  }
+  .ladder-step.won .step-num,
+  .ladder-step.won .step-ects { color: #ffd700; }
+
+  @keyframes glow-gold {
+    0%, 100% { box-shadow: 0 0 5px rgba(255,215,0,0.3); }
+    50% { box-shadow: 0 0 15px rgba(255,215,0,0.6); }
+  }
+
+  /* CONFIRMATION */
+  .confirm-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .confirm-overlay.active { display: flex; }
+
+  .confirm-box {
+    background: linear-gradient(145deg, #1a1a5e, #0e0e3a);
+    border: 2px solid #ffd700;
+    border-radius: 20px;
+    padding: 35px 45px;
+    text-align: center;
+    max-width: 450px;
+  }
+
+  .confirm-box h2 {
+    font-family: 'Cinzel', serif;
+    color: #ffd700;
+    margin-bottom: 20px;
+    font-size: 1.4em;
+  }
+
+  .confirm-box p {
+    margin-bottom: 25px;
+    font-size: 1.05em;
+    color: #ccccee;
+  }
+
+  .confirm-buttons { display: flex; gap: 15px; justify-content: center; }
+
+  .confirm-buttons button {
+    padding: 12px 30px;
+    border: 2px solid;
+    border-radius: 25px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .btn-yes {
+    background: linear-gradient(145deg, #1a4a1a, #0a2a0a);
+    border-color: #00cc66;
+    color: #00ff88;
+  }
+  .btn-yes:hover { background: linear-gradient(145deg, #2a6a2a, #1a4a1a); box-shadow: 0 0 15px rgba(0,204,102,0.4); }
+
+  .btn-no {
+    background: linear-gradient(145deg, #4a1a1a, #2a0a0a);
+    border-color: #cc3333;
+    color: #ff6666;
+  }
+  .btn-no:hover { background: linear-gradient(145deg, #6a2a2a, #4a1a1a); box-shadow: 0 0 15px rgba(204,51,51,0.4); }
+
+  /* LIFELINE RESULTS */
+  .lifeline-result {
+    display: none;
+    background: linear-gradient(145deg, rgba(20,20,80,0.95), rgba(10,10,50,0.98));
+    border: 2px solid #6666cc;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 15px;
+    text-align: center;
+    animation: fadeIn 0.4s ease;
+  }
+  .lifeline-result.active { display: block; }
+
+  .lifeline-result h3 {
+    color: #ffd700;
+    margin-bottom: 10px;
+    font-family: 'Cinzel', serif;
+  }
+
+  /* Friend hint */
+  .friend-bubble {
+    background: rgba(40,40,100,0.8);
+    border-radius: 15px;
+    padding: 15px;
+    margin: 10px auto;
+    max-width: 400px;
+    font-style: italic;
+    color: #ccccee;
+    position: relative;
+  }
+  .friend-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50px;
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: rgba(40,40,100,0.8) transparent transparent;
+  }
+
+  /* Public bars */
+  .public-chart {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 20px;
+    height: 120px;
+    margin: 15px 0;
+  }
+  .public-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .public-bar .bar {
+    width: 50px;
+    background: linear-gradient(180deg, #6666cc, #3333aa);
+    border-radius: 5px 5px 0 0;
+    transition: height 1s ease;
+  }
+  .public-bar .bar-label { font-weight: 700; color: #ffd700; font-size: 0.9em; }
+  .public-bar .bar-pct { color: #aaaadd; font-size: 0.85em; }
+
+  /* SCREENS */
+  .screen { display: none; }
+  .screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* START SCREEN */
+  .start-screen {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .logo-diamond {
+    width: 150px;
+    height: 150px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00, #ffd700);
+    transform: rotate(45deg);
+    margin: 0 auto 30px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 40px rgba(255,215,0,0.4);
+    animation: float 3s ease-in-out infinite;
+  }
+  .logo-diamond span {
+    transform: rotate(-45deg);
+    font-size: 3em;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: rotate(45deg) translateY(0); }
+    50% { transform: rotate(45deg) translateY(-10px); }
+  }
+
+  .start-screen h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.8em;
+    background: linear-gradient(180deg, #ffd700, #ffaa00, #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 2px 6px rgba(255,215,0,0.4));
+  }
+
+  .start-screen .tagline {
+    color: #8888cc;
+    font-size: 1.1em;
+    margin-bottom: 40px;
+  }
+
+  .start-btn {
+    background: linear-gradient(145deg, #ffd700, #ff8c00);
+    border: none;
+    border-radius: 35px;
+    padding: 18px 50px;
+    font-size: 1.3em;
+    font-weight: 700;
+    font-family: 'Cinzel', serif;
+    color: #1a1a4e;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+  }
+  .start-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255,215,0,0.5);
+  }
+
+  /* END SCREEN */
+  .end-screen {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .end-screen .result-icon {
+    font-size: 5em;
+    margin-bottom: 20px;
+  }
+
+  .end-screen h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2em;
+    margin-bottom: 10px;
+  }
+
+  .end-screen .ects-won {
+    font-size: 3em;
+    font-weight: 900;
+    font-family: 'Cinzel', serif;
+    margin: 20px 0;
+  }
+
+  .end-screen .ects-won.gold {
+    background: linear-gradient(180deg, #ffd700, #ffaa00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .end-screen .ects-won.red { color: #ff4444; }
+
+  .end-screen .message {
+    color: #8888cc;
+    font-size: 1.1em;
+    margin-bottom: 30px;
+    max-width: 500px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* WALK AWAY */
+  .walkaway-btn {
+    margin-top: 18px;
+    background: transparent;
+    border: 1px solid #666;
+    border-radius: 20px;
+    padding: 8px 25px;
+    color: #888;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: all 0.3s;
+    align-self: center;
+  }
+  .walkaway-btn:hover {
+    border-color: #ffd700;
+    color: #ffd700;
+  }
+
+  /* Responsive */
+  @media (max-width: 800px) {
+    .main-area { flex-direction: column-reverse; }
+    .ladder {
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .ladder-step { padding: 4px 8px; font-size: 0.7em; }
+    .answers-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: 1.5em; }
+  }
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div class="game-container screen start-screen active" id="startScreen">
+  <div class="logo-diamond"><span>🎓</span></div>
+  <h1>Qui veut gagner<br>ses ECTS ?</h1>
+  <p class="tagline">Psychopathologie &mdash; 15 questions pour vos 30 ECTS</p>
+  <button class="start-btn" onclick="startGame()">JOUER</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="game-container screen" id="gameScreen">
+  <div class="header">
+    <h1>Qui veut gagner ses ECTS ?</h1>
+    <div class="subtitle">Psychopathologie</div>
+  </div>
+
+  <div class="lifelines">
+    <button class="lifeline-btn" id="ll5050" onclick="useFiftyFifty()" title="50/50">
+      <span class="icon">✂️</span>
+      <span>50:50</span>
+    </button>
+    <button class="lifeline-btn" id="llFriend" onclick="useFriend()" title="Appel à un ami">
+      <span class="icon">📞</span>
+      <span>Ami</span>
+    </button>
+    <button class="lifeline-btn" id="llPublic" onclick="usePublic()" title="Avis du public">
+      <span class="icon">👥</span>
+      <span>Public</span>
+    </button>
+  </div>
+
+  <div class="main-area">
+    <div class="question-panel">
+      <div class="question-box">
+        <div class="question-text" id="questionText"></div>
+      </div>
+
+      <div class="answers-grid" id="answersGrid"></div>
+
+      <div class="lifeline-result" id="lifelineResult"></div>
+
+      <button class="walkaway-btn" id="walkawayBtn" onclick="walkAway()">Quitter avec mes ECTS</button>
+    </div>
+
+    <div class="ladder" id="ladder"></div>
+  </div>
+</div>
+
+<!-- CONFIRM OVERLAY -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h2>Dernier mot ?</h2>
+    <p id="confirmText">C'est votre dernier mot ?</p>
+    <div class="confirm-buttons">
+      <button class="btn-yes" onclick="confirmAnswer()">Oui, dernier mot</button>
+      <button class="btn-no" onclick="cancelAnswer()">Non, je change</button>
+    </div>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div class="game-container screen end-screen" id="endScreen">
+  <div class="result-icon" id="resultIcon"></div>
+  <h2 id="resultTitle"></h2>
+  <div class="ects-won" id="resultECTS"></div>
+  <p class="message" id="resultMessage"></p>
+  <button class="start-btn" onclick="startGame()">REJOUER</button>
+</div>
+
+<script>
+// ===================== DATA =====================
+const levels = [
+  { num: 1,  ects: 1,  safety: false },
+  { num: 2,  ects: 2,  safety: false },
+  { num: 3,  ects: 3,  safety: false },
+  { num: 4,  ects: 4,  safety: false },
+  { num: 5,  ects: 5,  safety: true  },
+  { num: 6,  ects: 6,  safety: false },
+  { num: 7,  ects: 7,  safety: false },
+  { num: 8,  ects: 8,  safety: false },
+  { num: 9,  ects: 9,  safety: false },
+  { num: 10, ects: 10, safety: true  },
+  { num: 11, ects: 12, safety: false },
+  { num: 12, ects: 15, safety: false },
+  { num: 13, ects: 20, safety: false },
+  { num: 14, ects: 25, safety: false },
+  { num: 15, ects: 30, safety: true  },
+];
+
+const questions = [
+  {
+    q: "Le mot psychopathologie vient de trois racines grecques. Que signifie 'Pathos' ?",
+    answers: ["Souffrance", "Esprit", "Discours", "Maladie"],
+    correct: 0,
+    hint: "Je suis assez sûr que c'est lié au ressenti, pas au corps... Je dirais Souffrance, à 85%."
+  },
+  {
+    q: "Combien de troubles de la personnalité le DSM-5 identifie-t-il ?",
+    answers: ["10", "8", "12", "15"],
+    correct: 0,
+    hint: "On les regroupe en 3 clusters... A, B, C... et il y en a 10 en tout si je me souviens bien."
+  },
+  {
+    q: "Quel cluster regroupe les troubles de la personnalité 'dramatiques et émotionnels' ?",
+    answers: ["Cluster B", "Cluster A", "Cluster C", "Cluster D"],
+    correct: 0,
+    hint: "Le A c'est les bizarres, le C les anxieux... donc les dramatiques c'est le B !"
+  },
+  {
+    q: "L'effet Stroop démontre quel processus cognitif ?",
+    answers: ["L'inhibition", "La mémoire", "L'attention", "La perception"],
+    correct: 0,
+    hint: "C'est quand on doit ne pas lire le mot et dire la couleur... c'est de l'inhibition je pense."
+  },
+  {
+    q: "Quelle est la prévalence vie entière du TAG ?",
+    answers: ["6%", "2%", "15%", "10%"],
+    correct: 0,
+    hint: "Le trouble anxieux généralisé... je dirais autour de 5-6%, pas plus de 10%."
+  },
+  {
+    q: "La triade cognitive de Beck concerne les cognitions sur...",
+    answers: ["Soi, l'environnement, l'avenir", "Soi, les autres, le passé", "Le passé, le présent, l'avenir", "Le corps, l'esprit, les relations"],
+    correct: 0,
+    hint: "Beck et la dépression... la vision négative de soi, du monde et de l'avenir. C'est A."
+  },
+  {
+    q: "Quel auteur a décrit l'érotomanie en 1921 ?",
+    answers: ["Clérambault", "Kraepelin", "Freud", "Bleuler"],
+    correct: 0,
+    hint: "L'érotomanie de Clérambault, c'est un classique ! Le syndrome porte son nom."
+  },
+  {
+    q: "Quelle est la durée minimale pour diagnostiquer une schizophrénie ?",
+    answers: ["6 mois", "1 mois", "3 mois", "1 an"],
+    correct: 0,
+    hint: "Le DSM demande au moins 6 mois de perturbation avec au moins 1 mois de symptômes actifs."
+  },
+  {
+    q: "Le trouble bipolaire de type III se caractérise par des épisodes (hypo)maniaques induits par...",
+    answers: ["Des traitements antidépresseurs", "L'alcool", "Le stress", "Le cannabis"],
+    correct: 0,
+    hint: "Le type III c'est le virage maniaque sous antidépresseurs, iatrogène quoi."
+  },
+  {
+    q: "Quel est le pronostic de la BDA ? 40% épisode unique, 35% trouble bipolaire, et...",
+    answers: ["25% schizophrénie", "15% rémission", "20% trouble dépressif", "30% récidive"],
+    correct: 0,
+    hint: "Si on a 40% + 35%, il reste 25%... et ça évolue vers la schizophrénie dans ces cas."
+  },
+  {
+    q: "Dans la schizophrénie, l'échopraxie désigne...",
+    answers: ["La reproduction des gestes d'autrui", "La répétition des paroles d'autrui", "La reproduction des mimiques", "La répétition de ses propres mots"],
+    correct: 0,
+    hint: "Écho + praxie... praxis c'est l'action, le geste. C'est imiter les gestes des autres."
+  },
+  {
+    q: "Selon Hare (PCL-R), quel pourcentage des détenus avec TP antisociale sont réellement psychopathes ?",
+    answers: ["5-10%", "50-80%", "20-30%", "1-2%"],
+    correct: 0,
+    hint: "Hare distingue bien antisocial et psychopathe. Beaucoup de détenus sont antisociaux mais très peu sont de vrais psychopathes... 5 à 10%."
+  },
+  {
+    q: "Le délire paranoïaque est systématisé. Cela signifie qu'il est...",
+    answers: ["Cohérent, ordonné, logique avec un thème unique", "Polymorphe avec hallucinations multiples", "Flou et contradictoire", "Limité aux hallucinations"],
+    correct: 0,
+    hint: "Systématisé veut dire que le délire est bien construit, logique en interne, avec un seul thème."
+  },
+  {
+    q: "La paraphrénie se distingue par une 'apparente adaptation du sujet à la réalité'. Quel est son mécanisme principal ?",
+    answers: ["L'imagination", "L'interprétation", "L'hallucination", "L'intuition"],
+    correct: 0,
+    hint: "La paraphrénie c'est le délire d'imagination, fantastique... le mécanisme principal c'est l'imagination."
+  },
+  {
+    q: "Selon Zimmerman et al. (2015), combien de façons existent pour obtenir un diagnostic de dépression avec le DSM-5 ?",
+    answers: ["227", "50", "127", "300"],
+    correct: 0,
+    hint: "C'est un nombre surprenant qui montre l'hétérogénéité... 227 combinaisons possibles !"
+  }
+];
+
+// ===================== AUDIO =====================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+}
+
+function playTone(freq, duration, type = 'sine', volume = 0.15) {
+  ensureAudio();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+function soundCorrect() {
+  playTone(523, 0.15, 'sine', 0.12);
+  setTimeout(() => playTone(659, 0.15, 'sine', 0.12), 150);
+  setTimeout(() => playTone(784, 0.3, 'sine', 0.12), 300);
+}
+
+function soundWrong() {
+  playTone(200, 0.4, 'sawtooth', 0.08);
+  setTimeout(() => playTone(150, 0.5, 'sawtooth', 0.08), 200);
+}
+
+function soundSelect() {
+  playTone(440, 0.1, 'sine', 0.08);
+}
+
+function soundSuspense() {
+  playTone(220, 0.8, 'triangle', 0.05);
+  setTimeout(() => playTone(233, 0.8, 'triangle', 0.05), 800);
+  setTimeout(() => playTone(220, 0.8, 'triangle', 0.05), 1600);
+}
+
+function soundWin() {
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((n, i) => {
+    setTimeout(() => playTone(n, 0.3, 'sine', 0.1), i * 200);
+  });
+  setTimeout(() => {
+    playTone(1047, 0.8, 'sine', 0.12);
+    playTone(784, 0.8, 'sine', 0.08);
+    playTone(523, 0.8, 'sine', 0.06);
+  }, 800);
+}
+
+function soundLifeline() {
+  playTone(600, 0.1, 'sine', 0.08);
+  setTimeout(() => playTone(800, 0.15, 'sine', 0.08), 100);
+}
+
+// ===================== GAME STATE =====================
+let currentLevel = 0;
+let selectedAnswer = -1;
+let lifelines = { fifty: true, friend: true, public: true };
+let shuffledMaps = []; // maps shuffled index -> original index per question
+let gameActive = false;
+
+// ===================== SCREENS =====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ===================== START =====================
+function startGame() {
+  currentLevel = 0;
+  selectedAnswer = -1;
+  lifelines = { fifty: true, friend: true, public: true };
+  shuffledMaps = [];
+  gameActive = true;
+
+  // Pre-shuffle answers for all questions
+  questions.forEach((q, qi) => {
+    const indices = [0, 1, 2, 3];
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    shuffledMaps.push(indices);
+  });
+
+  document.getElementById('ll5050').classList.remove('used');
+  document.getElementById('llFriend').classList.remove('used');
+  document.getElementById('llPublic').classList.remove('used');
+
+  showScreen('gameScreen');
+  buildLadder();
+  loadQuestion();
+}
+
+// ===================== LADDER =====================
+function buildLadder() {
+  const ladder = document.getElementById('ladder');
+  ladder.innerHTML = '';
+  for (let i = levels.length - 1; i >= 0; i--) {
+    const lv = levels[i];
+    const step = document.createElement('div');
+    step.className = 'ladder-step';
+    step.id = 'step-' + i;
+    if (lv.safety) step.classList.add('safety');
+
+    const ectsLabel = lv.ects === 30 ? '30 ECTS 🎓' : lv.ects + ' ECTS';
+    step.innerHTML = `<span class="step-num">${lv.num}</span><span class="step-ects">${ectsLabel}</span>`;
+    ladder.appendChild(step);
+  }
+  updateLadder();
+}
+
+function updateLadder() {
+  levels.forEach((lv, i) => {
+    const step = document.getElementById('step-' + i);
+    step.classList.remove('current', 'passed', 'won');
+    if (i < currentLevel) step.classList.add('passed');
+    else if (i === currentLevel) step.classList.add('current');
+  });
+}
+
+// ===================== QUESTION =====================
+function loadQuestion() {
+  if (currentLevel >= questions.length) {
+    winGame();
+    return;
+  }
+
+  selectedAnswer = -1;
+  gameActive = true;
+  const q = questions[currentLevel];
+  const map = shuffledMaps[currentLevel];
+
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('lifelineResult').classList.remove('active');
+  document.getElementById('lifelineResult').innerHTML = '';
+
+  const letters = ['A', 'B', 'C', 'D'];
+  const grid = document.getElementById('answersGrid');
+  grid.innerHTML = '';
+
+  for (let i = 0; i < 4; i++) {
+    const origIdx = map[i];
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.id = 'ans-' + i;
+    btn.setAttribute('data-orig', origIdx);
+    btn.innerHTML = `<span class="letter">${letters[i]}:</span><span>${q.answers[origIdx]}</span>`;
+    btn.onclick = () => selectAnswer(i);
+    grid.appendChild(btn);
+  }
+
+  document.getElementById('walkawayBtn').style.display = currentLevel > 0 ? 'block' : 'none';
+  updateLadder();
+}
+
+// ===================== ANSWER SELECTION =====================
+function selectAnswer(idx) {
+  if (!gameActive) return;
+  const btn = document.getElementById('ans-' + idx);
+  if (btn.classList.contains('disabled')) return;
+
+  soundSelect();
+
+  // Remove previous selection
+  document.querySelectorAll('.answer-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedAnswer = idx;
+
+  // Show confirmation
+  const q = questions[currentLevel];
+  const map = shuffledMaps[currentLevel];
+  const letters = ['A', 'B', 'C', 'D'];
+  document.getElementById('confirmText').innerHTML =
+    `Vous avez choisi <strong style="color:#ffd700">${letters[idx]}: ${q.answers[map[idx]]}</strong><br>C'est votre dernier mot ?`;
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+
+function cancelAnswer() {
+  document.getElementById('confirmOverlay').classList.remove('active');
+  document.querySelectorAll('.answer-btn').forEach(b => b.classList.remove('selected'));
+  selectedAnswer = -1;
+}
+
+function confirmAnswer() {
+  document.getElementById('confirmOverlay').classList.remove('active');
+  gameActive = false;
+
+  // Lock all buttons
+  document.querySelectorAll('.answer-btn').forEach(b => b.classList.add('locked'));
+
+  const q = questions[currentLevel];
+  const map = shuffledMaps[currentLevel];
+  const chosenOrig = map[selectedAnswer];
+
+  soundSuspense();
+
+  // Dramatic pause
+  setTimeout(() => {
+    // Find which displayed button has the correct answer
+    let correctDisplayIdx = -1;
+    for (let i = 0; i < 4; i++) {
+      if (map[i] === q.correct) { correctDisplayIdx = i; break; }
+    }
+
+    if (chosenOrig === q.correct) {
+      // CORRECT
+      document.getElementById('ans-' + selectedAnswer).classList.remove('selected');
+      document.getElementById('ans-' + selectedAnswer).classList.add('correct');
+      soundCorrect();
+
+      setTimeout(() => {
+        currentLevel++;
+        if (currentLevel >= questions.length) {
+          winGame();
+        } else {
+          loadQuestion();
+        }
+      }, 1800);
+
+    } else {
+      // WRONG
+      document.getElementById('ans-' + selectedAnswer).classList.remove('selected');
+      document.getElementById('ans-' + selectedAnswer).classList.add('wrong');
+      document.getElementById('ans-' + correctDisplayIdx).classList.add('correct');
+      soundWrong();
+
+      setTimeout(() => loseGame(), 2500);
+    }
+  }, 2500);
+}
+
+// ===================== LIFELINES =====================
+function useFiftyFifty() {
+  if (!lifelines.fifty || !gameActive) return;
+  lifelines.fifty = false;
+  document.getElementById('ll5050').classList.add('used');
+  soundLifeline();
+
+  const q = questions[currentLevel];
+  const map = shuffledMaps[currentLevel];
+
+  // Find which displayed indices are wrong
+  let wrongDisplayIndices = [];
+  for (let i = 0; i < 4; i++) {
+    if (map[i] !== q.correct) wrongDisplayIndices.push(i);
+  }
+
+  // Shuffle and pick 2 to disable
+  for (let i = wrongDisplayIndices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [wrongDisplayIndices[i], wrongDisplayIndices[j]] = [wrongDisplayIndices[j], wrongDisplayIndices[i]];
+  }
+
+  const toDisable = wrongDisplayIndices.slice(0, 2);
+  toDisable.forEach(di => {
+    document.getElementById('ans-' + di).classList.add('disabled');
+  });
+}
+
+function useFriend() {
+  if (!lifelines.friend || !gameActive) return;
+  lifelines.friend = false;
+  document.getElementById('llFriend').classList.add('used');
+  soundLifeline();
+
+  const q = questions[currentLevel];
+  const result = document.getElementById('lifelineResult');
+  result.innerHTML = `
+    <h3>📞 Appel à un ami</h3>
+    <div class="friend-bubble">"${q.hint}"</div>
+  `;
+  result.classList.add('active');
+}
+
+function usePublic() {
+  if (!lifelines.public || !gameActive) return;
+  lifelines.public = false;
+  document.getElementById('llPublic').classList.add('used');
+  soundLifeline();
+
+  const q = questions[currentLevel];
+  const map = shuffledMaps[currentLevel];
+  const letters = ['A', 'B', 'C', 'D'];
+
+  // Generate fake percentages: correct gets 40-60%
+  const correctPct = 40 + Math.floor(Math.random() * 21);
+  let remaining = 100 - correctPct;
+  let pcts = [0, 0, 0, 0];
+
+  // Find correct display index
+  let correctDI = -1;
+  for (let i = 0; i < 4; i++) {
+    if (map[i] === q.correct) { correctDI = i; break; }
+  }
+  pcts[correctDI] = correctPct;
+
+  // Distribute remaining among wrong answers
+  const wrongDIs = [0,1,2,3].filter(i => i !== correctDI);
+  // Check if any are disabled (50/50)
+  const activeDIs = wrongDIs.filter(i => !document.getElementById('ans-' + i).classList.contains('disabled'));
+  const disabledDIs = wrongDIs.filter(i => document.getElementById('ans-' + i).classList.contains('disabled'));
+  disabledDIs.forEach(i => pcts[i] = 0);
+
+  if (activeDIs.length > 0) {
+    activeDIs.forEach((di, idx) => {
+      if (idx === activeDIs.length - 1) {
+        pcts[di] = remaining;
+      } else {
+        const p = Math.floor(Math.random() * (remaining / (activeDIs.length - idx)));
+        pcts[di] = p;
+        remaining -= p;
+      }
+    });
+  }
+
+  const maxPct = Math.max(...pcts);
+  const result = document.getElementById('lifelineResult');
+  let barsHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const h = maxPct > 0 ? (pcts[i] / maxPct) * 100 : 0;
+    barsHTML += `
+      <div class="public-bar">
+        <div class="bar-pct">${pcts[i]}%</div>
+        <div class="bar" style="height: ${h}px;"></div>
+        <div class="bar-label">${letters[i]}</div>
+      </div>
+    `;
+  }
+
+  result.innerHTML = `
+    <h3>👥 Avis du public</h3>
+    <div class="public-chart">${barsHTML}</div>
+  `;
+  result.classList.add('active');
+}
+
+// ===================== WALK AWAY =====================
+function walkAway() {
+  if (!gameActive) return;
+  const ects = currentLevel > 0 ? levels[currentLevel - 1].ects : 0;
+  showEndScreen(true, ects, true);
+}
+
+// ===================== END STATES =====================
+function winGame() {
+  soundWin();
+  showEndScreen(true, 30, false);
+}
+
+function loseGame() {
+  // Find safety net
+  let safeECTS = 0;
+  for (let i = currentLevel - 1; i >= 0; i--) {
+    if (levels[i].safety) { safeECTS = levels[i].ects; break; }
+  }
+  showEndScreen(false, safeECTS, false);
+}
+
+function showEndScreen(won, ects, walkaway) {
+  const icon = document.getElementById('resultIcon');
+  const title = document.getElementById('resultTitle');
+  const ectsEl = document.getElementById('resultECTS');
+  const msg = document.getElementById('resultMessage');
+
+  if (won && ects === 30) {
+    icon.textContent = '🎓';
+    title.textContent = 'DIPLOME !';
+    title.style.color = '#ffd700';
+    ectsEl.textContent = '30 ECTS';
+    ectsEl.className = 'ects-won gold';
+    msg.textContent = 'Incroyable ! Vous avez remporte tous vos ECTS ! Vous etes un(e) expert(e) en psychopathologie !';
+  } else if (walkaway) {
+    icon.textContent = '🚶';
+    title.textContent = 'Vous partez avec vos gains !';
+    title.style.color = '#00cc66';
+    ectsEl.textContent = ects + ' ECTS';
+    ectsEl.className = 'ects-won gold';
+    msg.textContent = 'Sage decision ! Vous repartez avec ' + ects + ' ECTS en poche.';
+  } else if (!won) {
+    icon.textContent = '😔';
+    title.textContent = 'Mauvaise reponse...';
+    title.style.color = '#ff4444';
+    ectsEl.textContent = ects + ' ECTS';
+    ectsEl.className = 'ects-won red';
+    if (ects > 0) {
+      msg.textContent = 'Votre filet de securite vous sauve ! Vous repartez avec ' + ects + ' ECTS.';
+    } else {
+      msg.textContent = 'Pas de filet de securite atteint... Vous repartez les mains vides. Retentez votre chance !';
+    }
+  }
+
+  showScreen('endScreen');
+}
+
+// Init
+buildLadder();
+</script>
+</body>
+</html>

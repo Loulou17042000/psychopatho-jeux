@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Pendu Psy - Chapitres 1-2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f1a;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  header {
+    text-align: center;
+    padding: 30px 20px 10px;
+    width: 100%;
+  }
+
+  header h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #2563eb, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 40px rgba(37,99,235,0.3);
+    margin-bottom: 4px;
+  }
+
+  header .subtitle {
+    font-size: 1rem;
+    color: #94a3b8;
+    font-weight: 300;
+  }
+
+  .score-bar {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    padding: 14px 0 10px;
+    font-size: 0.95rem;
+  }
+
+  .score-bar span {
+    background: rgba(37,99,235,0.12);
+    border: 1px solid rgba(37,99,235,0.25);
+    padding: 6px 18px;
+    border-radius: 20px;
+    color: #93c5fd;
+  }
+
+  .game-area {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    padding: 10px 20px 20px;
+    max-width: 1000px;
+    width: 100%;
+  }
+
+  /* Hangman SVG */
+  .hangman-container {
+    flex: 0 0 220px;
+    display: flex;
+    justify-content: center;
+  }
+
+  #hangman-svg {
+    filter: drop-shadow(0 0 12px rgba(37,99,235,0.25));
+  }
+
+  #hangman-svg .structure { stroke: #334155; stroke-width: 3; fill: none; }
+  #hangman-svg .body-part { stroke: #60a5fa; stroke-width: 3; fill: none; stroke-linecap: round; opacity: 0; transition: opacity 0.4s ease; }
+  #hangman-svg .body-part.visible { opacity: 1; }
+  #hangman-svg .head { fill: none; stroke: #60a5fa; stroke-width: 3; opacity: 0; transition: opacity 0.4s ease; }
+  #hangman-svg .head.visible { opacity: 1; }
+
+  /* Word & Clue */
+  .word-section {
+    flex: 1 1 400px;
+    text-align: center;
+  }
+
+  .clue-box {
+    background: rgba(37,99,235,0.08);
+    border: 1px solid rgba(37,99,235,0.2);
+    border-radius: 16px;
+    padding: 18px 24px;
+    margin-bottom: 24px;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .clue-box p {
+    font-size: 1.05rem;
+    color: #cbd5e1;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .clue-box .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #60a5fa;
+    font-style: normal;
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .word-display {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    min-height: 60px;
+  }
+
+  .letter-slot {
+    width: 42px;
+    height: 52px;
+    border-bottom: 3px solid #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    transition: all 0.3s ease;
+  }
+
+  .letter-slot.revealed {
+    border-bottom-color: #2563eb;
+    color: #93c5fd;
+    text-shadow: 0 0 10px rgba(37,99,235,0.5);
+  }
+
+  .letter-slot.wrong-reveal {
+    border-bottom-color: #ef4444;
+    color: #fca5a5;
+  }
+
+  /* Keyboard */
+  .keyboard {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 10px;
+  }
+
+  .key {
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(37,99,235,0.3);
+    background: rgba(37,99,235,0.08);
+    color: #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .key:hover:not(.used) {
+    background: rgba(37,99,235,0.25);
+    border-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+  }
+
+  .key.correct {
+    background: rgba(34,197,94,0.2);
+    border-color: #22c55e;
+    color: #86efac;
+    cursor: default;
+  }
+
+  .key.wrong {
+    background: rgba(239,68,68,0.1);
+    border-color: rgba(239,68,68,0.2);
+    color: #475569;
+    cursor: default;
+  }
+
+  /* Result overlay */
+  .result-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15,15,26,0.92);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(6px);
+  }
+
+  .result-overlay.show { display: flex; }
+
+  .result-card {
+    background: #1a1a2e;
+    border: 1px solid rgba(37,99,235,0.3);
+    border-radius: 24px;
+    padding: 40px 36px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    animation: popIn 0.4s ease;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .result-card .icon { font-size: 3rem; margin-bottom: 12px; }
+  .result-card h2 { font-size: 1.5rem; margin-bottom: 8px; }
+  .result-card .answer-word {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #60a5fa;
+    margin: 10px 0;
+    text-shadow: 0 0 20px rgba(37,99,235,0.4);
+  }
+  .result-card .explanation {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin: 16px 0 24px;
+    padding: 14px;
+    background: rgba(37,99,235,0.06);
+    border-radius: 12px;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: #fff;
+    border: none;
+    padding: 14px 36px;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(37,99,235,0.4);
+  }
+
+  .wrong-count {
+    color: #f87171;
+    font-size: 0.85rem;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 700px) {
+    header h1 { font-size: 1.7rem; }
+    .game-area { gap: 20px; }
+    .hangman-container { flex: 0 0 160px; }
+    .key { width: 36px; height: 36px; font-size: 0.85rem; }
+    .letter-slot { width: 32px; height: 42px; font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Le Pendu Psy</h1>
+  <p class="subtitle">Chapitres 1-2 : Psychopathologie &amp; Normalit&eacute;</p>
+</header>
+
+<div class="score-bar">
+  <span id="score-found">Trouv&eacute;s : 0</span>
+  <span id="score-total">Tent&eacute;s : 0</span>
+  <span id="score-streak">S&eacute;rie : 0</span>
+</div>
+
+<div class="game-area">
+  <div class="hangman-container">
+    <svg id="hangman-svg" width="200" height="240" viewBox="0 0 200 240">
+      <!-- Structure -->
+      <line class="structure" x1="20" y1="230" x2="180" y2="230"/>
+      <line class="structure" x1="60" y1="230" x2="60" y2="20"/>
+      <line class="structure" x1="60" y1="20" x2="140" y2="20"/>
+      <line class="structure" x1="140" y1="20" x2="140" y2="45"/>
+      <!-- Body parts -->
+      <circle class="head body-part" id="bp-0" cx="140" cy="62" r="17"/>
+      <line class="body-part" id="bp-1" x1="140" y1="79" x2="140" y2="130"/>
+      <line class="body-part" id="bp-2" x1="140" y1="92" x2="115" y2="115"/>
+      <line class="body-part" id="bp-3" x1="140" y1="92" x2="165" y2="115"/>
+      <line class="body-part" id="bp-4" x1="140" y1="130" x2="118" y2="165"/>
+      <line class="body-part" id="bp-5" x1="140" y1="130" x2="162" y2="165"/>
+      <!-- eyes (X X when dead) -->
+      <line class="body-part" id="bp-6" x1="133" y1="56" x2="137" y2="62"/>
+      <line class="body-part" id="bp-7" x1="137" y1="56" x2="133" y2="62"/>
+      <line class="body-part" id="bp-8" x1="143" y1="56" x2="147" y2="62"/>
+      <line class="body-part" id="bp-9" x1="147" y1="56" x2="143" y2="62"/>
+    </svg>
+  </div>
+
+  <div class="word-section">
+    <div class="clue-box">
+      <div>
+        <span class="label">Indice</span>
+        <p id="clue-text">Chargement...</p>
+      </div>
+    </div>
+    <div class="word-display" id="word-display"></div>
+    <div class="wrong-count" id="wrong-count"></div>
+  </div>
+</div>
+
+<div class="keyboard" id="keyboard"></div>
+
+<!-- Result overlay -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-card">
+    <div class="icon" id="result-icon"></div>
+    <h2 id="result-title"></h2>
+    <div class="answer-word" id="result-word"></div>
+    <div class="explanation" id="result-explanation"></div>
+    <button class="btn" onclick="nextWord()">Mot suivant</button>
+  </div>
+</div>
+
+<script>
+const WORDS = [
+  { word: "PSYCHE", display: "PSYCH\u00c9", clue: "Racine grecque signifiant \u00ab\u00a0esprit\u00a0\u00bb" },
+  { word: "PATHOS", display: "PATHOS", clue: "Racine grecque signifiant \u00ab\u00a0souffrance\u00a0\u00bb" },
+  { word: "LOGOS", display: "LOGOS", clue: "Racine grecque signifiant \u00ab\u00a0discours\u00a0\u00bb" },
+  { word: "SAMACHER", display: "SAMACHER", clue: "Auteur qui d\u00e9finit la psychopathologie en 2005" },
+  { word: "MINKOWSKI", display: "MINKOWSKI", clue: "Auteur qui distingue pathologie du psychologique et psychologie du pathologique (1966)" },
+  { word: "DECRIRE", display: "D\u00c9CRIRE", clue: "Premier objectif de la psychopathologie" },
+  { word: "INTERPRETER", display: "INTERPR\u00c9TER", clue: "Deuxi\u00e8me objectif de la psychopathologie (poser un diagnostic)" },
+  { word: "INTERVENIR", display: "INTERVENIR", clue: "Troisi\u00e8me objectif de la psychopathologie (aide et traitement)" },
+  { word: "CLINIQUE", display: "CLINIQUE", clue: "Du grec klinikos, signifiant \u00ab\u00a0lit\u00a0\u00bb ou \u00ab\u00a0couche\u00a0\u00bb" },
+  { word: "SEMIOLOGIE", display: "S\u00c9MIOLOGIE", clue: "M\u00e9thode d\u2019investigation li\u00e9e \u00e0 la psychiatrie" },
+  { word: "PSYCHIATRIE", display: "PSYCHIATRIE", clue: "Du grec psyche + iatros : la m\u00e9decine de l\u2019\u00e2me" },
+  { word: "IATROS", display: "IATROS", clue: "Racine grecque signifiant \u00ab\u00a0m\u00e9decin\u00a0\u00bb" },
+  { word: "VISA", display: "VISA", clue: "Document n\u00e9cessaire pour exercer comme psychologue clinicien en Belgique" },
+  { word: "NORMALITE", display: "NORMALIT\u00c9", clue: "La question centrale de la psychopathologie : o\u00f9 est la fronti\u00e8re ?" },
+  { word: "STATISTIQUE", display: "STATISTIQUE", clue: "Type de normalit\u00e9 bas\u00e9e sur la courbe de distribution (la majorit\u00e9)" },
+  { word: "IDEALE", display: "ID\u00c9ALE", clue: "Type de normalit\u00e9 qui rime avec absolu, conformit\u00e9 (Rogers)" },
+  { word: "SOCIALE", display: "SOCIALE", clue: "Type de normalit\u00e9 bas\u00e9e sur des crit\u00e8res socio-culturels" },
+  { word: "SUBJECTIVE", display: "SUBJECTIVE", clue: "Type de normalit\u00e9 bas\u00e9e sur des crit\u00e8res personnels" },
+  { word: "FONCTIONNELLE", display: "FONCTIONNELLE", clue: "Type de normalit\u00e9 : l\u2019individu compar\u00e9 \u00e0 lui-m\u00eame" },
+  { word: "NORMATIVITE", display: "NORMATIVIT\u00c9", clue: "Concept de Canguilhem : capacit\u00e9 \u00e0 instaurer de nouvelles normes" },
+  { word: "CANGUILHEM", display: "CANGUILHEM", clue: "Auteur de \u00ab\u00a0Le normal et le pathologique\u00a0\u00bb (1966)" },
+  { word: "ROGERS", display: "ROGERS", clue: "Psychologue qui parle de la \u00ab\u00a0fully functioning person\u00a0\u00bb" },
+  { word: "BERGERET", display: "BERGERET", clue: "Auteur qui parle d\u2019espace de jeu psychique et de structure n\u00e9vrotique" },
+  { word: "RESILIENCE", display: "R\u00c9SILIENCE", clue: "Trajectoire o\u00f9 l\u2019individu retrouve son niveau de fonctionnement initial" },
+  { word: "ANTIFRAGILITE", display: "ANTIFRAGILIT\u00c9", clue: "Trajectoire o\u00f9 l\u2019individu sort renforc\u00e9 de l\u2019\u00e9preuve" },
+  { word: "FRAGILITE", display: "FRAGILIT\u00c9", clue: "Trajectoire o\u00f9 l\u2019individu ne se remet pas et d\u00e9cline" },
+  { word: "CONTINUUM", display: "CONTINUUM", clue: "Id\u00e9e de Freud : pas de coupure nette entre normal et pathologique" },
+  { word: "WCIORKA", display: "WCIORKA", clue: "Auteur qui parle de signification clinique (2002)" },
+  { word: "SOUFFRANCE", display: "SOUFFRANCE", clue: "Expression n\u00e9cessaire pour franchir les limites de la normalit\u00e9" },
+  { word: "ADAPTATION", display: "ADAPTATION", clue: "Capacit\u00e9 cl\u00e9 dans la normativit\u00e9 de Canguilhem" },
+  { word: "FLEXIBILITE", display: "FLEXIBILIT\u00c9", clue: "Type de flexibilit\u00e9 psychologique li\u00e9e \u00e0 la sant\u00e9 mentale" },
+  { word: "BEAUCHESNE", display: "BEAUCHESNE", clue: "Auteur (1986) : la psychopathologie englobe maladie mentale ET dysfonctionnements normaux" },
+  { word: "WIDLOCHER", display: "WIDL\u00d6CHER", clue: "Auteur (1994) : m\u00e9thodes comparatives en psychopathologie" },
+  { word: "ARBITRAIRE", display: "ARBITRAIRE", clue: "Le choix du seuil en normalit\u00e9 statistique est..." },
+  { word: "BIOPSYCHOSOCIAL", display: "BIOPSYCHOSOCIAL", clue: "Mod\u00e8le qui reconna\u00eet la multiplicit\u00e9 des facteurs en interaction" },
+  { word: "COMPLEMENTAIRES", display: "COMPL\u00c9MENTAIRES", clue: "La psychiatrie et la psychopathologie sont des disciplines..." },
+  { word: "KLINIKOS", display: "KLINIKOS", clue: "Mot grec \u00e0 l\u2019origine du terme \u00ab\u00a0clinique\u00a0\u00bb" },
+  { word: "ALIENUS", display: "ALIENUS", clue: "Mot latin signifiant \u00ab\u00a0\u00e9tranger\u00a0\u00bb, \u00e0 l\u2019origine de \u00ab\u00a0ali\u00e9nation\u00a0\u00bb" },
+  { word: "MELANCOLIE", display: "M\u00c9LANCOLIE", clue: "Terme hippocratique : melas (noir) + chole (bile)" },
+  { word: "DYSFONCTIONNEMENT", display: "DYSFONCTIONNEMENT", clue: "La psychopathologie \u00e9tudie les origines de ces processus" },
+  { word: "EPIDEMIOLOGIE", display: "\u00c9PID\u00c9MIOLOGIE", clue: "\u00c9tude de la fr\u00e9quence et de la distribution des troubles dans une population" },
+  { word: "PREVALENCE", display: "PR\u00c9VALENCE", clue: "Proportion de personnes atteintes d\u2019un trouble \u00e0 un moment donn\u00e9" },
+  { word: "COMORBIDITE", display: "COMORBIDIT\u00c9", clue: "Pr\u00e9sence simultan\u00e9e de deux ou plusieurs troubles chez un m\u00eame individu" },
+  { word: "DIAGNOSTIC", display: "DIAGNOSTIC", clue: "Objectif principal de la psychiatrie : le poser" },
+  { word: "TRAITEMENT", display: "TRAITEMENT", clue: "Ce que la psychiatrie propose apr\u00e8s le diagnostic" },
+  { word: "COMPRENDRE", display: "COMPRENDRE", clue: "Objectif principal de la psychopathologie" },
+  { word: "GENETIQUE", display: "G\u00c9N\u00c9TIQUE", clue: "Type de facteur biologique dans le mod\u00e8le bio-psycho-social" },
+  { word: "NEUROTRANSMISSION", display: "NEUROTRANSMISSION", clue: "Facteur biologique impliquant la communication entre neurones" },
+  { word: "IDENTITE", display: "IDENTIT\u00c9", clue: "Facteur psychologique dans le mod\u00e8le bio-psycho-social" },
+  { word: "SOCIOECONOMIQUE", display: "SOCIO\u00c9CONOMIQUE", clue: "Type de facteur socioculturel dans le mod\u00e8le bio-psycho-social" },
+  { word: "NEURODEVELOPPEMENTALE", display: "NEUROD\u00c9VELOPPEMENTALE", clue: "Type d\u2019hypoth\u00e8se de Piper et al. (2012)" },
+  { word: "IONESCU", display: "IONESCU", clue: "Auteur qui identifie 14 approches de la psychopathologie" },
+  { word: "PATHOGNOMONIQUE", display: "PATHOGNOMONIQUE", clue: "\u00c9l\u00e9ment clinique qui permet de distinguer des entit\u00e9s voisines" },
+  { word: "COGNITION", display: "COGNITION", clue: "Un des 4 domaines perturb\u00e9s dans les troubles de la personnalit\u00e9" },
+  { word: "TEMPERAMENT", display: "TEMP\u00c9RAMENT", clue: "Composante biologique et g\u00e9n\u00e9tique de la personnalit\u00e9" },
+  { word: "CARACTERE", display: "CARACT\u00c8RE", clue: "Composante de la personnalit\u00e9 r\u00e9sultant des exp\u00e9riences de vie" },
+  { word: "EUTHYMIE", display: "EUTHYMIE", clue: "Humeur normale, absence d\u2019euphorie et de d\u00e9pression" },
+  { word: "THYMIE", display: "THYMIE", clue: "Synonyme d\u2019humeur en psychopathologie" },
+  { word: "PSYCHOPATHOLOGIE", display: "PSYCHOPATHOLOGIE", clue: "Le discours sur la souffrance psychique" },
+  { word: "CATHARSIS", display: "CATHARSIS", clue: "Purification des pulsions par le th\u00e9\u00e2tre dans l\u2019Antiquit\u00e9" },
+  { word: "HIPPOCRATE", display: "HIPPOCRATE", clue: "M\u00e9decin grec qui d\u00e9veloppe la th\u00e9orie des humeurs (460-375 av. J.-C.)" },
+  { word: "ETIOLOGIE", display: "\u00c9TIOLOGIE", clue: "\u00c9tude des causes et facteurs d\u2019une maladie" },
+  { word: "PRONOSTIC", display: "PRONOSTIC", clue: "Pr\u00e9vision de l\u2019\u00e9volution probable d\u2019un trouble" },
+  { word: "NOSOGRAPHIE", display: "NOSOGRAPHIE", clue: "Classification syst\u00e9matique des maladies" },
+  { word: "INTROSPECTION", display: "INTROSPECTION", clue: "M\u00e9thode d\u2019observation de ses propres \u00e9tats mentaux" },
+  { word: "ANAMNESE", display: "ANAMN\u00c8SE", clue: "Recueil de l\u2019histoire du patient et de son trouble" },
+];
+
+let currentWord = null;
+let guessedLetters = [];
+let wrongCount = 0;
+let found = 0;
+let attempted = 0;
+let streak = 0;
+let usedIndices = [];
+const MAX_WRONG = 10;
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pickWord() {
+  if (usedIndices.length >= WORDS.length) usedIndices = [];
+  let idx;
+  do { idx = Math.floor(Math.random() * WORDS.length); } while (usedIndices.includes(idx));
+  usedIndices.push(idx);
+  return WORDS[idx];
+}
+
+function buildKeyboard() {
+  const kb = document.getElementById('keyboard');
+  kb.innerHTML = '';
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  letters.split('').forEach(l => {
+    const btn = document.createElement('button');
+    btn.className = 'key';
+    btn.textContent = l;
+    btn.dataset.letter = l;
+    btn.addEventListener('click', () => guessLetter(l));
+    kb.appendChild(btn);
+  });
+}
+
+function renderWord() {
+  const container = document.getElementById('word-display');
+  container.innerHTML = '';
+  const word = currentWord.word;
+  for (let i = 0; i < word.length; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'letter-slot';
+    if (guessedLetters.includes(word[i])) {
+      slot.textContent = currentWord.display[i];
+      slot.classList.add('revealed');
+    }
+    container.appendChild(slot);
+  }
+}
+
+function guessLetter(letter) {
+  if (guessedLetters.includes(letter)) return;
+  guessedLetters.push(letter);
+
+  const keyBtn = document.querySelector(`.key[data-letter="${letter}"]`);
+
+  if (currentWord.word.includes(letter)) {
+    keyBtn.classList.add('correct');
+    renderWord();
+    if (checkWin()) endRound(true);
+  } else {
+    keyBtn.classList.add('wrong');
+    wrongCount++;
+    showBodyPart(wrongCount - 1);
+    document.getElementById('wrong-count').textContent = `Erreurs : ${wrongCount} / ${MAX_WRONG}`;
+    if (wrongCount >= MAX_WRONG) endRound(false);
+  }
+}
+
+function showBodyPart(index) {
+  const part = document.getElementById(`bp-${index}`);
+  if (part) part.classList.add('visible');
+}
+
+function hideAllParts() {
+  for (let i = 0; i < MAX_WRONG; i++) {
+    const part = document.getElementById(`bp-${i}`);
+    if (part) part.classList.remove('visible');
+  }
+}
+
+function checkWin() {
+  return currentWord.word.split('').every(l => guessedLetters.includes(l));
+}
+
+function endRound(won) {
+  attempted++;
+  if (won) { found++; streak++; } else { streak = 0; }
+  updateScore();
+
+  // reveal remaining letters
+  if (!won) {
+    const slots = document.querySelectorAll('.letter-slot');
+    const word = currentWord.word;
+    for (let i = 0; i < word.length; i++) {
+      if (!guessedLetters.includes(word[i])) {
+        slots[i].textContent = currentWord.display[i];
+        slots[i].classList.add('wrong-reveal');
+      }
+    }
+  }
+
+  // disable keyboard
+  document.querySelectorAll('.key').forEach(k => k.style.pointerEvents = 'none');
+
+  setTimeout(() => {
+    const overlay = document.getElementById('result-overlay');
+    document.getElementById('result-icon').textContent = won ? '\u2728' : '\ud83d\ude35';
+    document.getElementById('result-title').textContent = won ? 'Bravo !' : 'Perdu !';
+    document.getElementById('result-title').style.color = won ? '#22c55e' : '#ef4444';
+    document.getElementById('result-word').textContent = currentWord.display;
+    document.getElementById('result-explanation').innerHTML =
+      `<strong>Indice :</strong> ${currentWord.clue}`;
+    overlay.classList.add('show');
+  }, 800);
+}
+
+function updateScore() {
+  document.getElementById('score-found').textContent = `Trouv\u00e9s : ${found}`;
+  document.getElementById('score-total').textContent = `Tent\u00e9s : ${attempted}`;
+  document.getElementById('score-streak').textContent = `S\u00e9rie : ${streak}`;
+}
+
+function nextWord() {
+  document.getElementById('result-overlay').classList.remove('show');
+  startRound();
+}
+
+function startRound() {
+  currentWord = pickWord();
+  guessedLetters = [];
+  wrongCount = 0;
+  hideAllParts();
+  document.getElementById('clue-text').textContent = currentWord.clue;
+  document.getElementById('wrong-count').textContent = '';
+  buildKeyboard();
+  renderWord();
+}
+
+// Physical keyboard support
+document.addEventListener('keydown', (e) => {
+  const letter = e.key.toUpperCase();
+  if (/^[A-Z]$/.test(letter)) {
+    const keyBtn = document.querySelector(`.key[data-letter="${letter}"]`);
+    if (keyBtn && !keyBtn.classList.contains('correct') && !keyBtn.classList.contains('wrong')) {
+      guessLetter(letter);
+    }
+  }
+});
+
+startRound();
+</script>
+</body>
+</html>

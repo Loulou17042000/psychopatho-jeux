@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Balance — Chapitre 7</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f0f1a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;align-items:center}
+::selection{background:#4f46e5;color:#fff}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#1a1a2e}
+::-webkit-scrollbar-thumb{background:#4f46e5;border-radius:3px}
+
+.header{text-align:center;padding:20px 16px 8px}
+.header h1{font-size:2rem;background:linear-gradient(135deg,#4f46e5,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px}
+.header h2{font-size:.95rem;color:#94a3b8;margin-top:4px;font-weight:400}
+
+.stats-bar{display:flex;justify-content:center;gap:16px;padding:10px;flex-wrap:wrap}
+.stat{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:6px 18px;text-align:center}
+.stat .label{font-size:.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px}
+.stat .value{font-size:1.2rem;font-weight:700;color:#818cf8}
+.stat .value.streak{color:#f59e0b}
+
+/* Card area */
+.card-area{width:100%;max-width:600px;min-height:120px;display:flex;justify-content:center;align-items:center;padding:16px;position:relative}
+.symptom-card{background:linear-gradient(135deg,#1e1b4b,#312e81);border:2px solid #4f46e5;border-radius:16px;padding:20px 32px;font-size:1.2rem;font-weight:700;text-align:center;box-shadow:0 8px 32px #4f46e544;cursor:grab;transition:transform .2s,opacity .3s;user-select:none;max-width:90%}
+.symptom-card.correct{animation:correctPop .5s ease}
+.symptom-card.wrong{animation:wrongShake .5s ease}
+.symptom-card.fly-left{transition:transform .5s,opacity .5s;transform:translateX(-300px) rotate(-20deg);opacity:0}
+.symptom-card.fly-right{transition:transform .5s,opacity .5s;transform:translateX(300px) rotate(20deg);opacity:0}
+
+@keyframes correctPop{0%{transform:scale(1)}50%{transform:scale(1.1);box-shadow:0 0 30px #22c55e88}100%{transform:scale(1)}}
+@keyframes wrongShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-15px)}40%{transform:translateX(15px)}60%{transform:translateX(-10px)}80%{transform:translateX(10px)}}
+
+/* Balance */
+.balance-container{width:100%;max-width:700px;height:200px;position:relative;margin:0 auto}
+.balance-base{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:60px;height:80px;clip-path:polygon(50% 0%,100% 100%,0% 100%);background:linear-gradient(to bottom,#4f46e5,#3730a3)}
+.balance-beam{position:absolute;bottom:75px;left:50%;width:500px;height:6px;background:linear-gradient(90deg,#60a5fa,#4f46e5,#f97316);border-radius:3px;transform-origin:center center;transition:transform .6s cubic-bezier(.34,1.56,.64,1);margin-left:-250px}
+.balance-pivot{position:absolute;bottom:72px;left:50%;width:16px;height:16px;background:#818cf8;border-radius:50%;transform:translateX(-50%);z-index:2;box-shadow:0 0 12px #818cf888}
+.plate{position:absolute;bottom:0;width:100px;height:16px;border-radius:0 0 50% 50%;transition:transform .6s cubic-bezier(.34,1.56,.64,1)}
+.plate-left{left:0;background:#60a5fa;transform-origin:50px -60px}
+.plate-right{right:0;background:#f97316;transform-origin:50px -60px}
+.plate-label{position:absolute;top:-28px;width:100%;text-align:center;font-size:.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.plate-left .plate-label{color:#60a5fa}
+.plate-right .plate-label{color:#f97316}
+
+/* Drop zones */
+.drop-zones{display:flex;justify-content:space-between;width:100%;max-width:700px;gap:12px;padding:0 16px;margin-top:8px}
+.drop-zone{flex:1;border:2px dashed #4f46e544;border-radius:16px;padding:20px 8px;text-align:center;font-weight:700;font-size:1rem;cursor:pointer;transition:all .2s;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.drop-zone:hover{border-color:#818cf8;background:#4f46e511}
+.drop-zone.active{border-color:#818cf8;background:#4f46e522;transform:scale(1.03)}
+.dz-dep{color:#60a5fa;border-color:#60a5fa44}
+.dz-dep:hover,.dz-dep.active{border-color:#60a5fa;background:#60a5fa11}
+.dz-les2{color:#a78bfa;border-color:#a78bfa44}
+.dz-les2:hover,.dz-les2.active{border-color:#a78bfa;background:#a78bfa11}
+.dz-man{color:#f97316;border-color:#f9731644}
+.dz-man:hover,.dz-man.active{border-color:#f97316;background:#f9731611}
+.dz-icon{font-size:1.6rem}
+
+/* Explanation */
+.explanation{width:100%;max-width:600px;text-align:center;min-height:60px;padding:8px 16px}
+.explanation .exp-text{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:12px 20px;font-size:.9rem;color:#94a3b8;display:none}
+.explanation .exp-text.show{display:block;animation:fadeIn .3s}
+.explanation .exp-result{font-weight:700;margin-bottom:4px}
+.exp-correct{color:#22c55e}
+.exp-wrong{color:#ef4444}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* End screen */
+.end-screen{display:none;text-align:center;padding:40px 20px}
+.end-screen.show{display:block}
+.end-screen h2{font-size:2rem;background:linear-gradient(135deg,#4f46e5,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px}
+.end-screen .final-score{font-size:3rem;font-weight:800;color:#818cf8;margin:12px 0}
+.end-screen .detail{color:#94a3b8;margin:4px 0}
+.btn{background:linear-gradient(135deg,#4f46e5,#3730a3);color:#fff;border:none;padding:14px 32px;border-radius:12px;font-size:1.05rem;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .15s;letter-spacing:.5px;margin-top:20px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px #4f46e544}
+
+.game-area{display:flex;flex-direction:column;align-items:center;width:100%}
+.game-area.hidden{display:none}
+
+@media(max-width:600px){
+  .balance-beam{width:320px;margin-left:-160px}
+  .drop-zones{flex-direction:column;gap:8px}
+  .drop-zone{min-height:50px;padding:12px 8px}
+  .symptom-card{font-size:1rem;padding:16px 20px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>La Balance</h1>
+  <h2>Chapitre 7 : Les Troubles de l'Humeur</h2>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="label">Question</div><div class="value" id="qNum">1/20</div></div>
+  <div class="stat"><div class="label">Score</div><div class="value" id="score">0</div></div>
+  <div class="stat"><div class="label">Serie</div><div class="value streak" id="streak">0</div></div>
+  <div class="stat"><div class="label">Correct</div><div class="value" id="correctCount">0</div></div>
+</div>
+
+<div class="game-area" id="gameArea">
+  <div class="card-area">
+    <div class="symptom-card" id="card">Chargement...</div>
+  </div>
+
+  <div class="balance-container">
+    <div class="balance-beam" id="beam">
+      <div class="plate plate-left" id="plateLeft"><div class="plate-label">Depression</div></div>
+      <div class="plate plate-right" id="plateRight"><div class="plate-label">Manie</div></div>
+    </div>
+    <div class="balance-pivot"></div>
+    <div class="balance-base"></div>
+  </div>
+
+  <div class="drop-zones">
+    <div class="drop-zone dz-dep" data-side="DEPRESSION" onclick="answer('DEPRESSION')">
+      <div class="dz-icon">&#x1F535;</div>
+      DEPRESSION
+    </div>
+    <div class="drop-zone dz-les2" data-side="LES DEUX" onclick="answer('LES DEUX')">
+      <div class="dz-icon">&#x1F7E3;</div>
+      LES DEUX
+    </div>
+    <div class="drop-zone dz-man" data-side="MANIE" onclick="answer('MANIE')">
+      <div class="dz-icon">&#x1F7E0;</div>
+      MANIE
+    </div>
+  </div>
+
+  <div class="explanation" id="explanation">
+    <div class="exp-text" id="expText"></div>
+  </div>
+</div>
+
+<div class="end-screen" id="endScreen">
+  <h2>Partie terminee !</h2>
+  <div class="final-score" id="finalScore">0</div>
+  <div class="detail" id="detailCorrect"></div>
+  <div class="detail" id="detailStreak"></div>
+  <button class="btn" onclick="startGame()">Rejouer</button>
+</div>
+
+<script>
+const ITEMS=[
+// DEPRESSION
+{s:"Tristesse constante",side:"DEPRESSION",exp:"Humeur depressive avec pleurs incontrôlables"},
+{s:"Bradypsychie",side:"DEPRESSION",exp:"Pensee ralentie, sentiment de perte de capacites intellectuelles"},
+{s:"Ralentissement psychomoteur",side:"DEPRESSION",exp:"Mouvements lents, stupeur, fatigue"},
+{s:"Anhedonie",side:"DEPRESSION",exp:"Incapacite a ressentir de la joie ou du plaisir"},
+{s:"Monoideisme",side:"DEPRESSION",exp:"Rumination d'une même pensee en boucle"},
+{s:"Aboulie",side:"DEPRESSION",exp:"Indecision, incapacite a faire des choix"},
+{s:"Bradyphemie",side:"DEPRESSION",exp:"Parole ralentie, reponses laconiques"},
+{s:"Incurie",side:"DEPRESSION",exp:"Negligence de l'hygiene corporelle"},
+{s:"Hypomimie",side:"DEPRESSION",exp:"Visage sans expression, amimie"},
+{s:"Anorexie",side:"DEPRESSION",exp:"Perte d'appetit avec amaigrissement (90% des cas)"},
+{s:"Perte de libido",side:"DEPRESSION",exp:"Baisse du desir sexuel, frigidite, impuissance"},
+{s:"Aggravation matinale",side:"DEPRESSION",exp:"Asthenie, inhibition et douleur morale massive au reveil (depression endogene)"},
+{s:"Insomnie avec reveil precoce",side:"DEPRESSION",exp:"Reveil precoce (90% des cas), accompagne de mentisme"},
+{s:"Douleur morale",side:"DEPRESSION",exp:"L'humeur depressive est ressentie de façon douloureuse par l'individu"},
+{s:"Culpabilite exageree",side:"DEPRESSION",exp:"Vecu d'indignite, autodepreciation, culpabilite"},
+{s:"Pessimisme",side:"DEPRESSION",exp:"Sensation d'avenir bouche, incurabilite"},
+{s:"Autodepreciation",side:"DEPRESSION",exp:"Sentiment d'incapacite, de devalorisation, d'inferiorite"},
+{s:"Melancolie stuporeuse",side:"DEPRESSION",exp:"Forme grave : anhedonie + conscience douloureuse verbalisee ou non"},
+{s:"Delire d'indignite",side:"DEPRESSION",exp:"Forme grave : l'autodepreciation va jusqu'au delire"},
+{s:"Asthenie depressive",side:"DEPRESSION",exp:"Perte d'elan vital, fatigue intense (80% des deprimes). Ce n'est pas une simple fatigue"},
+{s:"Ideations suicidaires",side:"DEPRESSION",exp:"Desir de mourir, idee portant sur l'action de se tuer"},
+{s:"Constipation",side:"DEPRESSION",exp:"Trouble digestif somatique frequent dans la depression"},
+{s:"Hypothymie",side:"DEPRESSION",exp:"Emoussement affectif, pôle bas de l'humeur"},
+// MANIE
+{s:"Euphorie",side:"MANIE",exp:"Humeur exaltee, sentiment de bien-être constant, hyper hedonie"},
+{s:"Tachypsychie",side:"MANIE",exp:"Pensee acceleree avec fuite des idees"},
+{s:"Logorrhee",side:"MANIE",exp:"Flux verbal incessant, discours abondant et rapide"},
+{s:"Hyperactivite motrice",side:"MANIE",exp:"Agitation, excitation, caractere ludique"},
+{s:"Hypersexualite",side:"MANIE",exp:"Augmentation du desir et des comportements sexuels"},
+{s:"Hyperphagie",side:"MANIE",exp:"Gloutonnerie, augmentation de l'appetit"},
+{s:"Insomnie SANS fatigue",side:"MANIE",exp:"Reveil matinal precoce mais SANS fatigue ressentie"},
+{s:"Megalomanie",side:"MANIE",exp:"Idees de grandeur, sensation de toute-puissance"},
+{s:"Coq-a-l'âne",side:"MANIE",exp:"Associations par assonances, distractibilite dans le discours"},
+{s:"Pensee delirante",side:"MANIE",exp:"Idees de grandeur, persecution, erotomanie"},
+{s:"Hypermimie",side:"MANIE",exp:"Expression faciale exageree, mimique exuberante"},
+{s:"Desinhibition",side:"MANIE",exp:"Patient debraille, plaisanteries, sarcasmes"},
+{s:"Fureur maniaque",side:"MANIE",exp:"Grande crise d'agitation maniaque / crise clastique"},
+{s:"Labilite emotionnelle",side:"MANIE",exp:"Irritabilite, colere, passage rapide d'une emotion a l'autre"},
+{s:"Richesse associative",side:"MANIE",exp:"Contrairement a la pauvrete de pensee dans la depression"},
+{s:"Infatigabilite",side:"MANIE",exp:"Excitation motrice constante sans epuisement"},
+{s:"Deshydratation",side:"MANIE",exp:"Risque somatique lie a l'hyperactivite et l'hyperphagie sans hydratation"},
+// LES DEUX
+{s:"Troubles du sommeil",side:"LES DEUX",exp:"Insomnie dans les deux cas, mais AVEC fatigue (depression) vs SANS fatigue (manie)"},
+{s:"Irritabilite",side:"LES DEUX",exp:"Presente dans la depression ET la manie, mais differemment"},
+{s:"Troubles de l'attention",side:"LES DEUX",exp:"Difficultes de concentration dans les deux cas"},
+{s:"Risque suicidaire",side:"LES DEUX",exp:"Present dans la depression ET le trouble bipolaire"},
+{s:"Idees delirantes",side:"LES DEUX",exp:"Delire d'indignite (depression) ou delire de grandeur (manie)"},
+{s:"Alteration du jugement",side:"LES DEUX",exp:"Le jugement est perturbe dans les deux etats"},
+];
+
+const PER_SESSION=22;
+let queue=[], current=null, qIndex=0;
+let score=0, streak=0, maxStreak=0, correctTotal=0;
+let tilt=0, locked=false;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startGame(){
+  document.getElementById('endScreen').classList.remove('show');
+  document.getElementById('gameArea').classList.remove('hidden');
+  queue=shuffle([...ITEMS]).slice(0,PER_SESSION);
+  qIndex=0;score=0;streak=0;maxStreak=0;correctTotal=0;tilt=0;
+  updateStats();updateBeam();
+  nextCard();
+}
+
+function updateStats(){
+  document.getElementById('qNum').textContent=`${Math.min(qIndex+1,queue.length)}/${queue.length}`;
+  document.getElementById('score').textContent=score;
+  document.getElementById('streak').textContent=streak;
+  document.getElementById('correctCount').textContent=correctTotal;
+}
+
+function updateBeam(){
+  const angle=Math.max(-15,Math.min(15,tilt*3));
+  document.getElementById('beam').style.transform=`rotate(${angle}deg)`;
+}
+
+function nextCard(){
+  if(qIndex>=queue.length){endGame();return}
+  current=queue[qIndex];
+  const card=document.getElementById('card');
+  card.className='symptom-card';
+  card.textContent=current.s;
+  card.style.opacity='1';card.style.transform='';
+  document.getElementById('expText').classList.remove('show');
+  locked=false;
+  updateStats();
+}
+
+function answer(side){
+  if(locked||!current) return;
+  locked=true;
+  const card=document.getElementById('card');
+  const correct=side===current.side;
+  const isPiege=current.side==='LES DEUX';
+
+  if(correct){
+    card.classList.add('correct');
+    correctTotal++;
+    streak++;
+    if(streak>maxStreak) maxStreak=streak;
+    const bonus=streak>=3?streak*5:0;
+    score+=10+bonus;
+    tilt+=(side==='DEPRESSION'?-1:side==='MANIE'?1:0);
+  } else {
+    card.classList.add('wrong');
+    streak=0;
+    tilt+=(current.side==='DEPRESSION'?1:current.side==='MANIE'?-1:0)*0.5;
+  }
+  updateBeam();updateStats();
+
+  // Show explanation
+  const exp=document.getElementById('expText');
+  let resultHTML=correct
+    ?`<div class="exp-result exp-correct">Correct ! ${streak>=3?'(Combo x'+streak+' !)':''}</div>`
+    :`<div class="exp-result exp-wrong">Faux ! La reponse etait : ${current.side}${isPiege?' (piege !)':''}</div>`;
+  exp.innerHTML=resultHTML+`<div>${current.exp}</div>`;
+  exp.classList.add('show');
+
+  setTimeout(()=>{
+    qIndex++;
+    nextCard();
+  },2200);
+}
+
+function endGame(){
+  document.getElementById('gameArea').classList.add('hidden');
+  const es=document.getElementById('endScreen');
+  es.classList.add('show');
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('detailCorrect').textContent=`${correctTotal}/${queue.length} reponses correctes`;
+  document.getElementById('detailStreak').textContent=`Meilleure serie : ${maxStreak}`;
+}
+
+// Drag support
+let dragStartZone=null;
+const card=document.getElementById('card');
+card.addEventListener('mousedown',e=>{e.preventDefault()});
+card.addEventListener('touchstart',e=>{},{passive:true});
+
+// Touch/click on zones is already handled by onclick
+
+startGame();
+</script>
+</body>
+</html>

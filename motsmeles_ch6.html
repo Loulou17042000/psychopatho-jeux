@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mots Mêlés Psy — Chapitre 6</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f0f1a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+::selection{background:#e11d48;color:#fff}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#1a1a2e}
+::-webkit-scrollbar-thumb{background:#e11d48;border-radius:3px}
+
+.header{text-align:center;padding:24px 16px 8px}
+.header h1{font-size:2rem;background:linear-gradient(135deg,#e11d48,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;letter-spacing:1px}
+.header h2{font-size:1rem;color:#94a3b8;margin-top:4px;font-weight:400}
+
+.stats-bar{display:flex;justify-content:center;gap:24px;padding:12px;flex-wrap:wrap}
+.stat{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:8px 20px;text-align:center}
+.stat .label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px}
+.stat .value{font-size:1.3rem;font-weight:700;color:#e11d48}
+
+.container{display:flex;flex-wrap:wrap;justify-content:center;gap:24px;padding:16px;max-width:1200px;margin:0 auto}
+
+.grid-wrapper{position:relative;user-select:none;-webkit-user-select:none;touch-action:none}
+.grid{display:inline-grid;gap:0;background:#1a1a2e;border:2px solid #e11d4833;border-radius:12px;padding:4px;box-shadow:0 0 40px #e11d4811}
+.cell{width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:700;color:#cbd5e1;cursor:pointer;border-radius:4px;transition:background .15s,color .15s,transform .1s;position:relative;z-index:1}
+.cell:hover{background:#e11d4822}
+.cell.selecting{background:#e11d4855;color:#fff;transform:scale(1.08)}
+.cell.found{background:#e11d48;color:#fff;border-radius:4px;box-shadow:0 0 8px #e11d4888}
+
+.words-panel{max-width:380px;width:100%}
+.words-panel h3{font-size:1.1rem;color:#f472b6;margin-bottom:12px;padding-left:4px}
+.word-item{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:10px 14px;margin-bottom:8px;transition:all .3s}
+.word-item .word{font-weight:700;color:#f472b6;font-size:.95rem}
+.word-item .clue{font-size:.8rem;color:#94a3b8;margin-top:2px}
+.word-item.found{border-color:#e11d48;background:#e11d4815}
+.word-item.found .word{text-decoration:line-through;color:#e11d48}
+
+.btn{background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .15s;letter-spacing:.5px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px #e11d4844}
+.btn:active{transform:scale(.97)}
+.controls{text-align:center;padding:12px}
+
+.line-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2}
+
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#e11d48;color:#fff;padding:12px 28px;border-radius:12px;font-weight:700;font-size:1.1rem;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 20px #e11d4866}
+.toast.show{opacity:1}
+
+@media(max-width:700px){
+  .cell{width:26px;height:26px;font-size:.75rem}
+  .container{flex-direction:column;align-items:center}
+  .words-panel{max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Mots Meles Psy</h1>
+  <h2>Chapitre 6 : Les Troubles Anxieux</h2>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="label">Manche</div><div class="value" id="roundNum">1/5</div></div>
+  <div class="stat"><div class="label">Trouvés</div><div class="value" id="foundCount">0/0</div></div>
+  <div class="stat"><div class="label">Score</div><div class="value" id="score">0</div></div>
+  <div class="stat"><div class="label">Temps</div><div class="value" id="timer">0:00</div></div>
+</div>
+
+<div class="container">
+  <div class="grid-wrapper">
+    <div class="grid" id="grid"></div>
+    <svg class="line-overlay" id="lineOverlay"></svg>
+  </div>
+  <div class="words-panel">
+    <h3>Mots a trouver</h3>
+    <div id="wordList"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn" onclick="newRound()">Nouvelle grille</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const WORD_BANK=[
+{w:"ANXIETE",d:"Anticipation des situations de menace",display:"ANXIETE"},
+{w:"PEUR",d:"Emotion transitoire et adaptative face a un danger",display:"PEUR"},
+{w:"STRESS",d:"Reponse physiologique de l'organisme face a un stresseur",display:"STRESS"},
+{w:"TRAUMA",d:"Consequences psychologiques d'une exposition a la mort ou violence",display:"TRAUMA"},
+{w:"PANIQUE",d:"Periode de peur intense avec symptomes somatiques",display:"PANIQUE"},
+{w:"AGORAPHOBIE",d:"Peur des endroits d'ou il serait difficile de s'echapper",display:"AGORAPHOBIE"},
+{w:"PHOBIE",d:"Peur intense provoquee par un objet ou une situation specifique",display:"PHOBIE"},
+{w:"OBSESSION",d:"Idee qui s'impose a la pensee du patient de maniere intrusive",display:"OBSESSION"},
+{w:"COMPULSION",d:"Comportement repetitif pour reduire l'angoisse",display:"COMPULSION"},
+{w:"EVITEMENT",d:"Comportement typique des troubles anxieux",display:"EVITEMENT"},
+{w:"RUMINATION",d:"Pensees involontaires et repetitives qui tournent en boucle",display:"RUMINATION"},
+{w:"AMYGDALE",d:"Structure cerebrale suractivee dans l'anxiete (detecteur de danger)",display:"AMYGDALE"},
+{w:"PREFRONTAL",d:"Cortex sous-active dans l'anxiete (le 'frein' du cerveau)",display:"PREFRONTAL"},
+{w:"RACHMAN",d:"Auteur du modele de l'attention selective et l'hypervigilance (1998)",display:"RACHMAN"},
+{w:"NEVROSE",d:"Ancien terme pour les troubles anxieux (du grec neuron)",display:"NEVROSE"},
+{w:"CULLEN",d:"Inventeur du terme 'nevrose' en 1769",display:"CULLEN"},
+{w:"FREUD",d:"La nevrose est causee par un conflit psychique refoule",display:"FREUD"},
+{w:"HYSTERIE",d:"Ancien concept, subdivise en personnalite histrionique et troubles somatoformes",display:"HYSTERIE"},
+{w:"CHARCOT",d:"Presentait des patientes en crise hysterique lors de ses 'lecons du mardi'",display:"CHARCOT"},
+{w:"CONVERSION",d:"Trouble de symptome neurologique fonctionnel (pseudo-neurologique)",display:"CONVERSION"},
+{w:"HYPOCONDRIE",d:"Trouble d'anxiete liee a la maladie (sans symptomes somatiques)",display:"HYPOCONDRIE"},
+{w:"SOMATISATION",d:"Trouble de symptome somatique (difficulte a vivre psychiquement un evenement)",display:"SOMATISATION"},
+{w:"MUNCHHAUSEN",d:"Syndrome du trouble factice (le patient invente des symptomes)",display:"MUNCHHAUSEN"},
+{w:"DISSOCIATION",d:"Discontinuite de l'integration normale de la conscience et memoire",display:"DISSOCIATION"},
+{w:"AMNESIE",d:"Trouble dissociatif : incapacite a evoquer des souvenirs importants",display:"AMNESIE"},
+{w:"FUGUE",d:"Trouble dissociatif : depart soudain + confusion sur l'identite",display:"FUGUE"},
+{w:"ECMNESIE",d:"Souvenir intrusif ressenti comme appartenant a l'experience actuelle (flashback)",display:"ECMNESIE"},
+{w:"LIEBOWITZ",d:"Echelle d'evaluation de l'anxiete sociale (24 items)",display:"LIEBOWITZ"},
+{w:"RESILIENCE",d:"Trajectoire la plus frequente apres un trauma (2 patients sur 3)",display:"RESILIENCE"},
+{w:"TARGOWLA",d:"Syndrome d'hypermnesie emotionnelle paroxystique tardive (camps nazis)",display:"TARGOWLA"},
+{w:"ARACHNOPHOBIE",d:"Peur des araignees",display:"ARACHNOPHOBIE"},
+{w:"CLAUSTROPHOBIE",d:"Peur d'etre enferme",display:"CLAUSTROPHOBIE"},
+{w:"ACROPHOBIE",d:"Peur des hauteurs",display:"ACROPHOBIE"},
+{w:"AEROPHOBIE",d:"Peur de l'avion",display:"AEROPHOBIE"},
+{w:"HEMATOPHOBIE",d:"Peur du sang et des plaies",display:"HEMATOPHOBIE"},
+{w:"EMETOPHOBIE",d:"Peur de vomir",display:"EMETOPHOBIE"},
+{w:"COULROPHOBIE",d:"Peur des clowns",display:"COULROPHOBIE"},
+{w:"CYNOPHOBIE",d:"Peur des chiens",display:"CYNOPHOBIE"},
+{w:"NOSOPHOBIE",d:"Peur de la maladie",display:"NOSOPHOBIE"},
+{w:"THANATOPHOBIE",d:"Peur de la mort",display:"THANATOPHOBIE"},
+{w:"GLOSSOPHOBIE",d:"Peur de parler en public",display:"GLOSSOPHOBIE"},
+{w:"EREUTOPHOBIE",d:"Peur de rougir",display:"EREUTOPHOBIE"},
+{w:"CATHARSIS",d:"Purification des pulsions (utilisee depuis l'Antiquite)",display:"CATHARSIS"},
+{w:"PSYCHASTHENIE",d:"Terme ancien pour la fatigue psychique liee a l'anxiete",display:"PSYCHASTHENIE"},
+{w:"DEREALISATION",d:"Sentiment de deconnexion de la realite",display:"DEREALISATION"},
+{w:"DEPERSONNALISATION",d:"Sentiment de deconnexion avec soi-meme",display:"DEPERSONNALISATION"},
+{w:"HYPERVIGILANCE",d:"Etat d'alerte excessive typique de l'ESPT et des troubles anxieux",display:"HYPERVIGILANCE"},
+{w:"ESPT",d:"Etat de stress post-traumatique (au-dela d'1 mois apres le trauma)",display:"ESPT"},
+{w:"TRICHOTILLOMANIE",d:"Arrachage compulsif des cheveux ou des poils",display:"TRICHOTILLOMANIE"},
+{w:"DYSMORPHOPHOBIE",d:"Preoccupation obsedante concernant l'apparence corporelle",display:"DYSMORPHOPHOBIE"},
+];
+
+const GRID_SIZE=15;
+const WORDS_PER_ROUND=11;
+const DIRECTIONS=[[0,1],[1,0],[1,1],[0,-1],[-1,0],[-1,-1],[1,-1],[-1,1]];
+const LETTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+let grid=[], cells=[], currentWords=[], foundWords=new Set();
+let selecting=false, selStart=null, selEnd=null, selectedCells=[];
+let totalScore=0, roundIndex=0, totalRounds=5;
+let timerInterval, seconds=0;
+let wordPositions=[];
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function canPlace(word,r,c,dr,dc){
+  for(let i=0;i<word.length;i++){
+    const nr=r+dr*i, nc=c+dc*i;
+    if(nr<0||nr>=GRID_SIZE||nc<0||nc>=GRID_SIZE) return false;
+    if(grid[nr][nc]!==null && grid[nr][nc]!==word[i]) return false;
+  }
+  return true;
+}
+
+function placeWord(word,r,c,dr,dc){
+  const positions=[];
+  for(let i=0;i<word.length;i++){
+    const nr=r+dr*i, nc=c+dc*i;
+    grid[nr][nc]=word[i];
+    positions.push([nr,nc]);
+  }
+  return positions;
+}
+
+function buildGrid(){
+  grid=Array.from({length:GRID_SIZE},()=>Array(GRID_SIZE).fill(null));
+  wordPositions=[];
+  const sorted=[...currentWords].sort((a,b)=>b.w.length-a.w.length);
+  for(const item of sorted){
+    let placed=false;
+    const dirs=shuffle([...DIRECTIONS]);
+    for(let attempt=0;attempt<200&&!placed;attempt++){
+      const r=Math.floor(Math.random()*GRID_SIZE);
+      const c=Math.floor(Math.random()*GRID_SIZE);
+      for(const[dr,dc] of dirs){
+        if(canPlace(item.w,r,c,dr,dc)){
+          const pos=placeWord(item.w,r,c,dr,dc);
+          wordPositions.push({word:item.w,positions:pos});
+          placed=true;break;
+        }
+      }
+    }
+    if(!placed){
+      // fallback: try every position
+      outer:for(let r=0;r<GRID_SIZE;r++)for(let c=0;c<GRID_SIZE;c++)for(const[dr,dc] of dirs){
+        if(canPlace(item.w,r,c,dr,dc)){
+          const pos=placeWord(item.w,r,c,dr,dc);
+          wordPositions.push({word:item.w,positions:pos});
+          placed=true;break outer;
+        }
+      }
+    }
+  }
+  for(let r=0;r<GRID_SIZE;r++)for(let c=0;c<GRID_SIZE;c++){
+    if(grid[r][c]===null) grid[r][c]=LETTERS[Math.floor(Math.random()*26)];
+  }
+}
+
+function renderGrid(){
+  const g=document.getElementById('grid');
+  g.style.gridTemplateColumns=`repeat(${GRID_SIZE},34px)`;
+  g.innerHTML='';
+  cells=[];
+  for(let r=0;r<GRID_SIZE;r++){
+    cells[r]=[];
+    for(let c=0;c<GRID_SIZE;c++){
+      const d=document.createElement('div');
+      d.className='cell';
+      d.textContent=grid[r][c];
+      d.dataset.r=r;d.dataset.c=c;
+      g.appendChild(d);
+      cells[r][c]=d;
+    }
+  }
+  // responsive cell size
+  if(window.innerWidth<700){
+    g.style.gridTemplateColumns=`repeat(${GRID_SIZE},26px)`;
+  }
+}
+
+function renderWords(){
+  const wl=document.getElementById('wordList');
+  wl.innerHTML='';
+  for(const item of currentWords){
+    const d=document.createElement('div');
+    d.className='word-item'+(foundWords.has(item.w)?' found':'');
+    d.id='wi-'+item.w;
+    d.innerHTML=`<div class="word">${item.display}</div><div class="clue">${item.d}</div>`;
+    wl.appendChild(d);
+  }
+  document.getElementById('foundCount').textContent=`${foundWords.size}/${currentWords.length}`;
+}
+
+function getCellsInLine(r1,c1,r2,c2){
+  const dr=Math.sign(r2-r1), dc=Math.sign(c2-c1);
+  if(r1===r2&&c1===c2) return[[r1,c1]];
+  if(r1!==r2&&c1!==c2&&Math.abs(r2-r1)!==Math.abs(c2-c1)) return[];
+  const res=[];
+  let r=r1,c=c1;
+  while(true){
+    res.push([r,c]);
+    if(r===r2&&c===c2) break;
+    r+=dr;c+=dc;
+    if(res.length>GRID_SIZE) break;
+  }
+  return res;
+}
+
+function clearSelection(){
+  for(const[r,c] of selectedCells){
+    if(!cells[r][c].classList.contains('found')) cells[r][c].classList.remove('selecting');
+  }
+  selectedCells=[];
+}
+
+function checkWord(cellList){
+  const str=cellList.map(([r,c])=>grid[r][c]).join('');
+  for(const wp of wordPositions){
+    if(foundWords.has(wp.word)) continue;
+    const wpStr=wp.positions.map(([r,c])=>grid[r][c]).join('');
+    if(str===wpStr || str===[...wpStr].reverse().join('')){
+      return wp.word;
+    }
+  }
+  return null;
+}
+
+function markFound(word){
+  foundWords.add(word);
+  const wp=wordPositions.find(p=>p.word===word);
+  if(wp) wp.positions.forEach(([r,c])=>{cells[r][c].classList.add('found');cells[r][c].classList.remove('selecting')});
+  const wi=document.getElementById('wi-'+word);
+  if(wi) wi.classList.add('found');
+  totalScore+=word.length*10;
+  document.getElementById('score').textContent=totalScore;
+  document.getElementById('foundCount').textContent=`${foundWords.size}/${currentWords.length}`;
+  showToast(`${word} trouve ! +${word.length*10} pts`);
+  if(foundWords.size===currentWords.length){
+    setTimeout(()=>{
+      if(roundIndex<totalRounds-1){
+        showToast('Grille terminee ! Bravo !');
+        setTimeout(()=>nextRound(),1500);
+      } else {
+        showToast(`Termine ! Score final : ${totalScore}`);
+      }
+    },500);
+  }
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+function getRC(el){return[parseInt(el.dataset.r),parseInt(el.dataset.c)]}
+
+function handleStart(e){
+  e.preventDefault();
+  const el=e.target.closest('.cell');if(!el) return;
+  selecting=true;
+  selStart=getRC(el);
+  selEnd=selStart;
+  clearSelection();
+  selectedCells=[selStart];
+  el.classList.add('selecting');
+}
+
+function handleMove(e){
+  if(!selecting) return;
+  e.preventDefault();
+  let el;
+  if(e.touches){
+    const t=e.touches[0];
+    el=document.elementFromPoint(t.clientX,t.clientY);
+  } else {
+    el=e.target.closest('.cell');
+  }
+  if(!el||!el.classList.contains('cell')) return;
+  const[r,c]=getRC(el);
+  if(selEnd&&selEnd[0]===r&&selEnd[1]===c) return;
+  selEnd=[r,c];
+  clearSelection();
+  const line=getCellsInLine(selStart[0],selStart[1],r,c);
+  if(line.length===0) return;
+  selectedCells=line;
+  line.forEach(([rr,cc])=>cells[rr][cc].classList.add('selecting'));
+}
+
+function handleEnd(e){
+  if(!selecting) return;
+  selecting=false;
+  if(selectedCells.length>1){
+    const w=checkWord(selectedCells);
+    if(w) markFound(w);
+  }
+  clearSelection();
+}
+
+function initEvents(){
+  const g=document.getElementById('grid');
+  g.addEventListener('mousedown',handleStart);
+  g.addEventListener('mousemove',handleMove);
+  document.addEventListener('mouseup',handleEnd);
+  g.addEventListener('touchstart',handleStart,{passive:false});
+  g.addEventListener('touchmove',handleMove,{passive:false});
+  document.addEventListener('touchend',handleEnd);
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  seconds=0;
+  timerInterval=setInterval(()=>{
+    seconds++;
+    const m=Math.floor(seconds/60), s=seconds%60;
+    document.getElementById('timer').textContent=`${m}:${s.toString().padStart(2,'0')}`;
+  },1000);
+}
+
+function pickWords(){
+  const pool=shuffle([...WORD_BANK]);
+  // filter words that fit the grid
+  const fits=pool.filter(w=>w.w.length<=GRID_SIZE);
+  return fits.slice(0,WORDS_PER_ROUND);
+}
+
+function nextRound(){
+  roundIndex++;
+  startRound();
+}
+
+function newRound(){
+  startRound();
+}
+
+function startRound(){
+  foundWords=new Set();
+  currentWords=pickWords();
+  buildGrid();
+  renderGrid();
+  renderWords();
+  document.getElementById('roundNum').textContent=`${roundIndex+1}/${totalRounds}`;
+  startTimer();
+}
+
+initEvents();
+startRound();
+</script>
+</body>
+</html>

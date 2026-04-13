@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relier les Paires — Chapitre 4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f1a;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .glow { text-shadow: 0 0 20px rgba(8,145,178,0.5), 0 0 40px rgba(8,145,178,0.2); }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 30px 20px 10px;
+  }
+  header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #0891b2;
+    letter-spacing: -1px;
+  }
+  header h2 {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 16px 20px;
+    flex-wrap: wrap;
+  }
+  .stat {
+    background: rgba(8,145,178,0.08);
+    border: 1px solid rgba(8,145,178,0.2);
+    border-radius: 12px;
+    padding: 10px 22px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #64748b; }
+  .stat-value { font-size: 1.5rem; font-weight: 700; color: #0891b2; margin-top: 2px; }
+
+  /* Game area */
+  .game-container {
+    max-width: 1100px;
+    margin: 10px auto 30px;
+    padding: 0 20px;
+  }
+
+  .columns-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    position: relative;
+  }
+
+  .column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 420px;
+  }
+  .column.right { align-items: flex-end; }
+
+  .item {
+    background: rgba(30, 30, 50, 0.9);
+    border: 2px solid rgba(8,145,178,0.25);
+    border-radius: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    user-select: none;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+  .item:hover:not(.matched):not(.wrong) {
+    border-color: #0891b2;
+    background: rgba(8,145,178,0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(8,145,178,0.15);
+  }
+  .item.selected {
+    border-color: #0891b2;
+    background: rgba(8,145,178,0.15);
+    box-shadow: 0 0 20px rgba(8,145,178,0.3);
+  }
+  .item.matched {
+    border-color: #10b981;
+    background: rgba(16,185,129,0.1);
+    opacity: 0.7;
+    cursor: default;
+    box-shadow: 0 0 15px rgba(16,185,129,0.2);
+  }
+  .item.wrong {
+    border-color: #ef4444;
+    background: rgba(239,68,68,0.15);
+    animation: shake 0.5s ease;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+
+  /* SVG lines */
+  .lines-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .match-line {
+    stroke: #10b981;
+    stroke-width: 2.5;
+    stroke-dasharray: 8 4;
+    opacity: 0.6;
+    filter: drop-shadow(0 0 4px rgba(16,185,129,0.4));
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    border-radius: 12px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+    color: #0f0f1a;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(8,145,178,0.4); }
+  .btn-secondary {
+    background: rgba(8,145,178,0.1);
+    border: 1px solid rgba(8,145,178,0.3);
+    color: #0891b2;
+  }
+  .btn-secondary:hover { background: rgba(8,145,178,0.2); }
+
+  .center-area { text-align: center; margin-top: 28px; }
+
+  /* Celebration */
+  .celebration {
+    display: none;
+    text-align: center;
+    padding: 24px;
+    animation: fadeIn 0.5s ease;
+  }
+  .celebration.active { display: block; }
+  .celebration h3 { font-size: 1.4rem; color: #10b981; margin-bottom: 6px; }
+  .celebration p { color: #94a3b8; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    z-index: 999;
+    animation: confettiFall 2s ease-out forwards;
+  }
+  @keyframes confettiFall {
+    0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+  }
+
+  /* Start / End screens */
+  .screen {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .screen.active { display: block; }
+  .screen h2 { font-size: 2rem; font-weight: 800; color: #0891b2; margin-bottom: 10px; }
+  .screen p { color: #94a3b8; max-width: 500px; margin: 8px auto; line-height: 1.6; }
+
+  .final-score { font-size: 3rem; font-weight: 800; color: #0891b2; margin: 20px 0; }
+
+  /* Round indicator */
+  .round-indicator {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .columns-wrapper { flex-direction: column; align-items: center; }
+    .column { max-width: 100%; }
+    .lines-svg { display: none; }
+    header h1 { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Start Screen -->
+<div class="screen active" id="startScreen">
+  <header>
+    <h1 class="glow">🔗 Relier les Paires</h1>
+    <h2>Chapitre 4 : Sémiologie et Diagnostic</h2>
+  </header>
+  <div style="margin-top:30px;">
+    <p>Reliez chaque terme à sa définition correcte.<br>Cliquez sur un élément à gauche, puis sur son correspondant à droite.</p>
+    <p style="color:#0891b2; font-weight:600;">8 manches · 6 paires par manche · 50+ paires possibles</p>
+    <br>
+    <button class="btn btn-primary" onclick="startGame()">Commencer</button>
+  </div>
+</div>
+
+<!-- Game Screen -->
+<div class="screen" id="gameScreen">
+  <header>
+    <h1 class="glow">🔗 Relier les Paires</h1>
+    <h2>Chapitre 4 : Sémiologie et Diagnostic</h2>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-label">Manche</div><div class="stat-value" id="roundNum">1/8</div></div>
+    <div class="stat"><div class="stat-label">Score</div><div class="stat-value" id="scoreVal">0</div></div>
+    <div class="stat"><div class="stat-label">Précision</div><div class="stat-value" id="accuracyVal">—</div></div>
+    <div class="stat"><div class="stat-label">Chrono</div><div class="stat-value" id="timerVal">0:00</div></div>
+  </div>
+
+  <div class="round-indicator" id="roundIndicator"></div>
+
+  <div class="game-container">
+    <div class="columns-wrapper" id="columnsWrapper">
+      <div class="column left" id="leftColumn"></div>
+      <svg class="lines-svg" id="linesSvg"></svg>
+      <div class="column right" id="rightColumn"></div>
+    </div>
+
+    <div class="celebration" id="celebration">
+      <h3>✨ Bravo ! Manche terminée !</h3>
+      <p id="roundSummary"></p>
+      <br>
+      <button class="btn btn-primary" onclick="nextRound()">Manche suivante →</button>
+    </div>
+  </div>
+</div>
+
+<!-- End Screen -->
+<div class="screen" id="endScreen">
+  <header>
+    <h1 class="glow">🔗 Relier les Paires</h1>
+    <h2>Résultats</h2>
+  </header>
+  <div style="margin-top: 20px;">
+    <h3 style="color:#10b981; font-size:1.3rem;">Partie terminée !</h3>
+    <div class="final-score" id="finalScore">0</div>
+    <p id="finalAccuracy"></p>
+    <p id="finalTime"></p>
+    <br>
+    <button class="btn btn-primary" onclick="restartGame()">Rejouer</button>
+  </div>
+</div>
+
+<script>
+// ===== PAIR BANK =====
+const allPairs = [
+  ["Signe", "Ce que le clinicien peut observer (agitation, ralentissement)"],
+  ["Symptôme", "Ce que le patient ressent et exprime (tristesse, angoisse)"],
+  ["Syndrome", "Association de signes et/ou symptômes qui se présentent ensemble"],
+  ["Sémiologie", "Du grec semeion (signe) + logos (discours)"],
+  ["Pathognomonique", "Élément permettant de distinguer des entités voisines"],
+  ["Approche catégorielle", "Le trouble est présent ou absent (oui/non)"],
+  ["Approche dimensionnelle", "Évalue l'intensité et la fréquence sur un continuum"],
+  ["Approche processuelle", "Identifie des processus pathogènes communs à plusieurs troubles"],
+  ["CIM-10", "Classification de l'OMS"],
+  ["DSM-5", "Classification de l'APA (American Psychiatric Association)"],
+  ["300", "Nombre de diagnostics dans le DSM-5"],
+  ["106", "Nombre de diagnostics dans le DSM-I (1952)"],
+  ["22", "Nombre de catégories dans le DSM-5"],
+  ["Validité", "227 façons de diagnostiquer la dépression"],
+  ["Fidélité", "Accord entre cliniciens (kappa)"],
+  ["Échelle de Liebowitz", "Outil dimensionnel pour l'anxiété sociale (24 items)"],
+  ["MMPI", "Échelle multidimensionnelle de personnalité"],
+  ["Clinical Global Impression", "Échelle dimensionnelle de Guy (1976)"],
+  ["Nosologie", "Critères de classification des maladies"],
+  ["Nosographie", "Description et classification des maladies"],
+  ["Transdiagnostique", "Approche qui traite sans nécessairement passer par un diagnostic"],
+  ["Processus spécifique", "Hallucinations auditives (SCZ mais pas troubles anxieux)"],
+  ["Processus commun", "Fausses croyances (dépression, anxiété ET SCZ)"],
+  ["Présentation", "Un des 12 domaines sémiologiques à explorer (apparence et comportement)"],
+  ["Émotions", "Un des 12 domaines sémiologiques à explorer (humeur et affects)"],
+  ["Vigilance", "Un des 12 domaines sémiologiques à explorer (éveil et attention)"],
+  ["Mémoire", "Un des 12 domaines sémiologiques à explorer (encodage et rappel)"],
+  ["Jugement", "Un des 12 domaines sémiologiques à explorer (raisonnement et insight)"],
+  ["Conduites instinctuelles", "Un des 12 domaines (sommeil, alimentation, sexualité)"],
+  ["Conduites sociales", "Un des 12 domaines (relations interpersonnelles)"],
+  ["Perceptions", "Un des 12 domaines sémiologiques à explorer (illusions et hallucinations)"],
+  ["Pensée", "Un des 12 domaines sémiologiques à explorer (forme et contenu)"],
+  ["Conscience de soi", "Un des 12 domaines sémiologiques à explorer (identité et insight)"],
+  ["Langage", "Un des 12 domaines sémiologiques à explorer (discours et communication)"],
+  ["Psychomoteur", "Un des 12 domaines sémiologiques à explorer (activité motrice)"],
+  ["19 ans", "Âge médian d'apparition des troubles mentaux chez les hommes"],
+  ["20 ans", "Âge médian d'apparition des troubles mentaux chez les femmes"],
+  ["Dépression", "Trouble le plus courant chez les femmes ET les hommes"],
+  ["Phobie spécifique", "2e trouble le plus courant chez les femmes"],
+  ["ESPT", "3e trouble le plus courant chez les femmes"],
+  ["Alcool", "Trouble le plus courant chez les hommes (lié aux substances)"],
+  ["Kappa", "Mesure de l'accord inter-cliniciens en fidélité diagnostique"],
+  ["-0,004", "Kappa du trouble mixte anxieux-dépressif (le pire !)"],
+  ["0,78", "Kappa des troubles neurocognitifs majeurs (le meilleur)"],
+  ["227", "Nombre de façons de diagnostiquer la dépression (Zimmerman, 2015)"],
+  ["Comparabilité", "25-50% des TED perdent leur diagnostic entre DSM-IV et DSM-5"],
+  ["Intolérance à l'incertitude", "Processus pathogène transdiagnostique"],
+  ["Biais cognitifs", "Processus pathogène transdiagnostique (erreurs de raisonnement)"],
+  ["Hallucinations", "Processus pathogène spécifique à certains troubles"],
+  ["Fausses croyances", "Processus pathogène commun (dépression, anxiété, SCZ)"],
+];
+
+// ===== GAME STATE =====
+const ROUNDS = 8;
+const PAIRS_PER_ROUND = 6;
+let currentRound = 0;
+let roundPairs = [];
+let selectedLeft = null;
+let matchedCount = 0;
+let totalCorrect = 0;
+let totalAttempts = 0;
+let timerInterval = null;
+let roundSeconds = 0;
+let totalSeconds = 0;
+let usedPairIndices = new Set();
+let roundPairsData = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  currentRound = 0;
+  totalCorrect = 0;
+  totalAttempts = 0;
+  totalSeconds = 0;
+  usedPairIndices = new Set();
+  showScreen('gameScreen');
+  startRound();
+}
+
+function restartGame() {
+  startGame();
+}
+
+function startRound() {
+  currentRound++;
+  matchedCount = 0;
+  selectedLeft = null;
+  roundSeconds = 0;
+  document.getElementById('celebration').classList.remove('active');
+  document.getElementById('roundNum').textContent = currentRound + '/' + ROUNDS;
+  updateStats();
+
+  // Pick pairs not yet used
+  let available = [];
+  for (let i = 0; i < allPairs.length; i++) {
+    if (!usedPairIndices.has(i)) available.push(i);
+  }
+  if (available.length < PAIRS_PER_ROUND) {
+    usedPairIndices = new Set();
+    available = allPairs.map((_, i) => i);
+  }
+  const chosen = shuffle(available).slice(0, PAIRS_PER_ROUND);
+  chosen.forEach(i => usedPairIndices.add(i));
+  roundPairsData = chosen.map(i => ({ term: allPairs[i][0], def: allPairs[i][1], idx: i }));
+
+  renderColumns();
+  startTimer();
+}
+
+function renderColumns() {
+  const leftCol = document.getElementById('leftColumn');
+  const rightCol = document.getElementById('rightColumn');
+  const svg = document.getElementById('linesSvg');
+  leftCol.innerHTML = '';
+  rightCol.innerHTML = '';
+  svg.innerHTML = '';
+
+  const shuffledLeft = shuffle([...roundPairsData]);
+  const shuffledRight = shuffle([...roundPairsData]);
+
+  shuffledLeft.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.textContent = p.term;
+    el.dataset.idx = p.idx;
+    el.dataset.side = 'left';
+    el.addEventListener('click', () => handleClick(el, 'left'));
+    leftCol.appendChild(el);
+  });
+
+  shuffledRight.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.textContent = p.def;
+    el.dataset.idx = p.idx;
+    el.dataset.side = 'right';
+    el.addEventListener('click', () => handleClick(el, 'right'));
+    rightCol.appendChild(el);
+  });
+}
+
+function handleClick(el, side) {
+  if (el.classList.contains('matched') || el.classList.contains('wrong')) return;
+
+  if (side === 'left') {
+    // Deselect previous
+    if (selectedLeft) selectedLeft.classList.remove('selected');
+    selectedLeft = el;
+    el.classList.add('selected');
+  } else if (side === 'right' && selectedLeft) {
+    totalAttempts++;
+    const leftIdx = selectedLeft.dataset.idx;
+    const rightIdx = el.dataset.idx;
+
+    if (leftIdx === rightIdx) {
+      // Correct
+      totalCorrect++;
+      matchedCount++;
+      selectedLeft.classList.remove('selected');
+      selectedLeft.classList.add('matched');
+      el.classList.add('matched');
+      drawLine(selectedLeft, el);
+      selectedLeft = null;
+      updateStats();
+
+      if (matchedCount === PAIRS_PER_ROUND) {
+        clearInterval(timerInterval);
+        totalSeconds += roundSeconds;
+        setTimeout(() => showCelebration(), 400);
+      }
+    } else {
+      // Wrong
+      selectedLeft.classList.remove('selected');
+      selectedLeft.classList.add('wrong');
+      el.classList.add('wrong');
+      const l = selectedLeft, r = el;
+      selectedLeft = null;
+      setTimeout(() => { l.classList.remove('wrong'); r.classList.remove('wrong'); }, 600);
+      updateStats();
+    }
+  }
+}
+
+function drawLine(leftEl, rightEl) {
+  const svg = document.getElementById('linesSvg');
+  const wrapper = document.getElementById('columnsWrapper');
+  const rect = wrapper.getBoundingClientRect();
+
+  const lr = leftEl.getBoundingClientRect();
+  const rr = rightEl.getBoundingClientRect();
+
+  const x1 = lr.right - rect.left;
+  const y1 = lr.top + lr.height / 2 - rect.top;
+  const x2 = rr.left - rect.left;
+  const y2 = rr.top + rr.height / 2 - rect.top;
+
+  svg.setAttribute('width', wrapper.offsetWidth);
+  svg.setAttribute('height', wrapper.offsetHeight);
+
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', x1);
+  line.setAttribute('y1', y1);
+  line.setAttribute('x2', x2);
+  line.setAttribute('y2', y2);
+  line.classList.add('match-line');
+  svg.appendChild(line);
+}
+
+function updateStats() {
+  document.getElementById('scoreVal').textContent = totalCorrect;
+  if (totalAttempts > 0) {
+    document.getElementById('accuracyVal').textContent = Math.round(totalCorrect / totalAttempts * 100) + '%';
+  }
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  roundSeconds = 0;
+  timerInterval = setInterval(() => {
+    roundSeconds++;
+    const m = Math.floor(roundSeconds / 60);
+    const s = roundSeconds % 60;
+    document.getElementById('timerVal').textContent = m + ':' + String(s).padStart(2, '0');
+  }, 1000);
+}
+
+function showCelebration() {
+  const cel = document.getElementById('celebration');
+  cel.classList.add('active');
+  const pct = totalAttempts > 0 ? Math.round(totalCorrect / totalAttempts * 100) : 0;
+  document.getElementById('roundSummary').textContent =
+    `${matchedCount} paires trouvées en ${roundSeconds}s — Précision globale : ${pct}%`;
+  spawnConfetti();
+
+  if (currentRound >= ROUNDS) {
+    cel.querySelector('button').textContent = 'Voir les résultats →';
+    cel.querySelector('button').onclick = showEnd;
+  }
+}
+
+function nextRound() {
+  startRound();
+}
+
+function showEnd() {
+  showScreen('endScreen');
+  document.getElementById('finalScore').textContent = totalCorrect + ' / ' + totalAttempts;
+  const pct = totalAttempts > 0 ? Math.round(totalCorrect / totalAttempts * 100) : 0;
+  document.getElementById('finalAccuracy').textContent = 'Précision : ' + pct + '%';
+  const tt = totalSeconds;
+  const m = Math.floor(tt / 60);
+  const s = tt % 60;
+  document.getElementById('finalTime').textContent = 'Temps total : ' + m + 'min ' + s + 's';
+}
+
+function spawnConfetti() {
+  const colors = ['#0891b2', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+  for (let i = 0; i < 40; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.top = '-10px';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 0.5 + 's';
+    piece.style.animationDuration = (1.5 + Math.random()) + 's';
+    piece.style.width = (6 + Math.random() * 8) + 'px';
+    piece.style.height = (6 + Math.random() * 8) + 'px';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 3000);
+  }
+}
+</script>
+</body>
+</html>

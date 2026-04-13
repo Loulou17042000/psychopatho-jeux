@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Machine a Remonter le Temps - Chapitre 3</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f1a;--card:#1a1a2e;--card2:#272745;--accent:#7c3aed;--accent2:#a78bfa;
+  --green:#22c55e;--red:#ef4444;--text:#e0e0e0;--muted:#8888a0;--border:#2e2b4a;
+  --radius:14px;
+}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:20px 16px;line-height:1.6;
+}
+h1{font-size:1.8rem;margin-bottom:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;}
+.subtitle{color:var(--muted);font-size:.9rem;margin-bottom:24px;text-align:center;}
+.container{max-width:720px;width:100%;}
+
+.progress-wrap{width:100%;margin-bottom:18px;}
+.progress-info{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px;}
+.progress-bar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .5s ease;}
+
+.score-badge{
+  position:fixed;top:16px;right:20px;background:var(--card);border:1px solid var(--border);
+  padding:8px 18px;border-radius:99px;font-weight:600;font-size:.95rem;z-index:10;
+}
+.score-badge span{color:var(--accent2);}
+
+.quiz-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:28px 32px;margin-bottom:16px;position:relative;overflow:hidden;
+  animation:fadeIn .4s ease;
+}
+.quiz-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.q-type{
+  display:inline-block;padding:3px 12px;border-radius:99px;font-size:.75rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;
+  background:rgba(124,58,237,.15);color:var(--accent2);border:1px solid rgba(124,58,237,.3);
+}
+.q-text{font-size:1.1rem;font-weight:600;margin-bottom:20px;line-height:1.5;}
+
+.options{display:flex;flex-direction:column;gap:10px;}
+.opt-btn{
+  width:100%;padding:14px 18px;border-radius:10px;border:2px solid var(--border);
+  background:var(--card2);color:var(--text);font-size:.95rem;text-align:left;
+  cursor:pointer;transition:all .2s;font-weight:500;position:relative;
+}
+.opt-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(124,58,237,.08);transform:translateX(4px);}
+.opt-btn.correct{border-color:var(--green);background:rgba(34,197,94,.12);color:var(--green);}
+.opt-btn.wrong{border-color:var(--red);background:rgba(239,68,68,.12);color:var(--red);}
+.opt-btn:disabled{cursor:default;}
+.opt-btn .letter{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:8px;margin-right:12px;font-weight:700;font-size:.85rem;
+  background:rgba(124,58,237,.15);color:var(--accent2);flex-shrink:0;
+}
+
+.explanation{
+  margin-top:16px;padding:14px 18px;border-radius:10px;font-size:.9rem;line-height:1.5;
+  animation:fadeIn .3s ease;
+}
+.explanation.correct{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#86efac;}
+.explanation.wrong{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;}
+
+.next-btn{
+  display:inline-flex;align-items:center;gap:8px;margin-top:16px;
+  padding:12px 28px;border:none;border-radius:10px;
+  font-size:.95rem;font-weight:600;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  transition:all .2s;
+}
+.next-btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+
+.final{
+  text-align:center;padding:40px 32px;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  animation:fadeIn .5s ease;
+}
+.final h2{font-size:1.6rem;margin-bottom:8px;color:var(--accent2);}
+.final .big-score{font-size:3.5rem;font-weight:800;margin:16px 0;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.final .msg{color:var(--muted);font-size:1rem;margin-bottom:24px;}
+.stars{font-size:2.4rem;margin:10px 0 20px;}
+.stars .on{color:#facc15;}
+.stars .off{color:#333;}
+.replay-btn{
+  padding:14px 36px;border:none;border-radius:12px;
+  font-size:1.05rem;font-weight:700;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  transition:all .2s;
+}
+.replay-btn:hover{filter:brightness(1.15);transform:translateY(-2px);}
+
+.hidden{display:none!important;}
+.confetti{position:fixed;width:10px;height:10px;border-radius:2px;pointer-events:none;z-index:999;animation:confettiFall 1.5s ease forwards;}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
+
+@media(max-width:500px){
+  .quiz-card{padding:20px 16px;}
+  h1{font-size:1.4rem;}
+  .q-text{font-size:1rem;}
+}
+</style>
+</head>
+<body>
+
+<h1>La Machine a Remonter le Temps</h1>
+<p class="subtitle">Chapitre 3 : Historique et Approches</p>
+
+<div class="score-badge">Score : <span id="scoreDisplay">0</span> / <span id="totalDisplay">20</span></div>
+
+<div class="container">
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="qNum">Question 1 / 20</span>
+      <span id="pctText">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+
+  <div id="quizArea"></div>
+  <div id="finalArea" class="hidden"></div>
+</div>
+
+<script>
+const QUESTIONS_PER_SESSION = 20;
+
+const ALL_QUESTIONS = [
+  // ===== ANTIQUITE =====
+  {type:"qcm",q:"Le mot 'alienation mentale' vient du latin 'alienus' qui signifie :",opts:["Malade","Etranger","Fou","Dangereux"],ans:1,expl:"Alienus signifie 'etranger' en latin. L'alienation mentale designe un trouble de l'esprit rendant la personne 'etrangere' a elle-meme."},
+  {type:"qcm",q:"Dans l'Antiquite, quelles sont les deux conceptions de la folie ?",opts:["Biologique et psychologique","Magique (chatiment divin) et medicale","Religieuse et philosophique","Organique et fonctionnelle"],ans:1,expl:"L'Antiquite distinguait l'approche magique (chatiment divin) et l'approche medicale de la folie."},
+  {type:"qui",q:"Qui suis-je ? Je suis ne entre 460 et 375 av. J.-C. et j'ai propose la theorie des humeurs pour expliquer les temperaments.",opts:["Galien","Celse","Hippocrate","Aristote"],ans:2,expl:"Hippocrate (460-375 av. J.-C.) est le pere de la theorie des humeurs."},
+  {type:"qcm",q:"Selon la theorie des humeurs d'Hippocrate, le sang est associe a quel organe et temperament ?",opts:["Foie - bilieux","Coeur - sanguin (jovial)","Rate - melancolique","Cerveau - flegmatique"],ans:1,expl:"Le sang est associe au coeur et au temperament sanguin (jovial)."},
+  {type:"qcm",q:"La bile jaune est associee a quel organe et temperament ?",opts:["Coeur - sanguin","Foie - bilieux (violent)","Rate - melancolique","Cerveau - flegmatique"],ans:1,expl:"La bile jaune est associee au foie et au temperament bilieux (violent)."},
+  {type:"qcm",q:"La bile noire (atrabile) est associee a quel organe et temperament ?",opts:["Coeur - sanguin","Foie - bilieux","Rate - melancolique (anxieux)","Cerveau - flegmatique"],ans:2,expl:"La bile noire/atrabile est associee a la rate et au temperament melancolique (anxieux)."},
+  {type:"qcm",q:"La pituite (phlegme) est associee a quel organe et temperament ?",opts:["Coeur - sanguin","Foie - bilieux","Rate - melancolique","Cerveau - flegmatique (calme)"],ans:3,expl:"La pituite/phlegme est associee au cerveau et au temperament flegmatique (calme)."},
+  {type:"qcm",q:"Selon Hippocrate, la 'Phrenitis' correspond a :",opts:["La tristesse chronique","La folie aigue avec fievre","L'agitation chronique","Les convulsions"],ans:1,expl:"La Phrenitis est une folie aigue accompagnee de fievre selon Hippocrate."},
+  {type:"qcm",q:"Selon Hippocrate, la 'Manie' correspond a :",opts:["La folie aigue avec fievre","La folie chronique avec agitation","La tristesse","Le voyage de la matrice"],ans:1,expl:"La Manie est une folie chronique caracterisee par l'agitation."},
+  {type:"qcm",q:"L'etymologie de 'melancolie' est :",opts:["Melas (noir) + chole (bile)","Melan (triste) + colie (esprit)","Melas (sombre) + cholos (colere)","Melanos (ombre) + kolos (cerveau)"],ans:0,expl:"Melancolie vient de melas (noir) et chole (bile), en reference a la bile noire."},
+  {type:"qcm",q:"Selon Hippocrate, l'hysterie s'expliquait par :",opts:["Un exces de bile noire","Le voyage de la matrice dans le corps","Un chatiment divin","Un desequilibre du phlegme"],ans:1,expl:"Hippocrate attribuait l'hysterie au deplacement de la matrice (uterus) dans le corps de la femme."},
+  {type:"vf",q:"Hippocrate considerait l'epilepsie comme une 'maladie sacree' d'origine divine.",ans:false,expl:"Hippocrate a justement remis en question le caractere sacre de l'epilepsie, cherchant une explication naturelle. Il la classait parmi les maladies mentales mais avec une approche medicale."},
+  {type:"qui",q:"Qui suis-je ? Je vivais au 1er siecle, je considerais l'epilepsie comme une possession et je preconisais la torture comme traitement.",opts:["Hippocrate","Celse","Galien","Caelius"],ans:1,expl:"Celse (1er siecle) considerait l'epilepsie comme une possession et preconisait la torture."},
+  {type:"qui",q:"Qui suis-je ? Je vivais au 5e siecle et je proposais la tranquillite, la detente et le voyage comme traitements.",opts:["Hippocrate","Celse","Caelius","Galien"],ans:2,expl:"Caelius (5e siecle) proposait des traitements doux : tranquillite, detente, voyage."},
+  {type:"qcm",q:"Le theatre dans l'Antiquite avait une fonction therapeutique appelee :",opts:["Mimesis","Catharsis","Anamnese","Praxis"],ans:1,expl:"La catharsis signifie purification des pulsions par le spectacle theatral."},
+  {type:"qui",q:"Qui suis-je ? Je suis ne en 129 et mort en 216, j'ai parle de 'dyscrasie' et je traitais par les contraires.",opts:["Hippocrate","Celse","Caelius","Galien"],ans:3,expl:"Galien (129-216) a introduit le concept de dyscrasie (desequilibre) et le traitement par les contraires."},
+  {type:"qcm",q:"La 'dyscrasie' de Galien designe :",opts:["Un equilibre parfait des humeurs","Un desequilibre des humeurs","Une maladie du cerveau","Un type de personnalite"],ans:1,expl:"La dyscrasie est un desequilibre des humeurs selon Galien."},
+  {type:"vf",q:"Galien proposait de traiter les maladies par les semblables.",ans:false,expl:"Galien proposait le traitement par les contraires (allopathie), pas par les semblables."},
+
+  // ===== MOYEN AGE =====
+  {type:"qcm",q:"Au Moyen Age (Ve-Xe siecle, premiere periode), l'attitude envers les fous etait :",opts:["La persecution systematique","La tolerance relative","L'internement obligatoire","Le traitement medical"],ans:1,expl:"La premiere periode du Moyen Age (Ve-Xe) est marquee par la tolerance. Le fou est vu comme un 'pauvre d'esprit'."},
+  {type:"qcm",q:"Pendant la premiere periode du Moyen Age, les traitements incluaient :",opts:["L'internement en hopital","L'exorcisme et les saints guerisseurs","La lobotomie","Les medicaments a base de plantes"],ans:1,expl:"Pendant la premiere periode (Ve-Xe), on pratiquait l'exorcisme et on invoquait les saints guerisseurs."},
+  {type:"qcm",q:"Saint Avertin etait invoque pour guerir :",opts:["L'epilepsie","Les vertiges","Les convulsions","La folie"],ans:1,expl:"Saint Avertin etait le saint guerisseur invoque pour les vertiges."},
+  {type:"qcm",q:"Saint Leonard etait invoque pour guerir :",opts:["Les vertiges","L'epilepsie","Les convulsions","La melancolie"],ans:1,expl:"Saint Leonard etait invoque pour guerir l'epilepsie."},
+  {type:"qcm",q:"Saint Valentin etait invoque pour guerir :",opts:["Les vertiges","L'epilepsie","Les convulsions","L'hysterie"],ans:2,expl:"Saint Valentin etait le saint guerisseur invoque pour les convulsions."},
+  {type:"qcm",q:"La deuxieme periode du Moyen Age (Xe-XVe) est marquee par :",opts:["La tolerance et l'accueil","La persecution et l'Inquisition","La medicalisation","La psychotherapie"],ans:1,expl:"La deuxieme periode (Xe-XVe) est marquee par la persecution, la possession demoniaque et l'Inquisition."},
+  {type:"qcm",q:"L'Inquisition a ete instauree en :",opts:["1099","1199","1299","1399"],ans:1,expl:"L'Inquisition a ete instauree en 1199."},
+  {type:"qcm",q:"Le Malleus Maleficarum (1487) a ete ecrit par :",opts:["Hippocrate et Galien","Kramer et Spencer","Pinel et Esquirol","Kraepelin et Bleuler"],ans:1,expl:"Le Malleus Maleficarum (Le Marteau des Sorcieres) a ete ecrit par Kramer et Spencer en 1487."},
+  {type:"qcm",q:"La 'pierre de folie' (lithotomie) consistait a :",opts:["Utiliser des pierres chaudes comme therapie","Extraire la folie par trepanation","Enfermer les fous dans des grottes","Ecraser des pierres pour fabriquer des remedes"],ans:1,expl:"La lithotomie ou extraction de la pierre de folie consistait a trepaner le crane pour 'extraire' la folie."},
+  {type:"vf",q:"Le Malleus Maleficarum date de 1387.",ans:false,expl:"Le Malleus Maleficarum date de 1487, pas de 1387."},
+
+  // ===== RENAISSANCE =====
+  {type:"qcm",q:"Le premier hopital pour malades mentaux, le Manicome de Valence, a ete fonde en :",opts:["1209","1309","1409","1509"],ans:2,expl:"Le Manicome de Valence, premier hopital pour malades mentaux, a ete fonde en 1409."},
+  {type:"qcm",q:"A la Renaissance, l'ecole de Salerne defendait une approche :",opts:["Religieuse","Organique","Psychanalytique","Sociale"],ans:1,expl:"L'ecole de Salerne defendait une approche organique de la maladie mentale."},
+  {type:"qcm",q:"A la Renaissance, l'ecole de Montpellier defendait une approche :",opts:["Organique","Religieuse","Comportementale","Humaniste"],ans:1,expl:"L'ecole de Montpellier defendait une approche religieuse."},
+  {type:"qui",q:"Qui suis-je ? En 1575, j'ai pratique la metoposcopie, une methode de lecture du visage.",opts:["Gall","Lombroso","Jerome Cardan","Felix Plater"],ans:2,expl:"Jerome Cardan (1575) pratiquait la metoposcopie (lecture du visage)."},
+  {type:"qcm",q:"La phrenologie est associee a :",opts:["Jerome Cardan","Gall","Lombroso","Weyer"],ans:1,expl:"Gall est l'auteur de la phrenologie (etude des bosses du crane)."},
+  {type:"qcm",q:"Lombroso est connu pour avoir etudie le lien entre :",opts:["Les humeurs et les temperaments","Le crane et la personnalite","La criminalite et le visage","Les reves et l'inconscient"],ans:2,expl:"Lombroso a etudie le lien entre la criminalite et les traits du visage."},
+  {type:"qui",q:"Qui suis-je ? En 1563, j'ai affirme que les sorcieres etaient en realite des malades mentales.",opts:["Jerome Cardan","Felix Plater","Weyer","Pinel"],ans:2,expl:"Weyer (1563) a affirme que les sorcieres etaient des malades mentales, pas des possedees."},
+  {type:"qui",q:"Qui suis-je ? J'ai publie la Praxis Medica en 1604, premier classement des maladies mentales.",opts:["Weyer","Jerome Cardan","Felix Plater","Kraepelin"],ans:2,expl:"Felix Plater (1536-1614) a publie la Praxis Medica en 1604, premier classement des maladies mentales."},
+  {type:"vf",q:"Felix Plater a publie le premier classement des maladies mentales en 1504.",ans:false,expl:"La Praxis Medica de Felix Plater date de 1604, pas de 1504."},
+
+  // ===== TEMPS MODERNES =====
+  {type:"qcm",q:"Selon Foucault (1976), qu'est-ce qui a libere des batiments pour y enfermer les fous ?",opts:["La fin des guerres de religion","La disparition de la lepre","La construction de nouveaux hopitaux","La Revolution francaise"],ans:1,expl:"Foucault note que la disparition de la lepre a libere des batiments (leproseries) qui ont ensuite servi a enfermer les fous."},
+  {type:"qcm",q:"L'Hopital General de Paris a ete cree sous quel roi et en quelle annee ?",opts:["Louis XIII en 1636","Louis XIV en 1656","Louis XV en 1736","Louis XVI en 1776"],ans:1,expl:"Louis XIV a cree l'Hopital General en 1656 pour isoler, exclure et interner de maniere coercitive."},
+  {type:"qcm",q:"L'Hopital General de Louis XIV servait principalement a :",opts:["Soigner les malades mentaux","Isoler, exclure et interner de maniere coercitive","Former les medecins","Mener des recherches scientifiques"],ans:1,expl:"L'Hopital General etait un lieu d'isolation, d'exclusion et d'internement coercitif, pas de soins."},
+  {type:"qcm",q:"Parmi ces traitements brutaux des Temps Modernes, lequel est correct ?",opts:["Transfusion de sang d'agneau","Acupuncture cerebrale","Magnetisme animal","Hypnose profonde"],ans:0,expl:"La transfusion de sang d'agneau faisait partie des traitements brutaux de cette epoque, avec la camisole et la lobotomie."},
+  {type:"qcm",q:"La narcotherapie des Temps Modernes utilisait :",opts:["Uniquement l'hypnose","La digitale, le bromure, l'opium et la morphine","Les electrochocs","La saignee"],ans:1,expl:"La narcotherapie (contention chimique) utilisait la digitale, le bromure, l'opium et la morphine."},
+  {type:"qcm",q:"En 1838, combien de fous etaient internes a la Salpetriere ?",opts:["400","800","1200","1600"],ans:1,expl:"En 1838, la Salpetriere comptait 800 fous internes."},
+  {type:"qcm",q:"En 1860, combien de fous etaient internes a la Salpetriere ?",opts:["800","1000","1200","1400"],ans:3,expl:"En 1860, le nombre est passe a 1400 internes a la Salpetriere."},
+  {type:"qui",q:"Qui suis-je ? Je suis une pianiste qui a ete internee par erreur a la Salpetriere pendant 14 ans (1854-1868).",opts:["Camille Claudel","Hersilie Rouy","Marie Curie","Louise Michel"],ans:1,expl:"Hersilie Rouy, pianiste, a ete internee par erreur a la Salpetriere de 1854 a 1868, soit 14 ans."},
+  {type:"vf",q:"Esquirol a temoigne des conditions terribles a la Salpetriere.",ans:true,expl:"Esquirol a effectivement temoigne des conditions epouvantables dans lesquelles vivaient les internes de la Salpetriere."},
+
+  // ===== PERIODE CONTEMPORAINE =====
+  {type:"qui",q:"Qui suis-je ? Ne en 1745 et mort en 1826, j'ai humanise le traitement des fous et aboli les entraves.",opts:["Kraepelin","Bleuler","Philippe Pinel","Esquirol"],ans:2,expl:"Philippe Pinel (1745-1826) est le tournant decisif : humanisation, abolition des entraves, reconnaissance du fou comme malade."},
+  {type:"qcm",q:"Philippe Pinel a marque l'histoire de la psychiatrie par :",opts:["La creation du DSM","L'humanisation du traitement des fous et l'abolition des entraves","La decouverte des antidepresseurs","La creation de la psychanalyse"],ans:1,expl:"Pinel a humanise le traitement, aboli les entraves, separe fous et delinquants, et reconnu le fou comme malade."},
+  {type:"qcm",q:"Le Traite medico-philosophique de Pinel date de :",opts:["1781","1791","1801","1811"],ans:2,expl:"Le Traite medico-philosophique de Pinel a ete publie en 1801."},
+  {type:"qcm",q:"Pinel a innove en utilisant quelle methode therapeutique ?",opts:["Les electrochocs","La parole comme moyen therapeutique","La lobotomie","Les bains froids"],ans:1,expl:"Pinel a reconnu la parole comme moyen therapeutique, une innovation majeure."},
+  {type:"vf",q:"Pinel a separe les fous des delinquants dans les institutions.",ans:true,expl:"C'est l'un des apports majeurs de Pinel : la separation des fous et des delinquants."},
+  {type:"qui",q:"Qui suis-je ? Ne en 1856 et mort en 1926, j'ai propose la premiere classification rigoureuse avec la manic-depression et la dementia praecox.",opts:["Pinel","Kraepelin","Bleuler","Jaspers"],ans:1,expl:"Kraepelin (1856-1926) a propose la premiere classification rigoureuse avec la manic-depression et la dementia praecox."},
+  {type:"qcm",q:"Kraepelin a publie combien d'editions de son ouvrage 'Psychiatrie' ?",opts:["5","7","9","12"],ans:2,expl:"Kraepelin a publie 9 editions de son ouvrage Psychiatrie."},
+  {type:"qcm",q:"Quelle est la difference entre nosologie et nosographie ?",opts:["Ce sont des synonymes","La nosologie classe les maladies, la nosographie les decrit","La nosologie etudie les causes, la nosographie classe et decrit les maladies","La nosologie est ancienne, la nosographie est moderne"],ans:2,expl:"La nosologie etudie les causes des maladies tandis que la nosographie les classe et les decrit systematiquement. Kraepelin a contribue aux deux."},
+  {type:"qui",q:"Qui suis-je ? Ne en 1857 et mort en 1939, j'ai decrit la schizophrenie comme une atteinte cerebrale primaire avec des troubles secondaires.",opts:["Kraepelin","Bleuler","Jaspers","Pinel"],ans:1,expl:"Bleuler (1857-1939) a decrit la schizophrenie avec une atteinte cerebrale primaire et des troubles secondaires (dissociation et autisme)."},
+  {type:"qcm",q:"Selon Bleuler, les troubles secondaires de la schizophrenie sont :",opts:["Les hallucinations et les delires","La dissociation et l'autisme","La depression et l'anxiete","Les troubles du sommeil et de l'appetit"],ans:1,expl:"Pour Bleuler, les troubles secondaires de la schizophrenie sont la dissociation et l'autisme."},
+  {type:"qcm",q:"Le terme 'psychopathologie' a ete utilise pour la premiere fois en :",opts:["1683","1783","1883","1913"],ans:1,expl:"Karl P. Moritz a utilise le terme 'psychopathologie' pour la premiere fois en 1783."},
+  {type:"qui",q:"Qui suis-je ? En 1783, j'ai utilise le mot 'psychopathologie' pour la premiere fois.",opts:["Jaspers","Kraepelin","Karl P. Moritz","Freud"],ans:2,expl:"Karl P. Moritz a utilise le terme 'psychopathologie' pour la premiere fois en 1783."},
+  {type:"qcm",q:"Karl Jaspers a publie 'Psychopathologie generale' en :",opts:["1903","1913","1923","1933"],ans:1,expl:"Karl Jaspers a publie Psychopathologie generale en 1913."},
+  {type:"qcm",q:"Pour Jaspers, la psychopathologie s'interesse a :",opts:["Les comportements observables uniquement","L'activite psychique reelle et consciente, la psychogenese","Les bases neurologiques exclusivement","Les tests psychometriques"],ans:1,expl:"Jaspers s'interesse a l'activite psychique reelle et consciente, ainsi qu'a la psychogenese."},
+
+  // ===== 20e SIECLE =====
+  {type:"qcm",q:"En 1969, combien de patients etaient hospitalises en France dans le contexte de l'antipsychiatrie ?",opts:["19 000","59 000","119 000","219 000"],ans:2,expl:"119 000 patients etaient hospitalises en France en 1969, ce qui a alimente le mouvement de l'antipsychiatrie."},
+  {type:"qcm",q:"L'organo-dynamisme est l'approche de :",opts:["Freud","Henri Ey","Kraepelin","Bleuler"],ans:1,expl:"Henri Ey a developpe l'organo-dynamisme, une approche integrant neurologie et psychiatrie."},
+  {type:"qcm",q:"Le premier psychochirurgien a ete :",opts:["Freeman","Moniz","Burckhardt","Watts"],ans:2,expl:"Burckhardt a ete le premier a pratiquer la psychochirurgie en 1889."},
+  {type:"qcm",q:"Moniz a recu le prix Nobel en :",opts:["1939","1944","1949","1954"],ans:2,expl:"Moniz a recu le prix Nobel en 1949 pour ses travaux sur la lobotomie."},
+  {type:"qcm",q:"Freeman et Watts ont developpe :",opts:["La cure de Sakel","La lobotomie transorbitaire","L'electroconvulsivotherapie","L'impaludation"],ans:1,expl:"Freeman et Watts ont developpe la lobotomie transorbitaire."},
+  {type:"qcm",q:"Combien de lobotomies avaient ete pratiquees aux USA en 1951 ?",opts:["5 000","10 000","20 000","50 000"],ans:2,expl:"En 1951, 20 000 lobotomies avaient ete pratiquees aux Etats-Unis."},
+  {type:"qcm",q:"La cure de Sakel (1933) consistait en :",opts:["Des electrochocs","Des comas hypoglycemiques","Des convulsions au Cardiazol","L'inoculation du paludisme"],ans:1,expl:"La cure de Sakel (1933) consistait a provoquer des comas hypoglycemiques."},
+  {type:"qcm",q:"La convulsivotherapie au Cardiazol a ete developpee par :",opts:["Sakel","Von Meduna","Cerletti et Bini","Von Jauregg"],ans:1,expl:"Von Meduna a developpe la convulsivotherapie au Cardiazol en 1934."},
+  {type:"qcm",q:"L'electroconvulsivotherapie (ECT) a ete developpee par :",opts:["Sakel","Von Meduna","Cerletti et Bini","Freeman et Watts"],ans:2,expl:"Cerletti et Bini ont developpe l'electroconvulsivotherapie."},
+  {type:"qui",q:"Qui suis-je ? En 1917, j'ai propose d'inoculer le paludisme pour traiter la paralysie generale, ce qui m'a valu le Nobel en 1927.",opts:["Sakel","Von Meduna","Von Jauregg","Moniz"],ans:2,expl:"Von Jauregg a propose l'impaludation en 1917 et a recu le prix Nobel en 1927."},
+  {type:"vf",q:"L'impaludation de Von Jauregg consistait a inoculer la malaria pour traiter la paralysie generale.",ans:true,expl:"Exact. Von Jauregg inoculait le paludisme (malaria) aux patients atteints de paralysie generale pour provoquer de la fievre censee combattre la maladie."},
+  {type:"vf",q:"La therapie aversive est consideree comme conforme a l'ethique medicale.",ans:false,expl:"La therapie aversive est contraire a l'ethique medicale."},
+
+  // ===== BELGIQUE =====
+  {type:"qcm",q:"En Belgique, la medicalisation de la psychiatrie (passage de la Justice a la Sante) date de :",opts:["1928","1938","1948","1958"],ans:2,expl:"En 1948, la responsabilite des malades mentaux est passee de la Justice a la Sante en Belgique."},
+  {type:"qcm",q:"La desinstitutionnalisation en Belgique a commence :",opts:["Depuis 1950","Depuis 1960","Depuis 1970","Depuis 1990"],ans:2,expl:"Depuis 1970, la Belgique a entame un processus de desinstitutionnalisation et de reinsertion."},
+  {type:"vf",q:"Le site psy107.be est lie a la reforme de la sante mentale en Belgique.",ans:true,expl:"Psy107.be est effectivement le site de reference pour la reforme de la sante mentale en Belgique, lie au processus de desinstitutionnalisation."},
+
+  // ===== MODELE BIO-PSYCHO-SOCIAL =====
+  {type:"qcm",q:"Le modele medical classique (Huber, 1993) considere que les symptomes resultent de :",opts:["Facteurs psychologiques","Une maladie sous-jacente a causes somatiques","Des facteurs socioculturels","L'interaction de multiples facteurs"],ans:1,expl:"Le modele medical classique considere que les symptomes sont le signe d'une maladie sous-jacente a causes somatiques."},
+  {type:"qcm",q:"Le modele bio-psycho-social integre :",opts:["Uniquement les facteurs biologiques","Uniquement les facteurs psychologiques et sociaux","La multiplicite de facteurs biologiques, psychologiques et socioculturels en interaction","Uniquement les facteurs genetiques et neuroanatomiques"],ans:2,expl:"Le modele bio-psycho-social integre des facteurs biologiques, psychologiques et socioculturels en interaction."},
+  {type:"qcm",q:"Parmi les facteurs BIOLOGIQUES du modele bio-psycho-social, on trouve :",opts:["Relations familiales et identite","Genetique, neurotransmission, neuroanatomie","Niveau socio-economique","Estime de soi et attachement"],ans:1,expl:"Les facteurs biologiques incluent la genetique, la neurotransmission et la neuroanatomie."},
+  {type:"qcm",q:"Parmi les facteurs PSYCHOLOGIQUES du modele bio-psycho-social, on trouve :",opts:["Genetique et neuroanatomie","Niveau socio-economique et stabilite familiale","Relations familiales, identite, estime de soi","Neurotransmission et hormones"],ans:2,expl:"Les facteurs psychologiques incluent les relations familiales, l'identite et l'estime de soi."},
+  {type:"qcm",q:"Parmi les facteurs SOCIOCULTURELS du modele bio-psycho-social, on trouve :",opts:["Genetique et neuroanatomie","Estime de soi et identite","Neurotransmission et hormones","Niveau socio-economique et stabilite familiale"],ans:3,expl:"Les facteurs socioculturels incluent le niveau socio-economique et la stabilite familiale."},
+  {type:"qcm",q:"L'hypothese neurodeveloppementale est associee a :",opts:["Kraepelin (1926)","Bleuler (1939)","Piper et al. (2012)","Huber (1993)"],ans:2,expl:"L'hypothese neurodeveloppementale est associee a Piper et al. (2012)."},
+  {type:"qcm",q:"Combien d'approches de la psychopathologie Ionescu a-t-il repertorie ?",opts:["7","10","14","20"],ans:2,expl:"Ionescu a repertorie 14 approches de la psychopathologie."},
+
+  // ===== MALADIE MENTALE VS SANTE MENTALE =====
+  {type:"vf",q:"Il est possible d'avoir une bonne sante mentale tout en ayant une maladie mentale.",ans:true,expl:"Maladie mentale et sante mentale sont deux axes independants : on peut avoir une bonne sante mentale avec une maladie mentale, et inversement."},
+  {type:"vf",q:"Une personne sans maladie mentale a necessairement une bonne sante mentale.",ans:false,expl:"Sante mentale et maladie mentale sont sur deux axes independants. On peut avoir une sante mentale mediocre sans maladie mentale diagnostiquee."},
+  {type:"qcm",q:"La relation entre sante mentale et maladie mentale est :",opts:["Un seul axe : soit l'un soit l'autre","Deux axes independants, c'est une question de degre","Totalement identique","Sans aucun lien"],ans:1,expl:"Sante mentale et maladie mentale sont deux axes independants, et c'est une question de degre."},
+
+  // ===== QUESTIONS SUPPLEMENTAIRES =====
+  {type:"vf",q:"Kraepelin a invente le terme 'schizophrenie'.",ans:false,expl:"C'est Bleuler qui a invente le terme 'schizophrenie', pas Kraepelin. Kraepelin parlait de 'dementia praecox'."},
+  {type:"qcm",q:"La 'dementia praecox' de Kraepelin correspond a ce que Bleuler a appele :",opts:["Le trouble bipolaire","La schizophrenie","La depression majeure","Le trouble obsessionnel-compulsif"],ans:1,expl:"La dementia praecox de Kraepelin a ete renommee schizophrenie par Bleuler."},
+  {type:"vf",q:"Pinel a ete le premier a utiliser le mot 'psychopathologie'.",ans:false,expl:"C'est Karl P. Moritz qui a utilise le terme 'psychopathologie' pour la premiere fois en 1783, pas Pinel."},
+  {type:"qcm",q:"Classez chronologiquement : Hippocrate, Kraepelin, Pinel, Galien.",opts:["Hippocrate, Galien, Pinel, Kraepelin","Galien, Hippocrate, Pinel, Kraepelin","Hippocrate, Pinel, Galien, Kraepelin","Pinel, Hippocrate, Galien, Kraepelin"],ans:0,expl:"L'ordre chronologique est : Hippocrate (460-375 av. J.-C.), Galien (129-216), Pinel (1745-1826), Kraepelin (1856-1926)."},
+  {type:"qcm",q:"Quel evenement marque le passage de la tolerance a la persecution au Moyen Age ?",opts:["La chute de l'Empire romain","L'avenement de l'Inquisition (1199)","La fondation du Manicome de Valence","La publication du Malleus Maleficarum"],ans:1,expl:"L'Inquisition (1199) marque le passage de la tolerance (Ve-Xe) a la persecution (Xe-XVe) au Moyen Age."},
+  {type:"vf",q:"Le Manicome de Valence est le premier hopital psychiatrique et date de 1409.",ans:true,expl:"Le Manicome de Valence (1409) est effectivement considere comme le premier hopital pour malades mentaux."},
+  {type:"qcm",q:"Hersilie Rouy a ete internee a la Salpetriere pendant :",opts:["4 ans","8 ans","14 ans","20 ans"],ans:2,expl:"Hersilie Rouy a ete internee par erreur pendant 14 ans (1854-1868) a la Salpetriere."},
+  {type:"vf",q:"Burckhardt (1889) a ete le premier a pratiquer la psychochirurgie, avant Moniz.",ans:true,expl:"Burckhardt a pratique la premiere psychochirurgie en 1889, bien avant Moniz qui a recu le Nobel en 1949."},
+  {type:"qcm",q:"Von Meduna a developpe la convulsivotherapie au Cardiazol en :",opts:["1924","1929","1934","1939"],ans:2,expl:"Von Meduna a developpe la convulsivotherapie au Cardiazol en 1934."},
+  {type:"vf",q:"La psychopharmacologie inclut les antidepresseurs, les anxiolytiques et les antipsychotiques.",ans:true,expl:"La psychopharmacologie regroupe les traitements medicamenteux : antidepresseurs, anxiolytiques et antipsychotiques."},
+  {type:"qcm",q:"Quel temperament est associe a une personne calme selon la theorie des humeurs ?",opts:["Sanguin","Bilieux","Melancolique","Flegmatique"],ans:3,expl:"Le temperament flegmatique (pituite/phlegme, cerveau) est associe au calme."},
+  {type:"qcm",q:"Quel temperament est associe a une personne violente selon la theorie des humeurs ?",opts:["Sanguin","Bilieux","Melancolique","Flegmatique"],ans:1,expl:"Le temperament bilieux (bile jaune, foie) est associe a la violence."},
+  {type:"qcm",q:"Quel temperament est associe a une personne joviale selon la theorie des humeurs ?",opts:["Sanguin","Bilieux","Melancolique","Flegmatique"],ans:0,expl:"Le temperament sanguin (sang, coeur) est associe a la jovialite."},
+  {type:"vf",q:"L'ecole de Salerne a la Renaissance defendait une approche religieuse de la maladie mentale.",ans:false,expl:"L'ecole de Salerne defendait une approche organique. C'est l'ecole de Montpellier qui defendait l'approche religieuse."},
+  {type:"qcm",q:"Weyer a publie son oeuvre affirmant que les sorcieres etaient malades en :",opts:["1463","1513","1563","1613"],ans:2,expl:"Weyer a publie son oeuvre en 1563."},
+];
+
+// --- Engine ---
+let session=[], current=0, score=0;
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}
+
+function startGame(){
+  session=shuffle([...ALL_QUESTIONS]).slice(0,QUESTIONS_PER_SESSION);
+  current=0;score=0;
+  document.getElementById('scoreDisplay').textContent='0';
+  document.getElementById('totalDisplay').textContent=session.length;
+  document.getElementById('finalArea').classList.add('hidden');
+  document.getElementById('quizArea').classList.remove('hidden');
+  showQuestion();
+}
+
+function showQuestion(){
+  const q=session[current];
+  const pct=Math.round((current/session.length)*100);
+  document.getElementById('qNum').textContent=`Question ${current+1} / ${session.length}`;
+  document.getElementById('pctText').textContent=pct+'%';
+  document.getElementById('progFill').style.width=pct+'%';
+
+  let typeLabel=q.type==='vf'?'Vrai / Faux':q.type==='qui'?'Qui suis-je ?':'QCM';
+
+  let html='<div class="quiz-card">';
+  html+=`<div class="q-type">${typeLabel}</div>`;
+  html+=`<div class="q-text">${q.q}</div>`;
+  html+='<div class="options">';
+
+  if(q.type==='vf'){
+    html+=`<button class="opt-btn" onclick="answer(this,true)"><span class="letter">V</span>Vrai</button>`;
+    html+=`<button class="opt-btn" onclick="answer(this,false)"><span class="letter">F</span>Faux</button>`;
+  } else {
+    let indices=[0,1,2,3];
+    shuffle(indices);
+    const letters=['A','B','C','D'];
+    indices.forEach((origIdx,i)=>{
+      html+=`<button class="opt-btn" onclick="answer(this,${origIdx})" data-idx="${origIdx}"><span class="letter">${letters[i]}</span>${q.opts[origIdx]}</button>`;
+    });
+  }
+
+  html+='</div><div id="feedback"></div></div>';
+  document.getElementById('quizArea').innerHTML=html;
+}
+
+function answer(btn,val){
+  const q=session[current];
+  const btns=document.querySelectorAll('.opt-btn');
+  btns.forEach(b=>b.disabled=true);
+
+  let correct=false;
+  if(q.type==='vf'){
+    correct=(val===q.ans);
+    btns.forEach(b=>{
+      const bVal=(b.textContent.trim().startsWith('V'));
+      if(bVal===q.ans) b.classList.add('correct');
+      else if(b===btn && !correct) b.classList.add('wrong');
+    });
+  } else {
+    correct=(val===q.ans);
+    btns.forEach(b=>{
+      const idx=parseInt(b.dataset.idx);
+      if(idx===q.ans) b.classList.add('correct');
+      else if(b===btn && !correct) b.classList.add('wrong');
+    });
+  }
+
+  if(correct) score++;
+  document.getElementById('scoreDisplay').textContent=score;
+
+  const fb=document.getElementById('feedback');
+  fb.innerHTML=`<div class="explanation ${correct?'correct':'wrong'}">${correct?'Correct !':'Incorrect.'} ${q.expl}</div><button class="next-btn" onclick="nextQ()">Suivante &rarr;</button>`;
+}
+
+function nextQ(){
+  current++;
+  if(current>=session.length) showFinal();
+  else showQuestion();
+}
+
+function showFinal(){
+  document.getElementById('quizArea').classList.add('hidden');
+  const pct=Math.round((score/session.length)*100);
+  document.getElementById('progFill').style.width='100%';
+  document.getElementById('pctText').textContent='100%';
+  document.getElementById('qNum').textContent=`Termine !`;
+
+  const stars=pct>=90?5:pct>=75?4:pct>=60?3:pct>=40?2:1;
+  let starsHtml='';
+  for(let i=0;i<5;i++) starsHtml+=`<span class="${i<stars?'on':'off'}">&#9733;</span>`;
+
+  let msg='';
+  if(pct>=90) msg='Bravo ! Vous maitrisez l\'histoire de la psychopathologie !';
+  else if(pct>=75) msg='Tres bien ! Quelques dates et auteurs a revoir.';
+  else if(pct>=60) msg='Pas mal, mais revisez les periodes historiques !';
+  else if(pct>=40) msg='Moyen, relisez le chapitre 3 attentivement.';
+  else msg='Reprenez les bases historiques. Courage !';
+
+  const fa=document.getElementById('finalArea');
+  fa.classList.remove('hidden');
+  fa.innerHTML=`<div class="final"><h2>Resultats</h2><div class="big-score">${score} / ${session.length}</div><div class="stars">${starsHtml}</div><p class="msg">${msg} (${pct}%)</p><p style="color:var(--muted);font-size:.85rem;margin-bottom:20px;">Banque : ${ALL_QUESTIONS.length} questions &mdash; ${QUESTIONS_PER_SESSION} par session</p><button class="replay-btn" onclick="startGame()">Rejouer</button></div>`;
+
+  if(pct>=60) launchConfetti();
+}
+
+function launchConfetti(){
+  const colors=['#7c3aed','#a78bfa','#22c55e','#facc15','#ef4444','#60a5fa'];
+  for(let i=0;i<50;i++){
+    const el=document.createElement('div');
+    el.className='confetti';
+    el.style.left=Math.random()*100+'vw';
+    el.style.top='-10px';
+    el.style.background=colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDelay=Math.random()*0.7+'s';
+    el.style.animationDuration=(1+Math.random())+'s';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),2500);
+  }
+}
+
+startGame();
+</script>
+</body>
+</html>

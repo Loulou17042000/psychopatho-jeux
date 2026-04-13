@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Anxiomètre — Quiz Chapitre 6</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:#0f0f1a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .container{max-width:780px;width:100%;margin:auto}
+  h1{font-size:2.2rem;font-weight:800;text-align:center;background:linear-gradient(135deg,#e11d48,#fb7185);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+  .subtitle{text-align:center;font-size:1rem;color:#94a3b8;margin-bottom:30px}
+  .score-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:.9rem;color:#cbd5e1}
+  .progress-track{width:100%;height:8px;background:#1e1e2e;border-radius:99px;overflow:hidden;margin-bottom:24px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#e11d48,#fb7185);border-radius:99px;transition:width .4s ease}
+  .card{background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:28px 24px;margin-bottom:18px;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+  .q-number{font-size:.75rem;color:#e11d48;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  .question{font-size:1.1rem;font-weight:600;line-height:1.5;margin-bottom:20px}
+  .options{display:flex;flex-direction:column;gap:10px}
+  .opt-btn{background:#16162a;border:2px solid #2a2a3e;border-radius:12px;padding:14px 18px;font-size:1rem;color:#e2e8f0;cursor:pointer;text-align:left;transition:all .2s;font-family:inherit}
+  .opt-btn:hover:not(.locked){border-color:#e11d48;background:#1f1f35}
+  .opt-btn.correct{border-color:#22c55e;background:rgba(34,197,94,.12);color:#4ade80}
+  .opt-btn.wrong{border-color:#ef4444;background:rgba(239,68,68,.1);color:#f87171}
+  .opt-btn.reveal{border-color:#22c55e;background:rgba(34,197,94,.08)}
+  .explanation{margin-top:14px;padding:14px 16px;background:#12121f;border-left:3px solid #e11d48;border-radius:0 8px 8px 0;font-size:.9rem;color:#94a3b8;line-height:1.5;display:none}
+  .explanation.show{display:block}
+  .next-btn{display:none;margin:18px auto 0;padding:12px 32px;background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .next-btn:hover{transform:scale(1.04)}
+  .result{text-align:center;padding:40px 20px}
+  .result h2{font-size:2rem;margin-bottom:8px}
+  .result .big-score{font-size:3.5rem;font-weight:800;background:linear-gradient(135deg,#e11d48,#fb7185);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .result p{color:#94a3b8;margin:8px 0}
+  .replay-btn{margin-top:24px;padding:14px 40px;background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;border:none;border-radius:12px;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .replay-btn:hover{transform:scale(1.05)}
+  .start-screen{text-align:center;padding:50px 20px}
+  .start-screen p{color:#94a3b8;margin:10px 0 28px}
+  .start-btn{padding:16px 48px;background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;border:none;border-radius:14px;font-size:1.15rem;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .start-btn:hover{transform:scale(1.05)}
+  .tag{display:inline-block;background:rgba(225,29,72,.15);color:#fb7185;font-size:.75rem;padding:3px 10px;border-radius:99px;font-weight:600;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<script>
+const ALL_QUESTIONS=[
+// === PRÉSENTATION GÉNÉRALE ===
+{q:"Quel est le point commun à tous les troubles anxieux selon le DSM-5 ?",o:["Une anxiété massive et ingérable","Des hallucinations récurrentes","Un déficit intellectuel","Une humeur dépressive chronique"],a:0,e:"Les troubles anxieux partagent une anxiété massive et ingérable ; ce qui varie, c'est la manière dont elle se manifeste."},
+{q:"Pour poser un diagnostic de trouble anxieux, l'anxiété doit être disproportionnée depuis au moins :",o:["6 mois","2 semaines","3 mois","1 an"],a:0,e:"Le DSM-5 requiert une anxiété disproportionnée (durée, intensité, fréquence) persistant depuis plus de 6 mois."},
+{q:"Les troubles anxieux sont les troubles mentaux les plus fréquents.",o:["Vrai","Faux"],a:0,e:"Effectivement, les troubles anxieux constituent la catégorie de troubles mentaux la plus fréquente dans la population générale."},
+// === ÉPIDÉMIOLOGIE ===
+{q:"Quelle est la prévalence sur la vie entière des troubles anxieux ?",o:["20-30 %","5-10 %","10-15 %","40-50 %"],a:0,e:"La prévalence sur la vie entière est estimée entre 20 et 30 %."},
+{q:"Les femmes sont plus touchées que les hommes par les troubles anxieux, sauf pour :",o:["Le TOC et les phobies sang/injection","Le TAG","La phobie sociale","Le trouble panique"],a:0,e:"La majorité des troubles anxieux touchent davantage de femmes, sauf le TOC et les phobies de type sang-injection-accident."},
+{q:"Quelle est la prévalence sur un an du TAG ?",o:["2,1 %","6 %","4,7 %","1,2 %"],a:0,e:"Le TAG a une prévalence sur un an de 2,1 % et de 6 % sur la vie entière."},
+{q:"Quel trouble anxieux a la plus forte prévalence sur la vie entière ?",o:["Les phobies spécifiques (11,6 %)","Le TAG (6 %)","La phobie sociale (4,7 %)","Le trouble panique (3 %)"],a:0,e:"Les phobies spécifiques sont les plus fréquentes avec 11,6 % de prévalence vie entière."},
+{q:"La prévalence sur un an du trouble panique avec agoraphobie est de :",o:["0,6 %","1,2 %","2,1 %","3 %"],a:0,e:"Le trouble panique avec agoraphobie a une prévalence sur un an de 0,6 % (1,8 % vie entière)."},
+{q:"La prévalence sur un an des troubles anxieux est d'environ :",o:["15 %","5 %","25 %","35 %"],a:0,e:"Environ 15 % de la population présente un trouble anxieux sur une période d'un an."},
+// === CONCEPTS CLÉS ===
+{q:"La peur est une émotion transitoire, réactive et adaptative.",o:["Vrai","Faux"],a:0,e:"La peur est une réponse normale à un stimulus, transitoire et adaptative."},
+{q:"Quelle est la différence principale entre peur et anxiété ?",o:["La peur est réactive, l'anxiété est anticipatoire","La peur est pathologique, l'anxiété est normale","La peur dure plus longtemps que l'anxiété","Il n'y a aucune différence"],a:0,e:"La peur est une réponse à un stimulus présent ; l'anxiété est une anticipation de situations de menace futures."},
+{q:"Le stress est une réponse physiologique face à un stresseur. Si celui-ci est prolongé ou inefficace, les conséquences deviennent :",o:["Psychologiques","Uniquement physiques","Inexistantes","Génétiques"],a:0,e:"Un stress prolongé ou inefficace engendre des conséquences psychologiques."},
+{q:"Selon le DSM-5, le traumatisme se définit comme l'exposition directe ou indirecte à :",o:["La mort, blessures graves ou violences sexuelles","Toute situation stressante","Un conflit professionnel","Une phobie spécifique"],a:0,e:"Le DSM-5 définit le trauma par l'exposition directe/indirecte à la mort, blessures graves ou violences sexuelles."},
+{q:"Quel type de traumatisme correspond à un événement ponctuel comme un accident ?",o:["Type 1","Type 2","Type 3","Type 0"],a:0,e:"Le type 1 correspond à un événement ponctuel (accident, agression, catastrophe) et entraîne stress aigu et post-traumatique."},
+{q:"Un traumatisme de type 2 (expérience répétée/prolongée) peut mener à :",o:["Un ESPT complexe, des troubles de la personnalité et dépressifs","Uniquement un stress aigu","Une phobie spécifique","Un TAG exclusivement"],a:0,e:"Les traumatismes répétés/prolongés (type 2) peuvent conduire à un ESPT complexe, des troubles de la personnalité et des troubles dépressifs."},
+// === SÉMIOLOGIE ===
+{q:"Quelles sont les 3 dimensions de la sémiologie de l'anxiété ?",o:["Affective, cognitive, comportementale","Affective, somatique, sociale","Cognitive, biologique, relationnelle","Somatique, comportementale, génétique"],a:0,e:"La sémiologie de l'anxiété se décline en dimensions affective, cognitive et comportementale."},
+{q:"La déréalisation et la dépersonnalisation font partie de la dimension :",o:["Cognitive","Affective","Comportementale","Somatique"],a:0,e:"Déréalisation et dépersonnalisation relèvent de la dimension cognitive de l'anxiété."},
+{q:"L'évitement et les rituels appartiennent à la dimension :",o:["Comportementale","Cognitive","Affective","Biologique"],a:0,e:"L'évitement et les rituels sont des manifestations de la dimension comportementale."},
+{q:"Les ecmnésies sont :",o:["Des souvenirs intrusifs ressentis comme actuels (flashbacks)","Des oublis sélectifs","Des faux souvenirs positifs","Des hallucinations auditives"],a:0,e:"Les ecmnésies sont des souvenirs intrusifs revécus comme s'ils se déroulaient au moment présent, autrement dit des flashbacks."},
+{q:"Les ruminations mentales sont des pensées volontaires que le patient contrôle facilement.",o:["Faux","Vrai"],a:0,e:"Les ruminations mentales sont des pensées involontaires et répétitives, caractéristiques de la pensée anxieuse."},
+// === MANIFESTATIONS SOMATIQUES ===
+{q:"La dysmorphophobie est :",o:["Une préoccupation excessive pour un défaut corporel perçu","Une phobie des formes géométriques","Un trouble de la perception des couleurs","Une peur de la dysmorphie faciale chez autrui"],a:0,e:"La dysmorphophobie désigne une préoccupation excessive concernant un défaut physique perçu, souvent minime ou inexistant."},
+{q:"La psychasthénie désigne :",o:["La fatigue psychique","Un trouble de la personnalité","Une forme de psychose","Un trouble du langage"],a:0,e:"La psychasthénie fait référence à une fatigue psychique, fréquemment observée dans les troubles anxieux."},
+// === APPROCHE BIOLOGIQUE ===
+{q:"Dans les troubles anxieux, l'amygdale est :",o:["Suractivée","Sous-activée","Normale","Absente"],a:0,e:"L'amygdale, détecteur de danger du cerveau, est en surrégime dans les troubles anxieux."},
+{q:"Le cortex préfrontal, dans les troubles anxieux, est :",o:["Sous-activé","Suractivé","Normal","Détruit"],a:0,e:"Le cortex préfrontal, qui joue le rôle de « frein » du cerveau, est sous-activé dans les troubles anxieux."},
+// === APPROCHE COGNITIVE ===
+{q:"Quel auteur a proposé le modèle de l'attention sélective et de l'hypervigilance (1998) ?",o:["Rachman","Beck","Freud","Seligman"],a:0,e:"Rachman (1998) a décrit le cercle vicieux attention sélective → hypervigilance → recherche de dangers."},
+{q:"Le cercle vicieux cognitif de l'anxiété commence par :",o:["L'anticipation","L'inhibition","La focalisation","La relaxation"],a:0,e:"Le cercle débute par l'anticipation, suivie d'hypervigilance, recherche de dangers, focalisation, inhibition, puis retour à l'anticipation."},
+// === NÉVROSE ===
+{q:"Qui a inventé le terme 'neurosis' ?",o:["Cullen (1769)","Freud","Pinel","Bergeret"],a:0,e:"Cullen a introduit le terme 'neurosis' en 1769 pour désigner des maladies nerveuses sans fièvre."},
+{q:"Selon Freud, le facteur commun à toutes les névroses est :",o:["L'anxiété","La dépression","Les hallucinations","La dissociation"],a:0,e:"Pour Freud, l'anxiété est le facteur commun, issue d'un conflit psychique refoulé."},
+{q:"Selon les postulats classiques de la névrose, le patient reconnaît ses symptômes mais n'en connaît pas la signification psychologique.",o:["Vrai","Faux"],a:0,e:"Le patient névrotique reconnaît ses symptômes comme anormaux mais ignore leur signification psychologique sous-jacente."},
+{q:"La névrose d'angoisse de Freud correspond aujourd'hui à :",o:["Trouble panique et TAG","TOC","Phobie sociale","Trouble dissociatif"],a:0,e:"La névrose d'angoisse correspond dans la classification moderne au trouble panique et à l'anxiété généralisée."},
+{q:"La névrose obsessionnelle correspond aujourd'hui au :",o:["TOC et personnalité obsessionnelle","Trouble panique","TAG","Phobie sociale"],a:0,e:"La névrose obsessionnelle se retrouve dans le TOC et la personnalité obsessionnelle."},
+{q:"Freud a décrit la phobie sociale.",o:["Faux","Vrai"],a:0,e:"La phobie sociale n'a pas été décrite par Freud ; elle n'a pas de correspondance directe dans les névroses freudiennes."},
+{q:"La névrose hystérique correspond aujourd'hui à :",o:["Personnalité histrionique et troubles somatoformes","Trouble panique","TOC","Agoraphobie"],a:0,e:"La névrose hystérique est devenue la personnalité histrionique et les troubles somatoformes dans les classifications modernes."},
+// === CLASSIFICATION DSM-5 ===
+{q:"Le DSM-5 classe les troubles anciennement 'anxieux' en combien de catégories ?",o:["4","2","3","6"],a:0,e:"Le DSM-5 distingue : troubles anxieux, TOC et connexes, troubles liés au trauma/stress, et troubles dissociatifs."},
+{q:"Lequel ne fait PAS partie des 4 catégories du DSM-5 liées à l'anxiété ?",o:["Troubles de l'humeur","Troubles anxieux","TOC et connexes","Troubles dissociatifs"],a:0,e:"Les troubles de l'humeur constituent une catégorie distincte et ne font pas partie des 4 groupes liés à l'anxiété."},
+// === ATTAQUE DE PANIQUE ===
+{q:"Quel pourcentage de la population fait une crise de panique au cours de sa vie ?",o:["5-30 %","1-2 %","50 %","0,5 %"],a:0,e:"Entre 5 et 30 % de la population fait au moins une crise de panique dans sa vie."},
+{q:"Le trouble panique débute généralement :",o:["Avant 30 ans","Après 50 ans","Dans l'enfance","Après 40 ans"],a:0,e:"Le trouble panique débute typiquement avant l'âge de 30 ans."},
+{q:"Quel pourcentage de patients avec trouble panique s'améliorent sans traitement ?",o:["30 %","5 %","60 %","80 %"],a:0,e:"Environ 30 % des patients s'améliorent spontanément, et 40 % sous placebo."},
+{q:"L'attaque de panique inclut des symptômes somatiques comme :",o:["Palpitations, difficultés respiratoires, douleurs cardiaques","Hallucinations visuelles","Amnésie totale","Paralysie des membres"],a:0,e:"L'AP se caractérise par des symptômes somatiques intenses : palpitations, difficultés respiratoires, douleurs thoraciques, sensation d'étranglement."},
+{q:"La prévalence du trouble panique est d'environ :",o:["3 % (vie entière)","10 %","0,1 %","15 %"],a:0,e:"Le trouble panique a une prévalence d'environ 3 % sur la vie entière, avec un sex-ratio de 2F/1H."},
+// === AGORAPHOBIE ===
+{q:"L'agoraphobie est :",o:["L'anxiété liée aux endroits d'où il est difficile de s'échapper en cas d'AP","La peur de l'eau","La peur des espaces clos uniquement","La peur des araignées"],a:0,e:"L'agoraphobie est l'anxiété liée aux endroits d'où il est difficile de s'échapper en cas d'attaque de panique, avec évitement."},
+{q:"L'agoraphobie débute vers l'âge de :",o:["20 ans","40 ans","10 ans","60 ans"],a:0,e:"L'agoraphobie débute typiquement vers 20 ans, avec une prévalence de 3 % et un sex-ratio de 2F/1H."},
+// === PHOBIES SPÉCIFIQUES ===
+{q:"La prévalence vie entière des phobies spécifiques est de :",o:["12 %","2 %","25 %","0,5 %"],a:0,e:"Les phobies spécifiques touchent environ 12 % de la population sur la vie entière."},
+{q:"L'acrophobie est la peur :",o:["Des hauteurs","Des araignées","Des espaces clos","De l'avion"],a:0,e:"L'acrophobie désigne la peur des hauteurs."},
+{q:"La coulrophobie est la peur :",o:["Des clowns","Des couleurs","De la course","Des serpents"],a:0,e:"La coulrophobie est la peur des clowns."},
+{q:"L'hématophobie est la peur :",o:["Du sang et des plaies","Des hématomes","De l'eau","Des hématologues"],a:0,e:"L'hématophobie est la peur du sang et des plaies. Elle fait partie des exceptions où le sex-ratio ne favorise pas les femmes."},
+{q:"La triskaïdékaphobie est la peur :",o:["Du nombre 13","Des tricycles","Des traits","De la triskèle"],a:0,e:"La triskaïdékaphobie est la peur irrationnelle du nombre 13."},
+{q:"L'émétophobie est la peur :",o:["De vomir","Des émeus","De rougir","De mourir"],a:0,e:"L'émétophobie est la peur de vomir ou de voir quelqu'un vomir."},
+{q:"L'éreutophobie est la peur :",o:["De rougir","De l'Europe","De l'errance","De l'écriture"],a:0,e:"L'éreutophobie est la peur de rougir en public."},
+{q:"La taphophobie est la peur :",o:["Des tombes ou d'être enterré vivant","Du toucher","Des tapisseries","De la taupe"],a:0,e:"La taphophobie est la peur des tombes et d'être enterré vivant."},
+{q:"L'ablutophobie est la peur :",o:["De se baigner","De l'absolu","De l'abus","De l'abstinence"],a:0,e:"L'ablutophobie est la peur de se baigner ou de se laver."},
+{q:"La psychopathophobie est la peur :",o:["De devenir fou","Des psychopathes","De la psychologie","Des psychiatres"],a:0,e:"La psychopathophobie est la peur de devenir fou."},
+{q:"La glossophobie est la peur :",o:["De parler en public","Des glossaires","Des langues étrangères","De la glottophobie"],a:0,e:"La glossophobie est la peur de parler en public."},
+{q:"La thanatophobie est la peur :",o:["De la mort","Des thèses","Du théâtre","De la thanatologie"],a:0,e:"La thanatophobie est la peur de la mort."},
+// === TAS ===
+{q:"Le trouble d'anxiété sociale débute généralement entre :",o:["11 et 15 ans","25 et 30 ans","5 et 8 ans","Après 40 ans"],a:0,e:"Le TAS a un début précoce, typiquement entre 11 et 15 ans."},
+{q:"En Belgique, le TAS est le 3e trouble le plus fréquent après :",o:["La dépression et l'alcoolisme","Le TAG et le TOC","La schizophrénie et le TDAH","Le trouble panique et les phobies"],a:0,e:"En Belgique, le TAS est le 3e trouble le plus fréquent, après la dépression et l'alcoolisme."},
+{q:"Le taux de comorbidités dans le TAS est de :",o:["80 %","20 %","50 %","10 %"],a:0,e:"Le TAS présente un taux très élevé de comorbidités, atteignant 80 %."},
+{q:"La prévalence vie entière du TAS est de 5 %, mais la timidité excessive touche :",o:["20 %","5 %","50 %","1 %"],a:0,e:"Si la phobie sociale touche 5 % de la population, la timidité excessive concerne environ 20 %."},
+// === TAG ===
+{q:"Le TAG se caractérise par des soucis persistants et excessifs depuis au moins :",o:["6 mois","2 semaines","1 mois","1 an"],a:0,e:"Le diagnostic de TAG requiert au moins 6 mois de soucis persistants et excessifs."},
+{q:"Dans le TAG, le patient a l'illusion de contrôler ses inquiétudes… par ses inquiétudes.",o:["Vrai","Faux"],a:0,e:"C'est un paradoxe du TAG : le patient croit que s'inquiéter le protège, ce qui maintient le cercle vicieux."},
+{q:"Le taux de rémissions spontanées du TAG est de :",o:["25 %","50 %","75 %","5 %"],a:0,e:"Seulement 25 % des patients avec TAG connaissent une rémission spontanée."},
+{q:"La prévalence vie entière du TAG est de :",o:["6 %","2 %","12 %","20 %"],a:0,e:"Le TAG a une prévalence vie entière d'environ 6 %."},
+// === TOC ===
+{q:"Le TOC est le ____ trouble mental le plus fréquent :",o:["4e","1er","2e","10e"],a:0,e:"Le TOC est le 4e trouble mental le plus fréquent."},
+{q:"L'âge moyen de début du TOC est de :",o:["12 ans","25 ans","5 ans","40 ans"],a:0,e:"Le TOC débute en moyenne vers 12 ans, avec une fourchette de 8 à 18 ans."},
+{q:"Les obsessions se divisent en 3 groupes :",o:["Idéatives, phobiques, impulsives","Visuelles, auditives, tactiles","Simples, complexes, mixtes","Aiguës, chroniques, récurrentes"],a:0,e:"Les obsessions se classent en idéatives, phobiques et impulsives."},
+{q:"La trichotillomanie est un trouble apparenté au TOC.",o:["Vrai","Faux"],a:0,e:"La trichotillomanie (arrachage compulsif des cheveux) fait partie des troubles apparentés au TOC dans le DSM-5."},
+{q:"L'accumulation compulsive (hoarding) est classée avec le TOC dans le DSM-5.",o:["Vrai","Faux"],a:0,e:"L'accumulation compulsive fait partie des troubles obsessionnels-compulsifs et connexes du DSM-5."},
+{q:"Selon l'idée clé du cours, les troubles anxieux sont :",o:["L'exagération d'un processus normal","Des maladies sans aucun lien avec le normal","Des troubles exclusivement biologiques","Toujours d'origine traumatique"],a:0,e:"Chaque trouble anxieux est l'exagération d'un processus normal : le TAG exagère les inquiétudes normales, l'AP l'interprétation des signaux internes, le TOC les pensées intrusives normales."},
+// === TROUBLES SOMATOFORMES ===
+{q:"Les troubles somatoformes touchent ____ de la population :",o:["5-10 %","1 %","30 %","0,1 %"],a:0,e:"La prévalence des troubles somatoformes est de 5 à 10 % de la population, avec un sex-ratio de 2F/1H."},
+{q:"Le trouble d'anxiété liée à la maladie correspond à l'ancienne :",o:["Hypocondrie","Hystérie","Somatisation","Conversion"],a:0,e:"Dans le DSM-5, l'hypocondrie est devenue le « trouble d'anxiété liée à la maladie », caractérisé par l'absence de symptômes somatiques significatifs."},
+{q:"Le trouble de symptôme neurologique fonctionnel correspond à :",o:["La conversion","L'hypocondrie","La somatisation","Le trouble factice"],a:0,e:"Le trouble de symptôme neurologique fonctionnel (anciennement conversion) se manifeste par des symptômes pseudo-neurologiques."},
+{q:"Le syndrome de Münchhausen correspond au :",o:["Trouble factice","Trouble de conversion","Trouble de somatisation","Trouble dissociatif"],a:0,e:"Le syndrome de Münchhausen est un trouble factice : le patient invente des symptômes, se blesse volontairement ou falsifie des tests."},
+{q:"Tout trouble somatoforme peut être comorbide d'une maladie organique dans ____ des cas :",o:["30 %","5 %","80 %","0 %"],a:0,e:"Dans 30 % des cas, un trouble somatoforme coexiste avec une véritable maladie organique."},
+{q:"Qui a été le premier à associer l'hystérie à l'utérus ?",o:["Hippocrate","Freud","Charcot","Pinel"],a:0,e:"Hippocrate, dans l'Antiquité, attribuait l'hystérie à un déplacement de l'utérus (hystera en grec)."},
+// === TROUBLES DISSOCIATIFS ===
+{q:"Les troubles dissociatifs impliquent une discontinuité de l'intégration normale de :",o:["La conscience, la mémoire et l'identité","L'humeur et des émotions","Du langage et de la motricité","De l'appétit et du sommeil"],a:0,e:"Les troubles dissociatifs affectent l'intégration de la conscience, de la mémoire et de l'identité."},
+{q:"L'amnésie dissociative de type « voyageur sans bagages » correspond à une amnésie :",o:["Généralisée","Lacunaire","Sélective","Antérograde"],a:0,e:"L'amnésie généralisée est aussi appelée « voyageur sans bagages » car le patient perd la totalité de ses souvenirs autobiographiques."},
+{q:"Le TDI (Trouble Dissociatif de l'Identité) était anciennement appelé :",o:["Dédoublement de la personnalité","Schizophrénie","Trouble de conversion","Névrose hystérique"],a:0,e:"Le TDI était autrefois nommé « dédoublement de la personnalité » ou personnalité multiple."},
+{q:"Dans le TDI, ____ des patients ont été abusés sexuellement ou physiquement :",o:["95 %","50 %","20 %","10 %"],a:0,e:"95 % des patients TDI ont un historique d'abus sexuels et/ou physiques."},
+{q:"Le TDI touche ____ de la population :",o:["3 %","0,01 %","10 %","20 %"],a:0,e:"Le TDI touche environ 3 % de la population."},
+{q:"20-50 % des patients TDI reçoivent à tort le diagnostic de :",o:["Schizophrénie","Dépression","TAG","TOC"],a:0,e:"Entre 20 et 50 % des patients TDI sont diagnostiqués à tort comme schizophrènes."},
+{q:"Les hallucinations dans le TDI viennent de l'intérieur, contrairement à celles de la schizophrénie.",o:["Vrai","Faux"],a:0,e:"Dans le TDI, les hallucinations sont perçues comme venant de l'intérieur (87 % des cas), alors que dans la SCZ, elles sont attribuées à l'extérieur (73 %)."},
+{q:"25 % des enfants abusés développent un TDI.",o:["Vrai","Faux"],a:0,e:"Environ 25 % des enfants victimes d'abus développeront un TDI."},
+{q:"La fugue dissociative se caractérise par :",o:["Un départ soudain avec confusion d'identité","Des hallucinations visuelles","Une paralysie motrice","Des obsessions récurrentes"],a:0,e:"La fugue dissociative implique un départ soudain et inattendu accompagné d'une confusion concernant son identité."},
+{q:"Le trouble de dépersonnalisation se caractérise par :",o:["Un détachement de son propre corps/fonctionnement","Des personnalités multiples","Une amnésie totale","Des compulsions de vérification"],a:0,e:"La dépersonnalisation implique un sentiment de détachement vis-à-vis de son propre corps ou de son fonctionnement mental."},
+{q:"Le TDI est apparu dans le DSM pour la première fois dans le :",o:["DSM-III","DSM-I","DSM-IV","DSM-5"],a:0,e:"Le TDI a fait son apparition dans le DSM-III."},
+{q:"Morton Prince a étudié le cas célèbre de :",o:["Christine Beauchamp (1906)","Anna O.","Dora","Le petit Hans"],a:0,e:"Morton Prince a documenté le cas de Christine Beauchamp en 1906, un cas emblématique de personnalité multiple."},
+// === ESPT / TRAUMA ===
+{q:"Quel pourcentage de la population rencontre un trauma pendant sa vie ?",o:["90 %","50 %","10 %","30 %"],a:0,e:"Environ 90 % des personnes sont exposées à au moins un événement traumatique au cours de leur vie."},
+{q:"Parmi ceux exposés à un trauma, environ ____ développent un ESPT :",o:["8-9 %","50 %","30 %","1 %"],a:0,e:"Seulement environ 8-9 % des personnes exposées à un trauma développent un ESPT."},
+{q:"L'ESA (état de stress aigu) survient dans :",o:["Les 2 jours à 1 mois après le trauma","Les 6 mois après le trauma","L'année suivant le trauma","Les premières heures uniquement"],a:0,e:"L'ESA se manifeste entre 2 jours et 1 mois après le trauma."},
+{q:"L'ESPT est diagnostiqué quand les symptômes persistent au-delà de :",o:["1 mois","2 semaines","6 mois","1 an"],a:0,e:"L'ESPT est diagnostiqué lorsque les symptômes persistent au-delà d'1 mois après le traumatisme."},
+{q:"50 % des patients avec ESPT ne répondaient PAS aux critères d'ESA.",o:["Vrai","Faux"],a:0,e:"C'est un fait important : la moitié des patients ESPT n'avaient pas présenté d'ESA au départ."},
+{q:"Quelle est la trajectoire post-traumatique la plus fréquente ?",o:["La résilience (2/3 des cas)","La chronicité","Le délai (delayed)","La guérison progressive (recovery)"],a:0,e:"La résilience est la trajectoire la plus fréquente, concernant environ 2/3 des personnes exposées à un trauma."},
+{q:"Le syndrome de Targowla est associé aux :",o:["Camps de concentration nazis","Accidents de voiture","Phobies spécifiques","Troubles somatoformes"],a:0,e:"Le syndrome de Targowla représente une forme extrême de chronicité post-traumatique, décrit chez les survivants des camps nazis."},
+{q:"Les 4 trajectoires post-traumatiques selon Galatzer-Levy et al. (2018) sont :",o:["Résilience, Recovery, Delayed, Chronic","Aigu, Subaigu, Chronique, Rémission","Léger, Modéré, Sévère, Extrême","Évitement, Intrusion, Dissociation, Guérison"],a:0,e:"Les 4 trajectoires sont : résilience (la plus fréquente), recovery (guérison progressive), delayed (décalage) et chronic (persistant)."},
+// === OUTILS D'ÉVALUATION ===
+{q:"L'échelle d'anxiété sociale de Liebowitz évalue :",o:["Le trouble d'anxiété sociale","Le TAG","Le TOC","L'ESPT"],a:0,e:"L'échelle de Liebowitz est spécifiquement conçue pour évaluer l'anxiété sociale."},
+{q:"Le Penn State Worry Questionnaire est un inventaire sur :",o:["Les inquiétudes","Les phobies","Les obsessions","Les dissociations"],a:0,e:"Le Penn State Worry Questionnaire (PSWQ) mesure la tendance aux inquiétudes, en lien avec le TAG."},
+{q:"L'échelle d'intolérance à l'incertitude a été développée par :",o:["Carleton et al. (2007)","Beck (1976)","Rachman (1998)","Freud (1917)"],a:0,e:"Carleton et al. ont publié l'échelle d'intolérance à l'incertitude en 2007."},
+// === DIAGNOSTIC DIFFÉRENTIEL ===
+{q:"Le TAG se distingue du trouble panique par :",o:["Des inquiétudes chroniques et diffuses vs des crises aiguës","La présence de compulsions","Des hallucinations","Un début plus tardif"],a:0,e:"Le TAG se caractérise par des soucis chroniques et diffus, alors que le trouble panique se manifeste par des crises aiguës et soudaines."},
+{q:"La phobie spécifique se distingue du TAS par :",o:["Un objet/situation précis vs des situations sociales en général","La durée des symptômes","L'âge de début","Le sexe du patient"],a:0,e:"La phobie spécifique concerne un objet ou une situation précise, tandis que le TAS concerne les situations sociales et de performance."},
+{q:"La claustrophobie est la peur :",o:["Des espaces clos","Des clowns","Des hauteurs","De la foule"],a:0,e:"La claustrophobie est la peur des espaces clos ou confinés."},
+{q:"L'arachnophobie est la peur :",o:["Des araignées","Des arachides","Des arcs-en-ciel","Des archéologues"],a:0,e:"L'arachnophobie est la peur des araignées, l'une des phobies spécifiques les plus courantes."},
+{q:"L'amaxophobie est la peur :",o:["De conduire","Des amazones","De l'amaxie","De l'amour"],a:0,e:"L'amaxophobie est la peur de conduire un véhicule."},
+{q:"La pédiophobie est la peur :",o:["Des poupées","Des enfants","Des pieds","Des pédiatres"],a:0,e:"La pédiophobie est la peur des poupées."},
+{q:"La nosophobie est la peur :",o:["De la maladie","Du nez","Des hôpitaux","De la nostalgie"],a:0,e:"La nosophobie est la peur de contracter une maladie."},
+{q:"L'halitophobie est la peur :",o:["De la mauvaise haleine","Des hallucinations","De l'halitose","De la halle"],a:0,e:"L'halitophobie est la peur d'avoir mauvaise haleine."},
+{q:"La cynophobie est la peur :",o:["Des chiens","Du cynisme","Des cygnes","Des cycles"],a:0,e:"La cynophobie est la peur des chiens."},
+{q:"La dentophobie est la peur :",o:["Du dentiste","Des dents","De la dentelle","Du dental"],a:0,e:"La dentophobie est la peur d'aller chez le dentiste."},
+{q:"L'algophobie est la peur :",o:["De la douleur","Des algues","De l'algèbre","De l'algorithme"],a:0,e:"L'algophobie est la peur de la douleur."},
+{q:"L'aérophobie est la peur :",o:["De l'avion","De l'air","De l'aéroport","De l'aérosol"],a:0,e:"L'aérophobie est la peur de prendre l'avion."},
+// === QUESTIONS SUPPLÉMENTAIRES ===
+{q:"Pinel définissait les névroses comme des maladies du système nerveux :",o:["Sans lésion organique","Avec lésion organique","Avec fièvre","Héréditaires uniquement"],a:0,e:"Pinel voyait les névroses comme des maladies du système nerveux sans lésion organique identifiable."},
+{q:"Bergeret parle de 'structure névrotique' tandis que Rossillon parle de :",o:["Pôle d'organisation névrotique","Spectre névrotique","Axe névrotique","Dimension névrotique"],a:0,e:"Rossillon préfère le terme « pôle d'organisation névrotique » à celui de structure."},
+{q:"Dans la névrose, il y a altération de la relation à la réalité.",o:["Faux","Vrai"],a:0,e:"Un postulat classique est que la névrose ne s'accompagne pas d'altération de la relation à la réalité ni de l'identité."},
+{q:"L'étymologie de « névrose » vient de :",o:["Neuron (nerf) + -ose (maladie non inflammatoire)","Neuro (cerveau) + -ase (enzyme)","Nervus (tendon) + -ite (inflammation)","Neuros (esprit) + -ique (qui se rapporte à)"],a:0,e:"Le mot neurosis vient du grec neuron (nerf) et du suffixe -ose désignant une maladie non inflammatoire."},
+{q:"Le sex-ratio du trouble panique est de :",o:["2F/1H","1F/1H","3F/1H","1F/2H"],a:0,e:"Le trouble panique touche deux fois plus de femmes que d'hommes (2F/1H)."},
+{q:"La prévalence sur un an des phobies spécifiques est de :",o:["4,7 %","11,6 %","1,7 %","2,1 %"],a:0,e:"Les phobies spécifiques ont une prévalence sur un an de 4,7 % (et 11,6 % sur la vie entière)."},
+{q:"La prévalence sur un an de la phobie sociale est de :",o:["1,7 %","4,7 %","2,1 %","0,6 %"],a:0,e:"La phobie sociale a une prévalence sur un an de 1,7 % (4,7 % sur la vie entière)."},
+{q:"Le trouble panique a une prévalence sur un an de :",o:["1,2 %","0,6 %","2,1 %","4,7 %"],a:0,e:"Le trouble panique présente une prévalence sur un an de 1,2 % (3 % sur la vie entière)."},
+{q:"L'excoriation compulsive est un trouble apparenté au :",o:["TOC","TAG","Trouble panique","ESPT"],a:0,e:"L'excoriation compulsive (se gratter la peau de manière compulsive) est classée avec le TOC et ses troubles connexes."},
+{q:"La dysmorphie corporelle est un trouble apparenté au :",o:["TOC","Trouble dissociatif","Trouble somatoforme","ESPT"],a:0,e:"La dysmorphie corporelle fait partie des troubles obsessionnels-compulsifs et connexes du DSM-5."},
+{q:"Le TOC touche environ ____ des adultes :",o:["2-3 %","10 %","0,1 %","15 %"],a:0,e:"Le TOC touche environ 2 à 3 % de la population adulte."},
+{q:"Les compulsions ont pour fonction de :",o:["Réduire l'angoisse","Provoquer du plaisir","Augmenter la concentration","Améliorer la mémoire"],a:0,e:"Les compulsions sont des comportements répétitifs destinés à réduire l'angoisse générée par les obsessions."},
+{q:"Un symptôme somatoforme peut être comorbide d'une maladie organique.",o:["Vrai","Faux"],a:0,e:"Dans 30 % des cas, un trouble somatoforme coexiste avec une véritable maladie organique."},
+{q:"Le trouble de symptôme somatique correspond à l'ancienne :",o:["Somatisation","Hypocondrie","Conversion","Trouble factice"],a:0,e:"Le trouble de symptôme somatique du DSM-5 correspond à l'ancienne somatisation."},
+{q:"Dans le trouble d'anxiété liée à la maladie, il n'y a PAS de symptômes somatiques significatifs.",o:["Vrai","Faux"],a:0,e:"C'est ce qui distingue l'ancienne hypocondrie (devenue trouble d'anxiété liée à la maladie) : pas de symptômes somatiques significatifs, mais une anxiété liée à la maladie."},
+{q:"La sémiologie de l'ESPT inclut tous ces éléments SAUF :",o:["Des compulsions de vérification","Des pensées intrusives","Des cauchemars et flash-backs","L'hypervigilance"],a:0,e:"Les compulsions de vérification relèvent du TOC, pas de l'ESPT. L'ESPT comprend intrusions, cauchemars, flash-backs, évitement, humeur négative et hypervigilance."},
+{q:"L'Anxiety Sensitivity est un outil qui évalue :",o:["La sensibilité à l'anxiété","La sévérité du TAG","Le niveau de phobies","L'intensité des obsessions"],a:0,e:"L'Anxiety Sensitivity mesure la tendance à craindre les sensations liées à l'anxiété elle-même."},
+{q:"90 % des patients TDI sont des femmes.",o:["Vrai","Faux"],a:0,e:"Le TDI touche majoritairement les femmes, avec 90 % des cas."},
+];
+
+const TOTAL=20;
+let selected,current,score,answered;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startGame(){
+  selected=shuffle([...ALL_QUESTIONS]).slice(0,TOTAL);
+  current=0;score=0;answered=false;
+  render();
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(current>=TOTAL){showResult();return}
+  const q=selected[current];
+  const isVF=q.o.length===2&&q.o[0]==="Vrai"&&q.o[1]==="Faux" || q.o.length===2&&q.o[0]==="Faux"&&q.o[1]==="Vrai";
+  // Shuffle options with index mapping
+  let indices=[...Array(q.o.length).keys()];
+  if(!isVF) indices=shuffle(indices);
+  const pct=Math.round((current/TOTAL)*100);
+  app.innerHTML=`
+    <h1>L'Anxiomètre</h1>
+    <p class="subtitle">Chapitre 6 : Les Troubles Anxieux</p>
+    <div class="score-bar"><span>Question ${current+1}/${TOTAL}</span><span>Score : ${score}/${TOTAL}</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="card">
+      <span class="tag">${isVF?'Vrai / Faux':'QCM'}</span>
+      <div class="question">${q.q}</div>
+      <div class="options">${indices.map(i=>`<button class="opt-btn" data-idx="${i}">${q.o[i]}</button>`).join('')}</div>
+      <div class="explanation" id="expl">💡 ${q.e}</div>
+    </div>
+    <button class="next-btn" id="nextBtn">${current<TOTAL-1?'Question suivante ➜':'Voir le résultat ➜'}</button>`;
+  answered=false;
+  document.querySelectorAll('.opt-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>handleAnswer(parseInt(btn.dataset.idx),q.a,btn));
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{current++;render()});
+}
+
+function handleAnswer(chosen,correct,btn){
+  if(answered)return;answered=true;
+  document.querySelectorAll('.opt-btn').forEach(b=>{b.classList.add('locked');b.disabled=true});
+  if(chosen===correct){score++;btn.classList.add('correct')}
+  else{btn.classList.add('wrong');document.querySelectorAll('.opt-btn').forEach(b=>{if(parseInt(b.dataset.idx)===correct)b.classList.add('reveal')})}
+  document.getElementById('expl').classList.add('show');
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function showResult(){
+  const pct=Math.round((score/TOTAL)*100);
+  let msg='';
+  if(pct>=90)msg='Exceptionnel ! Vous maîtrisez les troubles anxieux !';
+  else if(pct>=70)msg='Très bien ! Quelques révisions et ce sera parfait.';
+  else if(pct>=50)msg='Pas mal, mais il reste du travail.';
+  else msg='Il faut reprendre le chapitre 6 en profondeur !';
+  document.getElementById('app').innerHTML=`
+    <h1>L'Anxiomètre</h1>
+    <p class="subtitle">Chapitre 6 : Les Troubles Anxieux</p>
+    <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="card result">
+      <h2>Résultat</h2>
+      <div class="big-score">${score} / ${TOTAL}</div>
+      <p>${pct}% de bonnes réponses</p>
+      <p>${msg}</p>
+      <button class="replay-btn" onclick="startGame()">🔄 Rejouer</button>
+    </div>`;
+}
+
+startGame();
+</script>
+</body>
+</html>

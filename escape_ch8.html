@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Escape Room Psy — Chapitre 8</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f0f1a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+::selection{background:#b91c1c;color:#fff}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#1a1a2e}
+::-webkit-scrollbar-thumb{background:#b91c1c;border-radius:3px}
+
+.header{text-align:center;padding:20px 16px 4px}
+.header h1{font-size:2rem;background:linear-gradient(135deg,#b91c1c,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px}
+.header h2{font-size:.9rem;color:#94a3b8;margin-top:4px;font-weight:400}
+
+.top-bar{display:flex;justify-content:center;gap:16px;padding:10px;flex-wrap:wrap}
+.stat{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:6px 18px;text-align:center}
+.stat .label{font-size:.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px}
+.stat .value{font-size:1.1rem;font-weight:700;color:#f87171}
+
+/* Progress */
+.progress-bar{display:flex;justify-content:center;gap:8px;padding:8px 16px;flex-wrap:wrap}
+.room-dot{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;border:2px solid #2a2a4a;background:#1a1a2e;color:#64748b;transition:all .3s}
+.room-dot.current{border-color:#b91c1c;background:#b91c1c22;color:#f87171;box-shadow:0 0 16px #b91c1c44;animation:pulse 2s infinite}
+.room-dot.done{border-color:#22c55e;background:#22c55e22;color:#22c55e}
+.room-dot.locked{opacity:.5}
+@keyframes pulse{0%,100%{box-shadow:0 0 16px #b91c1c44}50%{box-shadow:0 0 28px #b91c1c66}}
+
+/* Room */
+.room{max-width:750px;margin:16px auto;padding:0 16px}
+.room-header{text-align:center;margin-bottom:20px}
+.room-title{font-size:1.4rem;color:#f87171;font-weight:700}
+.room-subtitle{font-size:.85rem;color:#94a3b8;margin-top:4px}
+
+.puzzle-card{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:16px;padding:20px;margin-bottom:16px;transition:all .3s}
+.puzzle-card.solved{border-color:#22c55e55;background:#22c55e08}
+.puzzle-card.failed{border-color:#ef444455;animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+.puzzle-label{font-size:.7rem;color:#b91c1c;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-weight:700}
+.puzzle-question{font-size:1rem;color:#e2e8f0;margin-bottom:14px;line-height:1.5}
+
+/* QCM */
+.options{display:flex;flex-direction:column;gap:8px}
+.option-btn{background:#0f0f1a;border:2px solid #2a2a4a;border-radius:12px;padding:12px 16px;color:#cbd5e1;font-size:.95rem;cursor:pointer;transition:all .15s;text-align:left}
+.option-btn:hover:not(.disabled){border-color:#b91c1c;background:#b91c1c11}
+.option-btn.selected-correct{border-color:#22c55e;background:#22c55e22;color:#22c55e}
+.option-btn.selected-wrong{border-color:#ef4444;background:#ef444422;color:#ef4444}
+.option-btn.show-correct{border-color:#22c55e88;background:#22c55e11}
+.option-btn.disabled{cursor:default;opacity:.7}
+
+/* Fill-in */
+.fill-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.fill-input{background:#0f0f1a;border:2px solid #2a2a4a;border-radius:10px;padding:10px 14px;color:#e2e8f0;font-size:1rem;width:160px;outline:none;transition:border-color .2s}
+.fill-input:focus{border-color:#b91c1c}
+.fill-input.correct{border-color:#22c55e;background:#22c55e11}
+.fill-input.wrong{border-color:#ef4444;background:#ef444411}
+
+/* Association / Matching */
+.match-container{display:flex;gap:16px;flex-wrap:wrap}
+.match-left,.match-right{flex:1;min-width:200px;display:flex;flex-direction:column;gap:8px}
+.match-item{background:#0f0f1a;border:2px solid #2a2a4a;border-radius:10px;padding:10px 14px;font-size:.9rem;cursor:pointer;transition:all .15s;text-align:center}
+.match-item:hover{border-color:#b91c1c}
+.match-item.selected{border-color:#f87171;background:#b91c1c22;color:#f87171}
+.match-item.matched{border-color:#22c55e;background:#22c55e15;color:#22c55e;cursor:default}
+.match-item.wrong-flash{border-color:#ef4444;background:#ef444422}
+
+/* Ordering */
+.order-list{display:flex;flex-direction:column;gap:8px}
+.order-item{background:#0f0f1a;border:2px solid #2a2a4a;border-radius:10px;padding:12px 16px;font-size:.9rem;cursor:grab;display:flex;align-items:center;gap:12px;transition:all .15s;user-select:none}
+.order-item:hover{border-color:#b91c1c}
+.order-item .order-num{background:#b91c1c;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+.order-item.dragging{opacity:.5;border-color:#f87171}
+.order-item.correct-order{border-color:#22c55e}
+.order-item.wrong-order{border-color:#ef4444}
+
+/* Vrai/Faux */
+.vf-btns{display:flex;gap:12px}
+.vf-btn{flex:1;padding:14px;border-radius:12px;font-size:1.1rem;font-weight:700;cursor:pointer;border:2px solid #2a2a4a;background:#0f0f1a;transition:all .15s;text-align:center}
+.vf-btn:hover{border-color:#b91c1c}
+.vf-btn.sel-correct{border-color:#22c55e;background:#22c55e22;color:#22c55e}
+.vf-btn.sel-wrong{border-color:#ef4444;background:#ef444422;color:#ef4444}
+
+.feedback{margin-top:10px;padding:10px 14px;border-radius:10px;font-size:.85rem;display:none}
+.feedback.show{display:block;animation:fadeIn .3s}
+.feedback.fb-correct{background:#22c55e15;border:1px solid #22c55e33;color:#86efac}
+.feedback.fb-wrong{background:#ef444415;border:1px solid #ef444433;color:#fca5a5}
+.feedback.fb-info{background:#3b82f615;border:1px solid #3b82f633;color:#93c5fd}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.hint-text{color:#f59e0b;font-size:.8rem;margin-top:6px}
+
+/* Submit / Next */
+.action-row{text-align:center;margin-top:16px}
+.btn{background:linear-gradient(135deg,#b91c1c,#991b1b);color:#fff;border:none;padding:14px 32px;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .15s;letter-spacing:.5px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px #b91c1c44}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+.btn-sm{padding:10px 20px;font-size:.9rem}
+.btn-green{background:linear-gradient(135deg,#22c55e,#16a34a)}
+.btn-green:hover{box-shadow:0 6px 24px #22c55e44}
+
+/* Recap */
+.recap{background:#1e1b4b;border:1px solid #4f46e544;border-radius:16px;padding:20px;margin:20px 0;display:none}
+.recap.show{display:block;animation:fadeIn .4s}
+.recap h3{color:#818cf8;margin-bottom:8px;font-size:1.1rem}
+.recap p{color:#94a3b8;font-size:.9rem;line-height:1.6}
+
+/* Door animation */
+.door-container{text-align:center;padding:20px;display:none}
+.door-container.show{display:block}
+.door{width:120px;height:180px;background:linear-gradient(135deg,#1e1b4b,#312e81);border:3px solid #b91c1c;border-radius:8px 8px 0 0;margin:0 auto;position:relative;transition:transform .8s cubic-bezier(.25,.8,.25,1);transform-origin:left center}
+.door.opening{transform:perspective(600px) rotateY(-80deg)}
+.door-knob{position:absolute;right:15px;top:50%;width:14px;height:14px;background:#f87171;border-radius:50%;box-shadow:0 0 10px #f8717188}
+.lock-icon{font-size:2rem;margin-bottom:8px}
+
+/* End celebration */
+.celebration{display:none;text-align:center;padding:40px 20px}
+.celebration.show{display:flex;flex-direction:column;align-items:center}
+.celebration h2{font-size:2.2rem;background:linear-gradient(135deg,#22c55e,#86efac);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px}
+.celebration .big-score{font-size:3rem;font-weight:800;color:#f87171}
+.celebration .detail{color:#94a3b8;margin:4px 0;font-size:1rem}
+
+@media(max-width:600px){
+  .match-container{flex-direction:column}
+  .room{padding:0 10px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>L'Escape Room Psy</h1>
+  <h2>Chapitre 8 : Les Troubles Schizophreniques</h2>
+</div>
+
+<div class="top-bar">
+  <div class="stat"><div class="label">Salle</div><div class="value" id="roomNum">1/6</div></div>
+  <div class="stat"><div class="label">Score</div><div class="value" id="score">0</div></div>
+  <div class="stat"><div class="label">Temps</div><div class="value" id="timer">0:00</div></div>
+</div>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div id="gameContainer"></div>
+
+<div class="celebration" id="celebration">
+  <h2>EVADE(E) !</h2>
+  <div class="big-score" id="finalScore">0</div>
+  <div class="detail" id="finalTime"></div>
+  <div class="detail" id="finalDetail"></div>
+  <button class="btn" style="margin-top:24px" onclick="startGame()">Rejouer</button>
+</div>
+
+<script>
+// ========== DATA ==========
+const ROOMS = [
+{
+  title:"Salle 1 : La Psychose",
+  subtitle:"Generalites sur les psychoses",
+  recap:"La psychose est un terme parapluie (pas un diagnostic DSM-5) designant une alteration profonde de la conscience. Elle touche environ 3% de la population. Le terme vient du grec psyche (esprit) et osis (anomalie).",
+  puzzles:[
+    {
+      type:"fill",
+      label:"Puzzle 1 — Comple\u0300te",
+      question:"Le mot psychose vient du grec _____ (esprit) et _____ (anomalie)",
+      answers:["psyche","osis"],
+      placeholders:["esprit","anomalie"],
+      feedback_ok:"Psyche = esprit, Osis = anomalie. Le terme a ete cree en 1845 par Ernst von Feuchtersleben.",
+      feedback_ko:"Les racines grecques sont PSYCHE (esprit) et OSIS (anomalie)."
+    },
+    {
+      type:"qcm",
+      label:"Puzzle 2 — QCM",
+      question:"Quelle est la caracteristique centrale d'une psychose ?",
+      options:["Anxiete massive","Alteration profonde de la conscience","Trouble de la personnalite","Phobie sociale"],
+      correct:1,
+      feedback_ok:"La psychose se definit par une alteration profonde de la conscience et du contact avec la realite.",
+      feedback_ko:"La reponse etait : Alteration profonde de la conscience."
+    },
+    {
+      type:"vf",
+      label:"Puzzle 3 — Vrai ou Faux",
+      question:"'Psychose' est un diagnostic officiel dans le DSM-5.",
+      correct:false,
+      feedback_ok:"Correct ! C'est un terme parapluie, pas un diagnostic en soi.",
+      feedback_ko:"Faux : 'Psychose' n'est PAS un diagnostic officiel. C'est un terme parapluie regroupant plusieurs troubles."
+    },
+    {
+      type:"qcm",
+      label:"Puzzle 4 — QCM",
+      question:"Quel pourcentage de la population est touche par les troubles psychotiques ?",
+      options:["1%","3%","7%","15%"],
+      correct:1,
+      feedback_ok:"Environ 3% de la population est concernee par les troubles psychotiques.",
+      feedback_ko:"La reponse etait 3%."
+    }
+  ]
+},
+{
+  title:"Salle 2 : Le Delire",
+  subtitle:"Mecanismes et themes delirants",
+  recap:"Le delire implique des mecanismes varies : interpretation, intuition, imagination, illusion et hallucination. Le delire systematise (paranoiaque) se distingue du delire non systematise (paranoide). Le theme le plus frequent est persecutoire (71%).",
+  puzzles:[
+    {
+      type:"match",
+      label:"Puzzle 1 — Association",
+      question:"Associe chaque mecanisme delirant a sa description :",
+      left:["Interpretation","Intuition","Imagination","Illusion","Hallucination"],
+      right:["Sens unique attribue a une perception correcte","Brusque revelation sans deduction","Le patient fabule, invente des scenarios","La perception elle-meme est deformee","Perception sans objet reel"],
+      correctPairs:[0,1,2,3,4],
+      feedback_ok:"Les 5 mecanismes du delire : interpretation, intuition, imagination, illusion, hallucination.",
+      feedback_ko:"Revoir les 5 mecanismes delirants dans le cours."
+    },
+    {
+      type:"qcm",
+      label:"Puzzle 2 — QCM",
+      question:"Le delire systematise est aussi appele delire :",
+      options:["Paranoide","Paranoiaque","Schizophrenique","Dissociatif"],
+      correct:1,
+      feedback_ok:"Systematise = paranoiaque (organise, logique interne). Non systematise = paranoide (flou, polymorphe).",
+      feedback_ko:"Systematise = paranoIAQUE. Non systematise = paranoIDE."
+    },
+    {
+      type:"order",
+      label:"Puzzle 3 — Classement",
+      question:"Classe ces themes du delire du plus frequent au moins frequent :",
+      items:["Persecutoire (71%)","Jalousie (8%)","Somatique (2%)","Erotomaniaque (1%)","Grandeur (1%)"],
+      correctOrder:[0,1,2,3,4],
+      feedback_ok:"Persecutoire 71% > Jalousie 8% > Somatique 2% > Erotomaniaque 1% = Grandeur 1%.",
+      feedback_ko:"L'ordre est : Persecutoire > Jalousie > Somatique > Erotomaniaque = Grandeur."
+    },
+    {
+      type:"qcm",
+      label:"Puzzle 4 — QCM",
+      question:"Les delires de possession ont ete historiquement decrits par :",
+      options:["Freud","Macario (1843)","Kraepelin","Bleuler"],
+      correct:1,
+      feedback_ok:"Macario a decrit les delires de possession en 1843.",
+      feedback_ko:"La reponse etait Macario (1843)."
+    }
+  ]
+},
+{
+  title:"Salle 3 : La BDA",
+  subtitle:"Bouffee Delirante Aigue",
+  recap:"La BDA est un 'coup de tonnerre dans un ciel serein' (Magnan). Elle touche l'adulte jeune (18-30 ans), sans trouble de la conscience ni DTS. Pronostic : 40% episode unique, 35% evoluent vers un trouble bipolaire, 25% vers la schizophrenie.",
+  puzzles:[
+    {
+      type:"qcm",
+      label:"Puzzle 1 — Citation",
+      question:"Qui a dit 'le coup de tonnerre dans un ciel serein' pour decrire la BDA ?",
+      options:["Ey","Magnan","Pinel","Kraepelin"],
+      correct:1,
+      feedback_ok:"C'est Valentin Magnan qui a utilise cette metaphore celebre.",
+      feedback_ko:"La reponse etait Magnan."
+    },
+    {
+      type:"fill",
+      label:"Puzzle 2 — Decode",
+      question:"Le pronostic de la BDA en 3 chiffres : ___% episode unique, ___% vers bipolaire, ___% vers schizophrenie",
+      answers:["40","35","25"],
+      placeholders:["%","%" ,"%"],
+      feedback_ok:"40% episode unique, 35% trouble bipolaire, 25% schizophrenie.",
+      feedback_ko:"Les chiffres sont 40%, 35% et 25%."
+    },
+    {
+      type:"vf",
+      label:"Puzzle 3 — Vrai ou Faux",
+      question:"Dans la BDA, il y a un trouble de la conscience et une desorientation temporo-spatiale.",
+      correct:false,
+      feedback_ok:"Correct ! PAS de trouble de la conscience, PAS de DTS. C'est ce qui distingue la BDA de la confusion mentale.",
+      feedback_ko:"FAUX : PAS de trouble de la conscience ni de DTS dans la BDA."
+    },
+    {
+      type:"qcm",
+      label:"Puzzle 4 — QCM",
+      question:"La BDA touche principalement :",
+      options:["Les enfants","L'adulte jeune (18-25/30 ans)","Les personnes agees","Les adolescents"],
+      correct:1,
+      feedback_ok:"La BDA touche principalement l'adulte jeune entre 18 et 30 ans.",
+      feedback_ko:"La reponse etait : l'adulte jeune (18-25/30 ans)."
+    }
+  ]
+},
+{
+  title:"Salle 4 : La Schizophrenie",
+  subtitle:"Le trepied schizophrenique",
+  recap:"La schizophrenie repose sur 3 syndromes : dissociatif (desorganisation), delirant (paranoide) et deficitaire (symptomes negatifs). Le mot vient du grec schizein (fractionnement) et phren (esprit). 80% des patients s'ameliorent avec traitement.",
+  puzzles:[
+    {
+      type:"match",
+      label:"Puzzle 1 — Association",
+      question:"Les 3 syndromes du trepied schizophrenique :",
+      left:["Syndrome dissociatif","Syndrome delirant","Syndrome deficitaire"],
+      right:["Desorganisation (pensee, affectivite, comportement)","Delire paranoide (hallucinations, themes polymorphes)","Symptomes negatifs (repli, appauvrissement, apragmatisme)"],
+      correctPairs:[0,1,2],
+      feedback_ok:"Dissociatif = desorganisation, Delirant = paranoide, Deficitaire = symptomes negatifs.",
+      feedback_ko:"Revoir le trepied : dissociatif, delirant, deficitaire."
+    },
+    {
+      type:"qcm",
+      label:"Puzzle 2 — QCM",
+      question:"Quel pourcentage de patients schizophrenes s'ameliorent des qu'ils sont traites ?",
+      options:["40%","60%","80%","95%"],
+      correct:2,
+      feedback_ok:"80% des patients s'ameliorent avec un traitement adequat.",
+      feedback_ko:"La reponse etait 80%."
+    },
+    {
+      type:"qcm",
+      label:"Puzzle 3 — Criteres DSM-5",
+      question:"Parmi les 5 criteres DSM-5, au moins l'un de ces 3 doit etre present. Lequel n'en fait PAS partie ?",
+      options:["Idees delirantes","Hallucinations","Symptomes negatifs","Discours desorganise"],
+      correct:2,
+      feedback_ok:"Les 3 obligatoires (au moins 1) : idees delirantes, hallucinations, discours desorganise. Les symptomes negatifs et le comportement catatonique sont les 2 autres criteres.",
+      feedback_ko:"Symptomes negatifs = critere 5, pas dans les 3 principaux."
+    },
+    {
+      type:"fill",
+      label:"Puzzle 4 — Comple\u0300te",
+      question:"Le mot schizophrenie vient du grec _____ (fractionnement) et _____ (esprit)",
+      answers:["schizein","phren"],
+      placeholders:["fractionnement","esprit"],
+      feedback_ok:"Schizein = fendre/fractionner, Phren = esprit.",
+      feedback_ko:"Les racines sont SCHIZEIN (fractionnement) et PHREN (esprit)."
+    }
+  ]
+},
+{
+  title:"Salle 5 : Le Spectre",
+  subtitle:"Diagnostic differentiel",
+  recap:"Le spectre des troubles psychotiques se distingue par la duree : BDA (<1 mois), trouble schizophreniforme (1-6 mois), schizophrenie (>6 mois). La prevalence en Belgique est d'environ 1/100. Le cannabis multiplie le risque (46% dans les 8 ans).",
+  puzzles:[
+    {
+      type:"order",
+      label:"Puzzle 1 — Classement de duree",
+      question:"Classe ces troubles du plus bref au plus chronique :",
+      items:["BDA (< 1 mois)","Trouble schizophreniforme (1-6 mois)","Schizophrenie (>= 6 mois)","Troubles delirants (chronique, > 35 ans)"],
+      correctOrder:[0,1,2,3],
+      feedback_ok:"BDA < Schizophreniforme < Schizophrenie < Troubles delirants chroniques.",
+      feedback_ko:"L'ordre de duree : BDA < Schizophreniforme < Schizophrenie < Delirants chroniques."
+    },
+    {
+      type:"qcm",
+      label:"Puzzle 2 — QCM",
+      question:"Quelle est la prevalence de la schizophrenie en Belgique ?",
+      options:["1 personne sur 1000","1 personne sur 100","1 personne sur 50","1 personne sur 10"],
+      correct:1,
+      feedback_ok:"Environ 110 000 personnes en Belgique, soit ~1 personne sur 100.",
+      feedback_ko:"La reponse etait 1 personne sur 100 (~110 000 personnes en Belgique)."
+    },
+    {
+      type:"match",
+      label:"Puzzle 3 — Association",
+      question:"Mecanisme delirant predominant et type de psychose chronique :",
+      left:["Interpretation","Hallucination","Imagination"],
+      right:["Delire paranoiaque","Psychose hallucinatoire chronique (PHC)","Paraphrenie"],
+      correctPairs:[0,1,2],
+      feedback_ok:"Interpretation = paranoiaque, Hallucination = PHC, Imagination = paraphrenie.",
+      feedback_ko:"Revoir les correspondances mecanisme-psychose."
+    },
+    {
+      type:"qcm",
+      label:"Puzzle 4 — QCM",
+      question:"Le risque de diagnostic de schizophrenie dans les 8 ans apres un 1er episode psychotique lie au cannabis est de :",
+      options:["10%","25%","46%","70%"],
+      correct:2,
+      feedback_ok:"46% des personnes ayant un 1er episode psychotique lie au cannabis recevront un diagnostic de schizophrenie dans les 8 ans.",
+      feedback_ko:"La reponse etait 46%."
+    }
+  ]
+},
+{
+  title:"Salle 6 : L'Evasion",
+  subtitle:"Synthese finale",
+  recap:"Felicitations ! Vous avez traverse les 6 salles. Les 4 criteres de diagnostic differentiel sont : duree, systematisation du delire, dissociation et symptomes thymiques. La paraphrenie se distingue par une apparente adaptation a la realite malgre un delire fantastique.",
+  puzzles:[
+    {
+      type:"qcm",
+      label:"Puzzle 1 — QCM",
+      question:"Les 4 criteres du diagnostic differentiel des troubles psychotiques sont :",
+      options:["Duree, systematisation du delire, dissociation, symptomes thymiques","Age, sexe, antecedents, traitement","Hallucinations, delire, anxiete, depression","Debut, duree, intensite, frequence"],
+      correct:0,
+      feedback_ok:"Les 4 criteres : duree, systematisation, dissociation, symptomes thymiques.",
+      feedback_ko:"La reponse etait : duree, systematisation du delire, dissociation, symptomes thymiques."
+    },
+    {
+      type:"match",
+      label:"Puzzle 2 — Association",
+      question:"Outils d'evaluation :",
+      left:["SANS","SAPS","PANSS","PSYRATS","Refer-o-scope"],
+      right:["Symptomes negatifs","Symptomes positifs","Mesure globale des psychoses","Intensite des symptomes psychotiques","Concu pour les jeunes"],
+      correctPairs:[0,1,2,3,4],
+      feedback_ok:"SANS = negatifs, SAPS = positifs, PANSS = global, PSYRATS = intensite, Refer-o-scope = jeunes.",
+      feedback_ko:"Revoir les echelles d'evaluation du cours."
+    },
+    {
+      type:"qcm",
+      label:"Puzzle 3 — QCM",
+      question:"La paraphrenie se distingue par :",
+      options:["Un delire d'interpretation systematise","Une apparente adaptation du sujet a la realite malgre un delire fantastique","Des hallucinations auditives predominantes","Un debut brutal avant 20 ans"],
+      correct:1,
+      feedback_ok:"La paraphrenie = adaptation apparente a la realite MALGRE un delire fantastique (mecanisme : imagination).",
+      feedback_ko:"La reponse etait : apparente adaptation malgre un delire fantastique."
+    },
+    {
+      type:"fill",
+      label:"Puzzle 4 — Pronostic",
+      question:"Le pronostic evolutif de la schizophrenie se divise en 3 tiers : ___% pejoratifs, ___% intermediaires, ___% favorables",
+      answers:["25","50","25"],
+      placeholders:["%","%","%"],
+      feedback_ok:"25% pejoratifs, 50% intermediaires, 25% favorables.",
+      feedback_ko:"Les chiffres sont 25%, 50% et 25%."
+    }
+  ]
+}
+];
+
+// ========== STATE ==========
+let currentRoom=0, totalScore=0, seconds=0, timerInterval;
+let puzzleStates=[];
+let attemptsLeft=[];
+
+// ========== TIMER ==========
+function startTimer(){
+  clearInterval(timerInterval);
+  seconds=0;
+  timerInterval=setInterval(()=>{
+    seconds++;
+    const m=Math.floor(seconds/60),s=seconds%60;
+    document.getElementById('timer').textContent=`${m}:${s.toString().padStart(2,'0')}`;
+  },1000);
+}
+
+// ========== PROGRESS ==========
+function renderProgress(){
+  const pb=document.getElementById('progressBar');
+  pb.innerHTML='';
+  for(let i=0;i<ROOMS.length;i++){
+    const d=document.createElement('div');
+    d.className='room-dot'+(i===currentRoom?' current':i<currentRoom?' done':' locked');
+    d.textContent=i+1;
+    pb.appendChild(d);
+  }
+  document.getElementById('roomNum').textContent=`${currentRoom+1}/${ROOMS.length}`;
+}
+
+// ========== RENDER ROOM ==========
+function renderRoom(){
+  const room=ROOMS[currentRoom];
+  const gc=document.getElementById('gameContainer');
+  puzzleStates=room.puzzles.map(()=>({solved:false}));
+  attemptsLeft=room.puzzles.map(()=>3);
+
+  let html=`<div class="room">
+    <div class="room-header">
+      <div class="room-title">${room.title}</div>
+      <div class="room-subtitle">${room.subtitle}</div>
+    </div>`;
+
+  room.puzzles.forEach((p,pi)=>{
+    html+=`<div class="puzzle-card" id="pc-${pi}">
+      <div class="puzzle-label">${p.label} <span id="attempts-${pi}" style="color:#94a3b8;float:right;font-size:.65rem">3 essais</span></div>
+      <div class="puzzle-question">${p.question}</div>
+      <div id="puzzle-${pi}">${renderPuzzle(p,pi)}</div>
+      <div class="feedback" id="fb-${pi}"></div>
+    </div>`;
+  });
+
+  html+=`<div class="door-container" id="doorContainer">
+    <div class="lock-icon" id="lockIcon">&#x1F512;</div>
+    <div class="door" id="door"><div class="door-knob"></div></div>
+    <div style="margin-top:12px;color:#94a3b8;font-size:.85rem" id="doorMsg">Resous tous les puzzles pour ouvrir la porte...</div>
+  </div>`;
+
+  html+=`<div class="recap" id="recap">
+    <h3>Ce qu'il faut retenir</h3>
+    <p>${room.recap}</p>
+    <div class="action-row">
+      <button class="btn btn-green" onclick="nextRoom()" id="nextBtn">${currentRoom<ROOMS.length-1?'Salle suivante':'Terminer l\'evasion !'}</button>
+    </div>
+  </div>`;
+
+  html+=`</div>`;
+  gc.innerHTML=html;
+
+  // Show door container
+  document.getElementById('doorContainer').classList.add('show');
+
+  // Init matching states
+  room.puzzles.forEach((p,pi)=>{
+    if(p.type==='match') initMatch(p,pi);
+    if(p.type==='order') initOrder(pi);
+  });
+}
+
+function renderPuzzle(p,pi){
+  if(p.type==='qcm'){
+    return `<div class="options">${p.options.map((o,i)=>
+      `<div class="option-btn" id="opt-${pi}-${i}" onclick="answerQCM(${pi},${i})">${o}</div>`
+    ).join('')}</div>`;
+  }
+  if(p.type==='vf'){
+    return `<div class="vf-btns">
+      <div class="vf-btn" id="vf-${pi}-true" onclick="answerVF(${pi},true)">VRAI</div>
+      <div class="vf-btn" id="vf-${pi}-false" onclick="answerVF(${pi},false)">FAUX</div>
+    </div>`;
+  }
+  if(p.type==='fill'){
+    return `<div class="fill-row">${p.answers.map((a,i)=>
+      `<input class="fill-input" id="fill-${pi}-${i}" placeholder="${p.placeholders[i]||''}" autocomplete="off">`
+    ).join('')}
+    <button class="btn btn-sm" onclick="answerFill(${pi})">Valider</button></div>`;
+  }
+  if(p.type==='match'){
+    const shuffledRight=p.right.map((r,i)=>({text:r,idx:i}));
+    shuffle(shuffledRight);
+    return `<div class="match-container">
+      <div class="match-left">${p.left.map((l,i)=>
+        `<div class="match-item" id="ml-${pi}-${i}" onclick="selectMatchLeft(${pi},${i})">${l}</div>`
+      ).join('')}</div>
+      <div class="match-right">${shuffledRight.map((r,i)=>
+        `<div class="match-item" id="mr-${pi}-${i}" data-idx="${r.idx}" onclick="selectMatchRight(${pi},${i})">${r.text}</div>`
+      ).join('')}</div>
+    </div>`;
+  }
+  if(p.type==='order'){
+    const items=[...p.items];
+    shuffle(items);
+    return `<div class="order-list" id="ol-${pi}">${items.map((it,i)=>
+      `<div class="order-item" draggable="true" data-oi="${i}" id="oi-${pi}-${i}">
+        <span class="order-num">${i+1}</span><span>${it}</span>
+      </div>`
+    ).join('')}</div>
+    <div class="action-row"><button class="btn btn-sm" onclick="answerOrder(${pi})">Valider l'ordre</button></div>`;
+  }
+  return '';
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+// ========== QCM ==========
+function answerQCM(pi,choice){
+  if(puzzleStates[pi].solved||attemptsLeft[pi]<=0) return;
+  const p=ROOMS[currentRoom].puzzles[pi];
+  const correct=choice===p.correct;
+  // Disable all
+  p.options.forEach((_,i)=>{
+    const el=document.getElementById(`opt-${pi}-${i}`);
+    el.classList.add('disabled');
+    if(i===p.correct) el.classList.add('show-correct');
+    if(i===choice&&!correct) el.classList.add('selected-wrong');
+    if(i===choice&&correct) el.classList.add('selected-correct');
+  });
+  resolvePuzzle(pi,correct,p);
+}
+
+// ========== VF ==========
+function answerVF(pi,val){
+  if(puzzleStates[pi].solved||attemptsLeft[pi]<=0) return;
+  const p=ROOMS[currentRoom].puzzles[pi];
+  const correct=val===p.correct;
+  document.getElementById(`vf-${pi}-true`).classList.add(p.correct===true?(correct&&val===true?'sel-correct':'sel-correct'):'');
+  document.getElementById(`vf-${pi}-false`).classList.add(p.correct===false?'sel-correct':'');
+  if(val===true) document.getElementById(`vf-${pi}-true`).classList.add(correct?'sel-correct':'sel-wrong');
+  if(val===false) document.getElementById(`vf-${pi}-false`).classList.add(correct?'sel-correct':'sel-wrong');
+  resolvePuzzle(pi,correct,p);
+}
+
+// ========== FILL ==========
+function answerFill(pi){
+  if(puzzleStates[pi].solved||attemptsLeft[pi]<=0) return;
+  const p=ROOMS[currentRoom].puzzles[pi];
+  let allCorrect=true;
+  p.answers.forEach((a,i)=>{
+    const el=document.getElementById(`fill-${pi}-${i}`);
+    const val=el.value.trim().toLowerCase();
+    if(val===a.toLowerCase()){
+      el.classList.add('correct');el.classList.remove('wrong');
+    } else {
+      el.classList.add('wrong');el.classList.remove('correct');
+      allCorrect=false;
+    }
+  });
+  if(!allCorrect){
+    attemptsLeft[pi]--;
+    document.getElementById(`attempts-${pi}`).textContent=`${attemptsLeft[pi]} essai(s)`;
+    if(attemptsLeft[pi]<=0){
+      p.answers.forEach((a,i)=>{
+        const el=document.getElementById(`fill-${pi}-${i}`);
+        el.value=a;el.classList.add('correct');el.classList.remove('wrong');el.disabled=true;
+      });
+      resolvePuzzle(pi,false,p);
+    } else {
+      showFeedback(pi,'Essaie encore ! '+(attemptsLeft[pi]===1?'Dernier essai...':''),'wrong');
+      document.getElementById(`pc-${pi}`).classList.add('failed');
+      setTimeout(()=>document.getElementById(`pc-${pi}`).classList.remove('failed'),400);
+    }
+    return;
+  }
+  p.answers.forEach((a,i)=>document.getElementById(`fill-${pi}-${i}`).disabled=true);
+  resolvePuzzle(pi,true,p);
+}
+
+// ========== MATCH ==========
+let matchState={};
+function initMatch(p,pi){
+  matchState[pi]={leftSel:null,matched:new Set(),pairs:{}};
+}
+function selectMatchLeft(pi,i){
+  if(puzzleStates[pi].solved) return;
+  const ms=matchState[pi];
+  if(ms.matched.has('l'+i)) return;
+  // deselect previous
+  if(ms.leftSel!==null){
+    const prev=document.getElementById(`ml-${pi}-${ms.leftSel}`);
+    if(prev) prev.classList.remove('selected');
+  }
+  ms.leftSel=i;
+  document.getElementById(`ml-${pi}-${i}`).classList.add('selected');
+}
+function selectMatchRight(pi,ri){
+  if(puzzleStates[pi].solved) return;
+  const ms=matchState[pi];
+  if(ms.leftSel===null) return;
+  if(ms.matched.has('r'+ri)) return;
+  const p=ROOMS[currentRoom].puzzles[pi];
+  const rightIdx=parseInt(document.getElementById(`mr-${pi}-${ri}`).dataset.idx);
+  const correct=p.correctPairs[ms.leftSel]===rightIdx;
+  if(correct){
+    document.getElementById(`ml-${pi}-${ms.leftSel}`).classList.remove('selected');
+    document.getElementById(`ml-${pi}-${ms.leftSel}`).classList.add('matched');
+    document.getElementById(`mr-${pi}-${ri}`).classList.add('matched');
+    ms.matched.add('l'+ms.leftSel);
+    ms.matched.add('r'+ri);
+    ms.leftSel=null;
+    // Check if all matched
+    if(ms.matched.size===p.left.length*2){
+      resolvePuzzle(pi,true,p);
+    }
+  } else {
+    document.getElementById(`mr-${pi}-${ri}`).classList.add('wrong-flash');
+    setTimeout(()=>document.getElementById(`mr-${pi}-${ri}`).classList.remove('wrong-flash'),500);
+    attemptsLeft[pi]--;
+    document.getElementById(`attempts-${pi}`).textContent=`${attemptsLeft[pi]} essai(s)`;
+    if(attemptsLeft[pi]<=0){
+      // reveal all
+      for(let li=0;li<p.left.length;li++){
+        document.getElementById(`ml-${pi}-${li}`).classList.add('matched');
+      }
+      const rights=document.querySelectorAll(`[id^="mr-${pi}-"]`);
+      rights.forEach(r=>r.classList.add('matched'));
+      resolvePuzzle(pi,false,p);
+    }
+  }
+}
+
+// ========== ORDER ==========
+function initOrder(pi){
+  const ol=document.getElementById(`ol-${pi}`);
+  if(!ol) return;
+  let dragIdx=null;
+  ol.addEventListener('dragstart',e=>{
+    dragIdx=parseInt(e.target.dataset.oi);
+    e.target.classList.add('dragging');
+  });
+  ol.addEventListener('dragover',e=>e.preventDefault());
+  ol.addEventListener('drop',e=>{
+    e.preventDefault();
+    const target=e.target.closest('.order-item');
+    if(!target) return;
+    const targetIdx=parseInt(target.dataset.oi);
+    if(dragIdx===null||dragIdx===targetIdx) return;
+    const items=[...ol.children];
+    const dragEl=items[dragIdx];
+    if(dragIdx<targetIdx){
+      ol.insertBefore(dragEl,target.nextSibling);
+    } else {
+      ol.insertBefore(dragEl,target);
+    }
+    // Re-index
+    [...ol.children].forEach((c,i)=>{
+      c.dataset.oi=i;
+      c.querySelector('.order-num').textContent=i+1;
+    });
+    dragIdx=null;
+  });
+  ol.addEventListener('dragend',e=>{e.target.classList.remove('dragging');dragIdx=null;});
+  // Touch support
+  let touchDrag=null,touchClone=null;
+  ol.addEventListener('touchstart',e=>{
+    const item=e.target.closest('.order-item');
+    if(!item) return;
+    touchDrag=item;
+  },{passive:true});
+  ol.addEventListener('touchmove',e=>{
+    if(!touchDrag) return;
+    e.preventDefault();
+    const touch=e.touches[0];
+    const target=document.elementFromPoint(touch.clientX,touch.clientY);
+    const targetItem=target?.closest('.order-item');
+    if(targetItem&&targetItem!==touchDrag){
+      const items=[...ol.children];
+      const di=[...ol.children].indexOf(touchDrag);
+      const ti=[...ol.children].indexOf(targetItem);
+      if(di<ti) ol.insertBefore(touchDrag,targetItem.nextSibling);
+      else ol.insertBefore(touchDrag,targetItem);
+      [...ol.children].forEach((c,i)=>{c.dataset.oi=i;c.querySelector('.order-num').textContent=i+1;});
+    }
+  },{passive:false});
+  ol.addEventListener('touchend',()=>{touchDrag=null;},{passive:true});
+}
+
+function answerOrder(pi){
+  if(puzzleStates[pi].solved||attemptsLeft[pi]<=0) return;
+  const p=ROOMS[currentRoom].puzzles[pi];
+  const ol=document.getElementById(`ol-${pi}`);
+  const items=[...ol.children];
+  const currentTexts=items.map(it=>it.querySelector('span:last-child').textContent);
+  let correct=true;
+  items.forEach((it,i)=>{
+    if(currentTexts[i]===p.items[p.correctOrder[i]]){
+      it.classList.add('correct-order');
+    } else {
+      it.classList.add('wrong-order');
+      correct=false;
+    }
+  });
+  if(!correct){
+    attemptsLeft[pi]--;
+    document.getElementById(`attempts-${pi}`).textContent=`${attemptsLeft[pi]} essai(s)`;
+    setTimeout(()=>items.forEach(it=>{it.classList.remove('correct-order','wrong-order')}),800);
+    if(attemptsLeft[pi]<=0){
+      // Show correct order
+      ol.innerHTML='';
+      p.correctOrder.forEach((ci,i)=>{
+        const d=document.createElement('div');
+        d.className='order-item correct-order';
+        d.innerHTML=`<span class="order-num">${i+1}</span><span>${p.items[ci]}</span>`;
+        ol.appendChild(d);
+      });
+      resolvePuzzle(pi,false,p);
+    } else {
+      showFeedback(pi,'Pas le bon ordre. '+(attemptsLeft[pi]===1?'Dernier essai !':'Essaie encore !'),'wrong');
+    }
+    return;
+  }
+  resolvePuzzle(pi,true,p);
+}
+
+// ========== RESOLVE ==========
+function resolvePuzzle(pi,correct,p){
+  puzzleStates[pi].solved=true;
+  const pc=document.getElementById(`pc-${pi}`);
+  if(correct){
+    pc.classList.add('solved');
+    totalScore+=25;
+    showFeedback(pi,p.feedback_ok,'correct');
+  } else {
+    showFeedback(pi,p.feedback_ko,'wrong');
+  }
+  document.getElementById('score').textContent=totalScore;
+  checkRoomComplete();
+}
+
+function showFeedback(pi,msg,type){
+  const fb=document.getElementById(`fb-${pi}`);
+  fb.className=`feedback show fb-${type==='correct'?'correct':type==='wrong'?'wrong':'info'}`;
+  fb.textContent=msg;
+}
+
+function checkRoomComplete(){
+  if(puzzleStates.every(s=>s.solved)){
+    // Open door
+    setTimeout(()=>{
+      document.getElementById('lockIcon').textContent='\u{1F513}';
+      document.getElementById('door').classList.add('opening');
+      document.getElementById('doorMsg').textContent='Porte ouverte !';
+      setTimeout(()=>{
+        document.getElementById('recap').classList.add('show');
+      },800);
+    },600);
+  }
+}
+
+function nextRoom(){
+  currentRoom++;
+  if(currentRoom>=ROOMS.length){
+    // End game
+    clearInterval(timerInterval);
+    document.getElementById('gameContainer').innerHTML='';
+    const cel=document.getElementById('celebration');
+    cel.classList.add('show');
+    document.getElementById('finalScore').textContent=totalScore+' pts';
+    const m=Math.floor(seconds/60),s=seconds%60;
+    document.getElementById('finalTime').textContent=`Temps total : ${m}:${s.toString().padStart(2,'0')}`;
+    document.getElementById('finalDetail').textContent=`${ROOMS.length} salles traversees`;
+    return;
+  }
+  renderProgress();
+  renderRoom();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function startGame(){
+  currentRoom=0;totalScore=0;
+  document.getElementById('celebration').classList.remove('show');
+  document.getElementById('score').textContent='0';
+  renderProgress();
+  renderRoom();
+  startTimer();
+}
+
+startGame();
+</script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Labo du Diagnostic - Chapitre 4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f1a;
+    color: #e0e0e0;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-grid {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-image:
+      linear-gradient(rgba(8,145,178,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(8,145,178,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    max-width: 800px; margin: 0 auto; padding: 20px;
+  }
+
+  /* ---- START SCREEN ---- */
+  #start-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 90vh; text-align: center;
+  }
+  #start-screen .icon { font-size: 64px; margin-bottom: 16px; }
+  #start-screen h1 {
+    font-family: 'Orbitron', sans-serif; font-size: 2.4rem; font-weight: 900;
+    color: #0891b2; text-shadow: 0 0 30px rgba(8,145,178,0.5);
+    margin-bottom: 8px;
+  }
+  #start-screen .subtitle {
+    font-size: 1.1rem; color: #94a3b8; margin-bottom: 32px;
+  }
+  #start-screen .info {
+    background: rgba(8,145,178,0.08); border: 1px solid rgba(8,145,178,0.2);
+    border-radius: 12px; padding: 20px 28px; margin-bottom: 32px;
+    font-size: 0.95rem; line-height: 1.7; color: #94a3b8; max-width: 500px;
+  }
+  #start-screen .info strong { color: #0891b2; }
+
+  .btn-start {
+    font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700;
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+    color: #0f0f1a; border: none; padding: 16px 48px; border-radius: 12px;
+    cursor: pointer; transition: all 0.3s;
+    box-shadow: 0 0 25px rgba(8,145,178,0.3);
+  }
+  .btn-start:hover {
+    transform: translateY(-2px); box-shadow: 0 0 40px rgba(8,145,178,0.5);
+  }
+
+  /* ---- QUIZ SCREEN ---- */
+  #quiz-screen { display: none; }
+
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+  }
+  .score-box, .progress-box {
+    background: rgba(8,145,178,0.08); border: 1px solid rgba(8,145,178,0.2);
+    border-radius: 10px; padding: 10px 18px; font-size: 0.9rem;
+  }
+  .score-box span, .progress-box span { color: #0891b2; font-weight: 700; }
+
+  .progress-bar-container {
+    width: 100%; height: 8px; background: rgba(255,255,255,0.06);
+    border-radius: 4px; margin-bottom: 28px; overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; width: 0%; background: linear-gradient(90deg, #0891b2, #06b6d4);
+    border-radius: 4px; transition: width 0.5s ease;
+  }
+
+  .question-card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px; padding: 32px; margin-bottom: 24px;
+  }
+  .question-tag {
+    display: inline-block; font-size: 0.75rem; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 16px;
+    background: rgba(8,145,178,0.15); color: #0891b2;
+  }
+  .question-text {
+    font-size: 1.15rem; font-weight: 500; line-height: 1.6; color: #f0f0f0;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+
+  .option-btn {
+    width: 100%; text-align: left; padding: 16px 20px; font-size: 1rem;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; color: #e0e0e0; cursor: pointer;
+    transition: all 0.2s; font-family: 'Inter', sans-serif; line-height: 1.5;
+  }
+  .option-btn:hover:not(.disabled) {
+    background: rgba(8,145,178,0.1); border-color: rgba(8,145,178,0.3);
+    transform: translateX(4px);
+  }
+  .option-btn.correct {
+    background: rgba(16,185,129,0.15) !important;
+    border-color: #10b981 !important; color: #6ee7b7 !important;
+  }
+  .option-btn.wrong {
+    background: rgba(239,68,68,0.15) !important;
+    border-color: #ef4444 !important; color: #fca5a5 !important;
+  }
+  .option-btn.disabled { cursor: default; opacity: 0.7; }
+  .option-btn.disabled.correct { opacity: 1; }
+
+  .explanation {
+    display: none; padding: 18px 20px; border-radius: 12px; margin-bottom: 16px;
+    background: rgba(8,145,178,0.08); border: 1px solid rgba(8,145,178,0.2);
+    font-size: 0.92rem; line-height: 1.6; color: #94a3b8;
+  }
+  .explanation strong { color: #0891b2; }
+
+  .btn-next {
+    display: none; margin: 0 auto;
+    font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 700;
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+    color: #0f0f1a; border: none; padding: 14px 40px; border-radius: 10px;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .btn-next:hover { box-shadow: 0 0 25px rgba(8,145,178,0.4); }
+
+  /* ---- END SCREEN ---- */
+  #end-screen {
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 80vh; text-align: center;
+  }
+  #end-screen .icon { font-size: 64px; margin-bottom: 16px; }
+  #end-screen h2 {
+    font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 900;
+    color: #0891b2; margin-bottom: 12px;
+  }
+  .final-score { font-size: 3rem; font-weight: 900; color: #06b6d4; margin: 16px 0; }
+  .final-msg { font-size: 1rem; color: #94a3b8; margin-bottom: 32px; max-width: 420px; }
+
+  .btn-replay {
+    font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700;
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+    color: #0f0f1a; border: none; padding: 16px 48px; border-radius: 12px;
+    cursor: pointer; transition: all 0.3s;
+    box-shadow: 0 0 25px rgba(8,145,178,0.3);
+  }
+  .btn-replay:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(8,145,178,0.5); }
+
+  @media (max-width: 600px) {
+    #start-screen h1 { font-size: 1.6rem; }
+    .question-card { padding: 20px; }
+    .question-text { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div class="container">
+
+  <!-- START -->
+  <div id="start-screen">
+    <div class="icon">🔬</div>
+    <h1>Le Labo du Diagnostic</h1>
+    <p class="subtitle">Chapitre 4 : Sémiologie et Diagnostic</p>
+    <div class="info">
+      <strong>20 questions</strong> tirées au hasard parmi 85+<br>
+      QCM (4 choix) et Vrai/Faux<br>
+      Réponses et options mélangées à chaque partie<br>
+      <strong>Rejouez</strong> pour découvrir de nouvelles questions !
+    </div>
+    <button class="btn-start" onclick="startQuiz()">Lancer le quiz</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz-screen">
+    <div class="top-bar">
+      <div class="score-box">Score : <span id="score">0</span> / <span id="total-display">20</span></div>
+      <div class="progress-box">Question <span id="q-num">1</span> / <span id="q-total">20</span></div>
+    </div>
+    <div class="progress-bar-container"><div class="progress-bar" id="progress-bar"></div></div>
+    <div class="question-card">
+      <div class="question-tag" id="q-tag">QCM</div>
+      <p class="question-text" id="q-text"></p>
+    </div>
+    <div class="options" id="options-container"></div>
+    <div class="explanation" id="explanation"></div>
+    <button class="btn-next" id="btn-next" onclick="nextQuestion()">Suivant →</button>
+  </div>
+
+  <!-- END -->
+  <div id="end-screen">
+    <div class="icon">🏆</div>
+    <h2>Résultats</h2>
+    <div class="final-score" id="final-score"></div>
+    <p class="final-msg" id="final-msg"></p>
+    <button class="btn-replay" onclick="startQuiz()">Rejouer 🔄</button>
+  </div>
+
+</div>
+
+<script>
+// ===================== QUESTION BANK =====================
+const ALL_QUESTIONS = [
+  // ---- SÉMIOLOGIE ----
+  {type:"qcm",q:"Que signifie le terme « sémiologie » ?",o:["L'étude des signes, symptômes et syndromes","L'étude des causes des maladies","L'étude du fonctionnement cérébral","L'étude des traitements médicamenteux"],a:0,e:"Du grec semeion (signe) + logos (discours), la sémiologie est l'étude des signes, symptômes et syndromes."},
+  {type:"qcm",q:"Quelle est l'origine étymologique du mot « sémiologie » ?",o:["Semeion (signe) + logos (discours)","Semus (sang) + logos (discours)","Soma (corps) + logos (discours)","Psyche (âme) + logos (discours)"],a:0,e:"Sémiologie vient du grec semeion (signe) et logos (discours)."},
+  {type:"vf",q:"En sémiologie, un signe est ce que le patient ressent et exprime.",a:false,e:"Faux. Un signe est ce que le clinicien OBSERVE (agitation, ralentissement). Ce que le patient ressent et exprime, c'est un symptôme."},
+  {type:"vf",q:"En sémiologie, un symptôme est ce que le patient ressent et exprime.",a:true,e:"Vrai. Le symptôme correspond à ce que le patient ressent et exprime (tristesse, angoisse), tandis que le signe est ce que le clinicien observe."},
+  {type:"qcm",q:"Quel est le bon ordre des 3 niveaux sémiologiques ?",o:["Signes → Symptômes → Syndromes","Symptômes → Signes → Syndromes","Syndromes → Symptômes → Signes","Signes → Syndromes → Symptômes"],a:0,e:"Les 3 niveaux sont : Signes (observés), Symptômes (exprimés), Syndromes (associations de signes/symptômes)."},
+  {type:"qcm",q:"Un syndrome est :",o:["Une association de signes et/ou de symptômes","Un signe isolé","Un traitement spécifique","Un diagnostic définitif"],a:0,e:"Un syndrome correspond à un regroupement (association) de signes et/ou de symptômes."},
+  {type:"qcm",q:"Le diagnostic sémiologique procède par regroupement de :",o:["Syndromes → troubles → maladies","Maladies → troubles → syndromes","Symptômes → maladies → syndromes","Troubles → syndromes → maladies"],a:0,e:"Le diagnostic sémiologique regroupe les éléments en syndromes, puis en troubles, puis en maladies."},
+  {type:"qcm",q:"Les éléments pathognomoniques servent à :",o:["Distinguer des entités cliniques voisines","Soigner les symptômes les plus graves","Classer les troubles par ordre de gravité","Mesurer l'intensité d'un symptôme"],a:0,e:"Les éléments pathognomoniques permettent de distinguer des entités voisines."},
+  {type:"qcm",q:"Combien de domaines sont à explorer lors de l'examen sémiologique ?",o:["12","8","10","15"],a:0,e:"Il y a 12 domaines : présentation, émotions, psychomoteurs, langage, perceptions, pensée, conscience de soi, vigilance, mémoire, jugement, conduites instinctuelles, conduites sociales."},
+  {type:"qcm",q:"Lequel de ces éléments n'est PAS un des 12 domaines de l'examen sémiologique ?",o:["Intelligence","Langage","Perceptions","Mémoire"],a:0,e:"L'intelligence ne fait pas partie des 12 domaines sémiologiques (mais les perceptions, le langage, la mémoire en font partie)."},
+  {type:"vf",q:"L'agitation psychomotrice est un exemple de signe en sémiologie.",a:true,e:"Vrai. L'agitation est observée par le clinicien, c'est donc un signe."},
+  {type:"vf",q:"La tristesse rapportée par un patient est un signe sémiologique.",a:false,e:"Faux. La tristesse rapportée par le patient est un symptôme (ce qu'il ressent et exprime), pas un signe (ce que le clinicien observe)."},
+
+  // ---- APPROCHE CATÉGORIELLE ----
+  {type:"qcm",q:"L'approche catégorielle repose sur un mode de diagnostic :",o:["Oui/non : le trouble est présent ou absent","Sur un continuum d'intensité","Basé sur les processus transdiagnostiques","Sur l'observation comportementale uniquement"],a:0,e:"L'approche catégorielle fonctionne en oui/non : le trouble est soit présent, soit absent."},
+  {type:"qcm",q:"Quelles sont les deux grandes classifications catégorielles ?",o:["CIM-10 (OMS) et DSM-5 (APA)","MMPI et NEO PI-R","PDQ-4 et PID-5","Liebowitz et Hamilton"],a:0,e:"Les deux grandes classifications catégorielles sont la CIM-10 (OMS) et le DSM-5 (APA)."},
+  {type:"qcm",q:"Combien de catégories diagnostiques contient le DSM-5 ?",o:["22","15","30","10"],a:0,e:"Le DSM-5 comprend 22 catégories diagnostiques."},
+  {type:"qcm",q:"Combien de diagnostics compte environ le DSM-5 ?",o:["Plus de 300","Environ 200","Environ 150","Plus de 500"],a:0,e:"Le DSM-5 contient plus de 300 diagnostics."},
+  {type:"qcm",q:"Le DSM-I (1952) contenait combien de diagnostics ?",o:["106","182","265","300"],a:0,e:"Le DSM-I (1952) contenait 106 diagnostics."},
+  {type:"qcm",q:"Quel DSM a introduit 265 diagnostics ?",o:["DSM-III (1980)","DSM-II (1968)","DSM-IV (1994)","DSM-5 (2013)"],a:0,e:"Le DSM-III (1980) comptait 265 diagnostics."},
+  {type:"qcm",q:"En quelle année le DSM-II a-t-il été publié ?",o:["1968","1952","1980","2000"],a:0,e:"Le DSM-II a été publié en 1968 avec 182 diagnostics."},
+  {type:"vf",q:"Le DSM-5 a été publié en 2013.",a:true,e:"Vrai. Le DSM-5 a été publié en 2013 par l'APA avec environ 300 diagnostics."},
+  {type:"qcm",q:"Selon Zimmerman et al. (2015), combien de façons existent pour obtenir un diagnostic de dépression ?",o:["227","100","50","350"],a:0,e:"Zimmerman et al. (2015) ont montré qu'il existe 227 façons d'obtenir un diagnostic de dépression, illustrant un problème de validité."},
+  {type:"qcm",q:"Le kappa de fidélité le plus élevé dans le DSM-5 concerne :",o:["Les troubles neurocognitifs (0,78)","Le trouble mixte anxieux-dépressif","Les troubles bipolaires","Les troubles de la personnalité"],a:0,e:"Le kappa le plus élevé est de 0,78 pour les troubles neurocognitifs."},
+  {type:"qcm",q:"Le kappa le plus faible dans le DSM-5 concerne :",o:["Le trouble mixte anxieux-dépressif (−0,004)","Les troubles neurocognitifs","La schizophrénie","Le trouble bipolaire"],a:0,e:"Le trouble mixte anxieux-dépressif a un kappa de −0,004, quasi nul, ce qui est le plus faible."},
+  {type:"qcm",q:"Quel pourcentage de TED perdent leur diagnostic entre DSM-IV et DSM-5 ?",o:["25 à 50 %","5 à 10 %","60 à 80 %","Moins de 5 %"],a:0,e:"Entre 25 et 50 % des TED perdent leur diagnostic lors du passage du DSM-IV au DSM-5, illustrant un problème de comparabilité."},
+  {type:"vf",q:"La CIM-10 est publiée par l'APA.",a:false,e:"Faux. La CIM-10 est publiée par l'OMS (Organisation Mondiale de la Santé). C'est le DSM-5 qui est publié par l'APA."},
+  {type:"vf",q:"Le DSM-5 est publié par l'APA (American Psychiatric Association).",a:true,e:"Vrai. Le DSM-5 est publié par l'APA."},
+  {type:"qcm",q:"Laquelle de ces catégories N'est PAS dans le DSM-5 ?",o:["Troubles de l'intelligence","Troubles neurodéveloppementaux","Troubles bipolaires","Troubles dissociatifs"],a:0,e:"Le DSM-5 inclut les troubles neurodéveloppementaux, bipolaires et dissociatifs, mais pas une catégorie spécifique « troubles de l'intelligence »."},
+  {type:"qcm",q:"Parmi les 22 catégories du DSM-5, laquelle inclut la schizophrénie ?",o:["Le spectre de la schizophrénie et autres troubles psychotiques","Les troubles neurodéveloppementaux","Les troubles bipolaires","Les troubles dissociatifs"],a:0,e:"La schizophrénie appartient à la catégorie « Spectre de la schizophrénie et autres troubles psychotiques »."},
+
+  // ---- APPROCHE DIMENSIONNELLE ----
+  {type:"qcm",q:"L'approche dimensionnelle évalue les troubles sur :",o:["Un continuum (intensité et fréquence)","Un mode binaire oui/non","Des processus transdiagnostiques","Des critères pathognomoniques"],a:0,e:"L'approche dimensionnelle évalue les troubles sur un continuum en mesurant leur intensité et leur fréquence."},
+  {type:"qcm",q:"L'échelle de Liebowitz évalue :",o:["L'anxiété sociale","La dépression","La schizophrénie","Le TDAH"],a:0,e:"L'échelle de Liebowitz est une échelle spécifique de l'anxiété sociale (24 items, intensité 0-3, évitement 0-3)."},
+  {type:"qcm",q:"Combien d'items comporte l'échelle de Liebowitz ?",o:["24","12","36","48"],a:0,e:"L'échelle de Liebowitz comporte 24 items."},
+  {type:"qcm",q:"Le MMPI est un exemple d'échelle :",o:["Multidimensionnelle","Unidimensionnelle","Transdiagnostique","Catégorielle"],a:0,e:"Le MMPI est une échelle multidimensionnelle, mesurant plusieurs dimensions de la personnalité et de la psychopathologie."},
+  {type:"qcm",q:"La Clinical Global Impression (CGI) a été développée par :",o:["Guy (1976)","Liebowitz (1987)","Zimmerman (2015)","Hare (1991)"],a:0,e:"La CGI (Clinical Global Impression) a été développée par Guy en 1976."},
+  {type:"vf",q:"L'approche dimensionnelle fonctionne sur le mode oui/non.",a:false,e:"Faux. C'est l'approche catégorielle qui fonctionne en oui/non. L'approche dimensionnelle évalue sur un continuum."},
+  {type:"vf",q:"Une échelle unidimensionnelle mesure un seul construit (ex : anxiété).",a:true,e:"Vrai. Une échelle unidimensionnelle mesure un seul construit, comme l'anxiété ou la dépression."},
+
+  // ---- APPROCHE PROCESSUELLE ----
+  {type:"qcm",q:"L'approche processuelle/transdiagnostique identifie :",o:["Des processus pathogènes communs à plusieurs troubles","Des catégories diagnostiques exclusives","Des signes pathognomoniques","Des échelles de mesure unidimensionnelles"],a:0,e:"L'approche transdiagnostique identifie des processus pathogènes communs à plusieurs troubles."},
+  {type:"qcm",q:"Lequel est un processus transdiagnostique COMMUN ?",o:["Les fausses croyances (dépression, anxiété, SCZ)","Les hallucinations auditives","L'agitation psychomotrice","Le ralentissement moteur"],a:0,e:"Les fausses croyances sont un processus commun à la dépression, l'anxiété ET la schizophrénie."},
+  {type:"qcm",q:"Quel est un processus transdiagnostique SPÉCIFIQUE ?",o:["Les hallucinations auditives (schizophrénie mais pas troubles anxieux)","L'intolérance à l'incertitude","Les fausses croyances","Les biais cognitifs"],a:0,e:"Les hallucinations auditives sont spécifiques à la schizophrénie et ne se retrouvent pas dans les troubles anxieux."},
+  {type:"vf",q:"L'approche transdiagnostique permet un traitement SANS passer par un diagnostic.",a:true,e:"Vrai. En ciblant directement les processus pathogènes, on peut traiter sans nécessairement poser un diagnostic catégoriel."},
+  {type:"vf",q:"L'intolérance à l'incertitude est un processus pathogène identifié par l'approche transdiagnostique.",a:true,e:"Vrai. L'intolérance à l'incertitude, les fausses croyances, les biais cognitifs et les hallucinations sont des processus identifiés par cette approche."},
+  {type:"qcm",q:"Parmi les processus suivants, lequel N'est PAS cité dans l'approche processuelle ?",o:["La résilience","L'intolérance à l'incertitude","Les fausses croyances","Les biais cognitifs"],a:0,e:"La résilience n'est pas un processus pathogène. Les processus cités sont : intolérance à l'incertitude, fausses croyances, biais cognitifs, hallucinations."},
+
+  // ---- ÉPIDÉMIOLOGIE PARTIE 2 ----
+  {type:"qcm",q:"Quel est l'âge médian d'apparition des troubles mentaux chez les hommes ?",o:["19 ans","25 ans","15 ans","30 ans"],a:0,e:"L'âge médian d'apparition est de 19 ans chez les hommes et 20 ans chez les femmes."},
+  {type:"qcm",q:"Quel est l'âge médian d'apparition des troubles mentaux chez les femmes ?",o:["20 ans","19 ans","25 ans","30 ans"],a:0,e:"L'âge médian d'apparition est de 20 ans chez les femmes."},
+  {type:"vf",q:"À 75 ans, une personne sur deux souffre ou a souffert d'un trouble mental.",a:true,e:"Vrai. À 75 ans, 1 personne sur 2 souffre d'un trouble mental."},
+  {type:"qcm",q:"Quel est le trouble le plus courant chez les femmes ?",o:["La dépression","La phobie spécifique","L'ESPT","Les troubles liés à l'alcool"],a:0,e:"Chez les femmes, les troubles les plus courants sont : dépression, phobie spécifique, ESPT."},
+  {type:"qcm",q:"Quel est le trouble le plus courant chez les hommes ?",o:["Les troubles liés à l'alcool","La dépression","L'ESPT","La phobie spécifique"],a:0,e:"Chez les hommes, le trouble le plus courant est celui lié à l'alcool, suivi de la dépression et de la phobie spécifique."},
+  {type:"vf",q:"La phobie spécifique figure parmi les troubles les plus courants aussi bien chez les hommes que chez les femmes.",a:true,e:"Vrai. La phobie spécifique figure dans le top 3 des deux sexes."},
+  {type:"vf",q:"L'ESPT est parmi les troubles les plus courants chez les hommes.",a:false,e:"Faux. Chez les hommes, les plus courants sont : troubles liés à l'alcool, dépression, phobie spécifique. L'ESPT est dans le top 3 féminin."},
+
+  // ---- COMPARAISONS ENTRE APPROCHES ----
+  {type:"qcm",q:"Quelle approche permet de dire qu'un trouble est « présent ou absent » ?",o:["L'approche catégorielle","L'approche dimensionnelle","L'approche processuelle","L'approche biopsychosociale"],a:0,e:"C'est l'approche catégorielle qui fonctionne en mode binaire : le trouble est présent ou absent."},
+  {type:"qcm",q:"L'approche qui utilise des échelles pour mesurer l'intensité d'un trouble est :",o:["L'approche dimensionnelle","L'approche catégorielle","L'approche processuelle","L'approche psychodynamique"],a:0,e:"L'approche dimensionnelle utilise des échelles pour mesurer l'intensité et la fréquence des troubles sur un continuum."},
+  {type:"qcm",q:"Laquelle de ces limites concerne spécifiquement l'approche catégorielle ?",o:["227 façons d'obtenir un même diagnostic","L'absence de critères objectifs","L'impossibilité de mesurer l'intensité","Le manque de processus transdiagnostiques"],a:0,e:"Le fait qu'il existe 227 façons d'obtenir le diagnostic de dépression illustre un problème de validité propre à l'approche catégorielle."},
+
+  // ---- DSM-5 CATÉGORIES ----
+  {type:"vf",q:"Les troubles du sommeil font partie des 22 catégories du DSM-5.",a:true,e:"Vrai. Les troubles du sommeil (veille-sommeil) sont l'une des 22 catégories du DSM-5."},
+  {type:"vf",q:"Les troubles des conduites alimentaires font partie des 22 catégories du DSM-5.",a:true,e:"Vrai. Les troubles des conduites alimentaires sont une des 22 catégories du DSM-5."},
+  {type:"qcm",q:"Parmi les catégories suivantes, laquelle fait partie du DSM-5 ?",o:["Dysphorie de genre","Troubles de l'intelligence","Troubles de l'attachement","Troubles du développement moteur"],a:0,e:"La dysphorie de genre est l'une des 22 catégories du DSM-5."},
+  {type:"qcm",q:"Les troubles paraphiliques appartiennent à :",o:["L'une des 22 catégories du DSM-5","L'une des catégories de la CIM-10 uniquement","L'approche dimensionnelle","L'approche processuelle"],a:0,e:"Les troubles paraphiliques sont l'une des 22 catégories diagnostiques du DSM-5."},
+  {type:"qcm",q:"Laquelle de ces catégories du DSM-5 inclut les addictions ?",o:["Troubles liés à une substance et troubles addictifs","Troubles des conduites et du contrôle des impulsions","Troubles dissociatifs","Troubles neurocognitifs"],a:0,e:"Les addictions relèvent de la catégorie « Troubles liés à une substance et troubles addictifs »."},
+
+  // ---- SIGNES, SYMPTÔMES, SYNDROMES ----
+  {type:"qcm",q:"Un patient rapporte qu'il se sent très triste depuis 3 semaines. Il s'agit d'un :",o:["Symptôme","Signe","Syndrome","Diagnostic"],a:0,e:"La tristesse rapportée par le patient est un symptôme (ce qu'il ressent et exprime)."},
+  {type:"qcm",q:"Le clinicien observe que le patient bouge sans arrêt pendant l'entretien. C'est un :",o:["Signe","Symptôme","Syndrome","Critère pathognomonique"],a:0,e:"L'agitation observée par le clinicien est un signe."},
+  {type:"qcm",q:"L'association de tristesse + insomnie + perte d'appétit + ralentissement constitue un :",o:["Syndrome","Signe","Symptôme","Processus transdiagnostique"],a:0,e:"L'association de plusieurs signes et symptômes constitue un syndrome."},
+
+  // ---- 12 DOMAINES ----
+  {type:"qcm",q:"Le domaine de la « vigilance » fait-il partie des 12 domaines de l'examen sémiologique ?",o:["Oui","Non","Seulement dans la CIM-10","Seulement chez l'enfant"],a:0,e:"Oui, la vigilance fait partie des 12 domaines : présentation, émotions, psychomoteurs, langage, perceptions, pensée, conscience de soi, vigilance, mémoire, jugement, conduites instinctuelles, conduites sociales."},
+  {type:"qcm",q:"Lequel de ces domaines appartient aux 12 domaines sémiologiques ?",o:["Conduites instinctuelles","Créativité","Résilience","Attachement"],a:0,e:"Les conduites instinctuelles font partie des 12 domaines de l'examen sémiologique."},
+  {type:"qcm",q:"Le domaine « conscience de soi » dans l'examen sémiologique explore :",o:["La perception que le sujet a de lui-même","Les capacités intellectuelles","Les compétences sociales","Les conduites addictives"],a:0,e:"La conscience de soi est l'un des 12 domaines sémiologiques explorant la perception que le sujet a de lui-même."},
+
+  // ---- KAPPA / FIDÉLITÉ / VALIDITÉ ----
+  {type:"qcm",q:"Un kappa de 0,78 indique :",o:["Une bonne fidélité interjuges","Une fidélité très faible","Une validité parfaite","Une absence de fidélité"],a:0,e:"Un kappa de 0,78 est considéré comme élevé, indiquant une bonne fidélité interjuges."},
+  {type:"qcm",q:"Un kappa de −0,004 indique :",o:["Un accord quasi nul entre les évaluateurs","Un accord parfait","Un désaccord systématique","Une validité excellente"],a:0,e:"Un kappa de −0,004 est quasiment nul, indiquant un accord quasi inexistant entre les évaluateurs."},
+  {type:"qcm",q:"Le problème des « 227 façons » d'obtenir un diagnostic de dépression illustre un défaut de :",o:["Validité","Fidélité","Sensibilité","Spécificité"],a:0,e:"C'est un problème de validité : si 227 profils différents mènent au même diagnostic, celui-ci manque de précision diagnostique."},
+  {type:"qcm",q:"Le problème de la perte de diagnostic TED entre DSM-IV et DSM-5 illustre un défaut de :",o:["Comparabilité","Fidélité","Validité","Sensibilité"],a:0,e:"C'est un problème de comparabilité : les critères changeant d'une version à l'autre, 25-50% des TED perdent leur diagnostic."},
+
+  // ---- VRAI/FAUX VARIÉS ----
+  {type:"vf",q:"L'échelle de Liebowitz mesure à la fois l'intensité et l'évitement.",a:true,e:"Vrai. L'échelle de Liebowitz mesure l'intensité (0-3) et l'évitement (0-3) pour chacun des 24 items."},
+  {type:"vf",q:"Le DSM-III (1980) contenait 182 diagnostics.",a:false,e:"Faux. Le DSM-III (1980) contenait 265 diagnostics. C'est le DSM-II (1968) qui en contenait 182."},
+  {type:"vf",q:"Le DSM-II (1968) contenait 182 diagnostics.",a:true,e:"Vrai. Le DSM-II (1968) contenait 182 diagnostics."},
+  {type:"vf",q:"L'approche processuelle permet de cibler des processus pathogènes sans poser de diagnostic.",a:true,e:"Vrai. L'approche processuelle/transdiagnostique permet de traiter en ciblant directement les processus pathogènes, sans nécessairement poser un diagnostic."},
+  {type:"vf",q:"Les hallucinations sont un processus spécifique selon l'approche transdiagnostique.",a:false,e:"Les hallucinations auditives sont considérées comme un processus spécifique (présent dans la SCZ mais pas dans les troubles anxieux). Cependant, les hallucinations en général peuvent varier. Le cours précise que les hallucinations auditives = SCZ mais pas troubles anxieux."},
+  {type:"vf",q:"Les troubles anxieux font partie des 22 catégories du DSM-5.",a:true,e:"Vrai. Les troubles anxieux constituent l'une des 22 catégories du DSM-5."},
+  {type:"vf",q:"Les troubles neurodéveloppementaux font partie des 22 catégories du DSM-5.",a:true,e:"Vrai. Les troubles neurodéveloppementaux (incluant le TDAH, l'autisme, etc.) sont une des 22 catégories."},
+  {type:"vf",q:"Les TOC (troubles obsessionnels compulsifs) ont leur propre catégorie dans le DSM-5.",a:true,e:"Vrai. Le TOC et les troubles apparentés forment une catégorie distincte dans le DSM-5."},
+  {type:"qcm",q:"Le nombre de diagnostics a évolué au fil des DSM. Quelle est la bonne chronologie ?",o:["106 → 182 → 265 → 300","100 → 200 → 300 → 400","106 → 265 → 182 → 300","182 → 106 → 300 → 265"],a:0,e:"DSM-I : 106 (1952), DSM-II : 182 (1968), DSM-III : 265 (1980), DSM-5 : ~300 (2013)."},
+  {type:"qcm",q:"Parmi ces éléments, lequel est exploré dans le domaine « perceptions » de l'examen sémiologique ?",o:["Hallucinations","Délires","Troubles de la mémoire","Agitation"],a:0,e:"Les hallucinations relèvent du domaine des perceptions. Les délires relèvent de la pensée."},
+  {type:"qcm",q:"Le domaine « pensée » dans l'examen sémiologique explore notamment :",o:["Les délires et le cours de la pensée","Les hallucinations","La vigilance","La mémoire de travail"],a:0,e:"La pensée (contenu, cours, forme) est l'un des 12 domaines sémiologiques et inclut les délires."},
+  {type:"qcm",q:"Le domaine « langage » dans l'examen sémiologique inclut :",o:["Les troubles du débit, de la forme et du contenu verbal","Les hallucinations auditives","Le jugement moral","Les conduites addictives"],a:0,e:"Le langage est l'un des 12 domaines et explore le débit, la forme et le contenu verbal."},
+  {type:"qcm",q:"Quelle approche diagnostique est la plus ancienne en psychiatrie ?",o:["L'approche catégorielle","L'approche dimensionnelle","L'approche processuelle","L'approche transdiagnostique"],a:0,e:"L'approche catégorielle est la plus ancienne (DSM-I date de 1952) et reste la plus utilisée dans la pratique clinique."},
+  {type:"qcm",q:"L'échelle de Liebowitz évalue l'anxiété sociale sur combien de niveaux d'intensité ?",o:["4 (de 0 à 3)","3 (de 0 à 2)","5 (de 0 à 4)","10 (de 0 à 9)"],a:0,e:"L'échelle de Liebowitz utilise 4 niveaux d'intensité (0 à 3) et 4 niveaux d'évitement (0 à 3)."},
+  {type:"qcm",q:"Le trouble lié au stress et aux traumatismes est une catégorie du DSM-5 qui inclut :",o:["L'ESPT (état de stress post-traumatique)","Le TOC","La dépression","La schizophrénie"],a:0,e:"La catégorie « Troubles liés à un traumatisme ou à un facteur de stress » inclut l'ESPT."},
+  {type:"vf",q:"Les troubles de l'élimination sont une catégorie du DSM-5.",a:true,e:"Vrai. Les troubles de l'élimination (énurésie, encoprésie) forment une des 22 catégories du DSM-5."},
+  {type:"vf",q:"Les mouvements induits par les médicaments font partie des 22 catégories du DSM-5.",a:true,e:"Vrai. Les mouvements induits par un médicament et autres effets indésirables d'un médicament forment une catégorie du DSM-5."},
+  {type:"qcm",q:"Parmi ces troubles, lequel relève de la catégorie « dysfonctions sexuelles » du DSM-5 ?",o:["L'éjaculation précoce","La dysphorie de genre","Le fétichisme","L'anorexie mentale"],a:0,e:"L'éjaculation précoce est une dysfonction sexuelle. La dysphorie de genre et les paraphilies (fétichisme) ont leurs propres catégories."},
+  {type:"qcm",q:"Les troubles de la personnalité constituent :",o:["Une des 22 catégories du DSM-5","Un processus transdiagnostique","Une dimension du MMPI","Un syndrome isolé"],a:0,e:"Les troubles de la personnalité sont l'une des 22 catégories diagnostiques du DSM-5."},
+  {type:"vf",q:"Les biais cognitifs sont un processus transdiagnostique.",a:true,e:"Vrai. Les biais cognitifs font partie des processus pathogènes identifiés par l'approche transdiagnostique."},
+  {type:"qcm",q:"Combien de catégories DSM-5 sont spécifiquement liées aux substances ?",o:["Une catégorie (troubles liés à une substance et troubles addictifs)","Deux catégories distinctes","Trois catégories","Aucune catégorie spécifique"],a:0,e:"Il y a une catégorie regroupant les troubles liés à une substance et les troubles addictifs."},
+  {type:"qcm",q:"La dépression et les troubles bipolaires sont :",o:["Dans deux catégories distinctes du DSM-5","Dans la même catégorie du DSM-5","Dans la catégorie des troubles anxieux","Non classifiés dans le DSM-5"],a:0,e:"Les troubles dépressifs et les troubles bipolaires forment deux catégories distinctes dans le DSM-5."},
+];
+
+// ===================== ENGINE =====================
+const QUESTIONS_PER_SESSION = 20;
+let sessionQuestions = [];
+let currentIndex = 0;
+let score = 0;
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startQuiz() {
+  // pick random subset
+  let pool = [...ALL_QUESTIONS];
+  shuffle(pool);
+  sessionQuestions = pool.slice(0, QUESTIONS_PER_SESSION);
+  currentIndex = 0;
+  score = 0;
+
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('end-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  document.getElementById('score').textContent = '0';
+  document.getElementById('total-display').textContent = QUESTIONS_PER_SESSION;
+  document.getElementById('q-total').textContent = QUESTIONS_PER_SESSION;
+
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = sessionQuestions[currentIndex];
+  document.getElementById('q-num').textContent = currentIndex + 1;
+  document.getElementById('progress-bar').style.width = ((currentIndex) / QUESTIONS_PER_SESSION * 100) + '%';
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('explanation').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'none';
+
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+
+  if (q.type === 'vf') {
+    document.getElementById('q-tag').textContent = 'Vrai / Faux';
+    ['Vrai','Faux'].forEach((label, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = label;
+      btn.onclick = () => handleAnswer(btn, i === 0, q.a, q);
+      container.appendChild(btn);
+    });
+  } else {
+    document.getElementById('q-tag').textContent = 'QCM';
+    // Randomize options
+    const correctText = q.o[q.a];
+    let options = [...q.o];
+    shuffle(options);
+    options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = opt;
+      btn.onclick = () => handleAnswerQCM(btn, opt, correctText, q);
+      container.appendChild(btn);
+    });
+  }
+}
+
+function handleAnswerQCM(btn, selected, correct, q) {
+  const container = document.getElementById('options-container');
+  const buttons = container.querySelectorAll('.option-btn');
+  buttons.forEach(b => {
+    b.classList.add('disabled');
+    b.onclick = null;
+    if (b.textContent === correct) b.classList.add('correct');
+  });
+  if (selected !== correct) {
+    btn.classList.add('wrong');
+  } else {
+    score++;
+    document.getElementById('score').textContent = score;
+  }
+  showExplanation(q.e);
+}
+
+function handleAnswer(btn, selectedTrue, correctTrue, q) {
+  const container = document.getElementById('options-container');
+  const buttons = container.querySelectorAll('.option-btn');
+  const isCorrect = selectedTrue === correctTrue;
+  buttons.forEach(b => {
+    b.classList.add('disabled');
+    b.onclick = null;
+  });
+  // highlight correct
+  const correctIdx = correctTrue ? 0 : 1;
+  buttons[correctIdx].classList.add('correct');
+  if (!isCorrect) btn.classList.add('wrong');
+  else { score++; document.getElementById('score').textContent = score; }
+  showExplanation(q.e);
+}
+
+function showExplanation(text) {
+  const el = document.getElementById('explanation');
+  el.innerHTML = '<strong>Explication :</strong> ' + text;
+  el.style.display = 'block';
+  document.getElementById('btn-next').style.display = 'block';
+}
+
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex >= QUESTIONS_PER_SESSION) {
+    endQuiz();
+  } else {
+    showQuestion();
+  }
+}
+
+function endQuiz() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  const pct = Math.round(score / QUESTIONS_PER_SESSION * 100);
+  document.getElementById('final-score').textContent = score + ' / ' + QUESTIONS_PER_SESSION + ' (' + pct + '%)';
+  let msg = '';
+  if (pct >= 90) msg = 'Excellent ! Tu maîtrises la sémiologie et le diagnostic !';
+  else if (pct >= 70) msg = 'Très bien ! Quelques révisions ciblées et ce sera parfait.';
+  else if (pct >= 50) msg = 'Pas mal ! Continue à t\'entraîner pour consolider tes connaissances.';
+  else msg = 'Il y a encore du travail. Relis le chapitre et rejoue !';
+  document.getElementById('final-msg').textContent = msg;
+  document.getElementById('end-screen').style.display = 'flex';
+  document.getElementById('progress-bar').style.width = '100%';
+}
+</script>
+</body>
+</html>

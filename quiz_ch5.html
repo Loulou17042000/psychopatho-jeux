@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Profiler - Chapitre 5</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f1a;
+    color: #e0e0e0;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-grid {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-image:
+      linear-gradient(rgba(234,88,12,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(234,88,12,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    max-width: 800px; margin: 0 auto; padding: 20px;
+  }
+
+  /* ---- START SCREEN ---- */
+  #start-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 90vh; text-align: center;
+  }
+  #start-screen .icon { font-size: 64px; margin-bottom: 16px; }
+  #start-screen h1 {
+    font-family: 'Orbitron', sans-serif; font-size: 2.4rem; font-weight: 900;
+    color: #ea580c; text-shadow: 0 0 30px rgba(234,88,12,0.5);
+    margin-bottom: 8px;
+  }
+  #start-screen .subtitle {
+    font-size: 1.1rem; color: #94a3b8; margin-bottom: 32px;
+  }
+  #start-screen .info {
+    background: rgba(234,88,12,0.08); border: 1px solid rgba(234,88,12,0.2);
+    border-radius: 12px; padding: 20px 28px; margin-bottom: 32px;
+    font-size: 0.95rem; line-height: 1.7; color: #94a3b8; max-width: 520px;
+  }
+  #start-screen .info strong { color: #ea580c; }
+
+  .btn-start {
+    font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700;
+    background: linear-gradient(135deg, #ea580c, #f97316);
+    color: #0f0f1a; border: none; padding: 16px 48px; border-radius: 12px;
+    cursor: pointer; transition: all 0.3s;
+    box-shadow: 0 0 25px rgba(234,88,12,0.3);
+  }
+  .btn-start:hover {
+    transform: translateY(-2px); box-shadow: 0 0 40px rgba(234,88,12,0.5);
+  }
+
+  /* ---- QUIZ SCREEN ---- */
+  #quiz-screen { display: none; }
+
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+  }
+  .score-box, .progress-box {
+    background: rgba(234,88,12,0.08); border: 1px solid rgba(234,88,12,0.2);
+    border-radius: 10px; padding: 10px 18px; font-size: 0.9rem;
+  }
+  .score-box span, .progress-box span { color: #ea580c; font-weight: 700; }
+
+  .progress-bar-container {
+    width: 100%; height: 8px; background: rgba(255,255,255,0.06);
+    border-radius: 4px; margin-bottom: 28px; overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; width: 0%; background: linear-gradient(90deg, #ea580c, #f97316);
+    border-radius: 4px; transition: width 0.5s ease;
+  }
+
+  .question-card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px; padding: 32px; margin-bottom: 24px;
+  }
+  .question-tag {
+    display: inline-block; font-size: 0.75rem; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 16px;
+    background: rgba(234,88,12,0.15); color: #ea580c;
+  }
+  .question-text {
+    font-size: 1.15rem; font-weight: 500; line-height: 1.6; color: #f0f0f0;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+
+  .option-btn {
+    width: 100%; text-align: left; padding: 16px 20px; font-size: 1rem;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; color: #e0e0e0; cursor: pointer;
+    transition: all 0.2s; font-family: 'Inter', sans-serif; line-height: 1.5;
+  }
+  .option-btn:hover:not(.disabled) {
+    background: rgba(234,88,12,0.1); border-color: rgba(234,88,12,0.3);
+    transform: translateX(4px);
+  }
+  .option-btn.correct {
+    background: rgba(16,185,129,0.15) !important;
+    border-color: #10b981 !important; color: #6ee7b7 !important;
+  }
+  .option-btn.wrong {
+    background: rgba(239,68,68,0.15) !important;
+    border-color: #ef4444 !important; color: #fca5a5 !important;
+  }
+  .option-btn.disabled { cursor: default; opacity: 0.7; }
+  .option-btn.disabled.correct { opacity: 1; }
+
+  .explanation {
+    display: none; padding: 18px 20px; border-radius: 12px; margin-bottom: 16px;
+    background: rgba(234,88,12,0.08); border: 1px solid rgba(234,88,12,0.2);
+    font-size: 0.92rem; line-height: 1.6; color: #94a3b8;
+  }
+  .explanation strong { color: #ea580c; }
+
+  .btn-next {
+    display: none; margin: 0 auto;
+    font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 700;
+    background: linear-gradient(135deg, #ea580c, #f97316);
+    color: #0f0f1a; border: none; padding: 14px 40px; border-radius: 10px;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .btn-next:hover { box-shadow: 0 0 25px rgba(234,88,12,0.4); }
+
+  /* ---- END SCREEN ---- */
+  #end-screen {
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 80vh; text-align: center;
+  }
+  #end-screen .icon { font-size: 64px; margin-bottom: 16px; }
+  #end-screen h2 {
+    font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 900;
+    color: #ea580c; margin-bottom: 12px;
+  }
+  .final-score { font-size: 3rem; font-weight: 900; color: #f97316; margin: 16px 0; }
+  .final-msg { font-size: 1rem; color: #94a3b8; margin-bottom: 32px; max-width: 420px; }
+
+  .btn-replay {
+    font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700;
+    background: linear-gradient(135deg, #ea580c, #f97316);
+    color: #0f0f1a; border: none; padding: 16px 48px; border-radius: 12px;
+    cursor: pointer; transition: all 0.3s;
+    box-shadow: 0 0 25px rgba(234,88,12,0.3);
+  }
+  .btn-replay:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(234,88,12,0.5); }
+
+  @media (max-width: 600px) {
+    #start-screen h1 { font-size: 1.6rem; }
+    .question-card { padding: 20px; }
+    .question-text { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div class="container">
+
+  <!-- START -->
+  <div id="start-screen">
+    <div class="icon">🔍</div>
+    <h1>Le Profiler</h1>
+    <p class="subtitle">Chapitre 5 : Les Troubles de la Personnalité</p>
+    <div class="info">
+      <strong>20 questions</strong> tirées au hasard parmi 110+<br>
+      QCM, Vrai/Faux et Vignettes cliniques<br>
+      Réponses et options mélangées à chaque partie<br>
+      <strong>Rejouez</strong> pour découvrir de nouvelles questions !
+    </div>
+    <button class="btn-start" onclick="startQuiz()">Lancer le quiz</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz-screen">
+    <div class="top-bar">
+      <div class="score-box">Score : <span id="score">0</span> / <span id="total-display">20</span></div>
+      <div class="progress-box">Question <span id="q-num">1</span> / <span id="q-total">20</span></div>
+    </div>
+    <div class="progress-bar-container"><div class="progress-bar" id="progress-bar"></div></div>
+    <div class="question-card">
+      <div class="question-tag" id="q-tag">QCM</div>
+      <p class="question-text" id="q-text"></p>
+    </div>
+    <div class="options" id="options-container"></div>
+    <div class="explanation" id="explanation"></div>
+    <button class="btn-next" id="btn-next" onclick="nextQuestion()">Suivant →</button>
+  </div>
+
+  <!-- END -->
+  <div id="end-screen">
+    <div class="icon">🏆</div>
+    <h2>Résultats</h2>
+    <div class="final-score" id="final-score"></div>
+    <p class="final-msg" id="final-msg"></p>
+    <button class="btn-replay" onclick="startQuiz()">Rejouer 🔄</button>
+  </div>
+
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  // ===== PERSONNALITÉ GÉNÉRALE =====
+  {type:"qcm",q:"Selon Cottraux et Blackburn (2005), la personnalité est :",o:["L'intégration stable et individualisée de nos comportements, émotions et cognitions","Un ensemble de réflexes innés","La somme des expériences traumatiques","Le résultat exclusif de l'éducation"],a:0,e:"Cottraux et Blackburn (2005) définissent la personnalité comme l'intégration stable et individualisée de nos comportements, émotions et cognitions."},
+  {type:"qcm",q:"Quelles sont les 3 caractéristiques de la personnalité selon Cottraux et Blackburn ?",o:["Stable dans le temps, spécifique, structurée à partir de l'âge adulte","Innée, rigide, pathologique","Variable, universelle, acquise dans l'enfance","Consciente, inconsciente, préconsciente"],a:0,e:"Les 3 caractéristiques sont : stable dans le temps, spécifique à chaque individu, et structurée à partir de l'âge adulte."},
+  {type:"qcm",q:"Les deux composantes de la personnalité sont :",o:["Tempérament et caractère","Conscience et inconscient","Émotion et cognition","Nature et culture"],a:0,e:"Tempérament (base biologique/génétique) + caractère (résultat des expériences de vie)."},
+  {type:"vf",q:"Le tempérament a une base biologique et génétique.",a:true,e:"Vrai. Le tempérament est la composante biologique/génétique de la personnalité."},
+  {type:"vf",q:"Le caractère est la composante biologique de la personnalité.",a:false,e:"Faux. Le caractère est le résultat des expériences de vie. C'est le tempérament qui a une base biologique."},
+  {type:"qcm",q:"Les 4 domaines perturbés dans un trouble de la personnalité sont :",o:["Cognition, affectivité, fonctionnement interpersonnel, contrôle des impulsions","Mémoire, attention, langage, perception","Sommeil, appétit, énergie, humeur","Intelligence, créativité, motivation, volonté"],a:0,e:"Les 4 domaines perturbés sont : cognition, affectivité, fonctionnement interpersonnel, contrôle des impulsions."},
+  {type:"vf",q:"Certains troubles de la personnalité s'atténuent avec l'âge, comme le TP borderline.",a:true,e:"Vrai. Le TP borderline et le TP antisociale ont tendance à s'atténuer avec l'âge."},
+  {type:"vf",q:"Le TP obsessionnelle-compulsive tend à s'atténuer avec l'âge.",a:false,e:"Faux. Le TP obsessionnelle-compulsive et le TP schizotypique ont tendance à persister."},
+
+  // ===== TEMPÉRAMENTS AFFECTIFS =====
+  {type:"qcm",q:"Qui a décrit les tempéraments affectifs en 1992 ?",o:["Akiskal","Cottraux","Millon","Kernberg"],a:0,e:"Les tempéraments affectifs ont été décrits par Akiskal en 1992."},
+  {type:"qcm",q:"Le tempérament hyperthymique se caractérise par :",o:["Affects positifs, extraversion, haute énergie, mégalomanie","Affects négatifs, introversion, faible énergie","Affects mixtes, dysphorie, agitation","Double polarité, réactivité excessive"],a:0,e:"L'hyperthymique : affects positifs, extraversion, haute énergie, mégalomanie, grégaire."},
+  {type:"qcm",q:"Le tempérament dépressif se caractérise par :",o:["Affects négatifs, introversion, faible énergie, passivité, dévalorisation","Affects positifs, extraversion, haute énergie","Affects mixtes, haute énergie, agitation","Double polarité, énergie variable"],a:0,e:"Le tempérament dépressif : affects négatifs, introversion, faible énergie, passivité, dévalorisation."},
+  {type:"qcm",q:"Le tempérament irritable se caractérise par :",o:["Affects mixtes (dysphorie), haute énergie, agitation, critique","Affects positifs, extraversion, grégaire","Double polarité, réactivité excessive","Affects négatifs, introversion, passivité"],a:0,e:"Le tempérament irritable : affects mixtes (dysphorie), haute énergie, agitation, critique, opposant."},
+  {type:"qcm",q:"Le tempérament cyclothymique se caractérise par :",o:["Double polarité, réactivité excessive, énergie variable, humeur changeante","Affects positifs stables, haute énergie","Affects négatifs stables, faible énergie","Affects mixtes, agitation constante"],a:0,e:"Le tempérament cyclothymique : double polarité, réactivité excessive, énergie variable, humeur changeante."},
+
+  // ===== ÉPIDÉMIOLOGIE =====
+  {type:"qcm",q:"La prévalence des troubles de la personnalité en population générale est de :",o:["3 à 10 %","0,5 à 1 %","15 à 20 %","25 à 30 %"],a:0,e:"En population générale, la prévalence des TP est de 3 à 10 %."},
+  {type:"qcm",q:"La prévalence des TP en population psychiatrique est d'environ :",o:["40 %","10 %","65 %","80 %"],a:0,e:"Environ 40 % de la population psychiatrique présente un TP."},
+  {type:"qcm",q:"La prévalence des TP en population carcérale est de :",o:["65 %","40 %","25 %","80 %"],a:0,e:"65 % de la population carcérale présente un TP, dont 60 % de TP antisociale."},
+  {type:"qcm",q:"Quel TP a la prévalence la plus élevée en population générale ?",o:["Obsessionnelle-compulsive (7,9 %)","Narcissique (6,2 %)","Borderline (5,9 %)","Paranoïaque (4,4 %)"],a:0,e:"Le TP obsessionnelle-compulsive a la prévalence la plus élevée : 7,9 %."},
+  {type:"qcm",q:"Quel TP a la prévalence la plus faible en population générale ?",o:["Dépendante (0,6 %)","Histrionique (1,84 %)","Évitante (2,4 %)","Schizoïde (3,1 %)"],a:0,e:"Le TP dépendante a la prévalence la plus faible : 0,6 %."},
+  {type:"vf",q:"Les TP sont plus fréquents en milieu urbain et défavorisé.",a:true,e:"Vrai. Les TP sont plus fréquents en milieu urbain et dans les milieux socio-économiques défavorisés."},
+  {type:"qcm",q:"La prévalence du TP borderline en population générale est d'environ :",o:["5,9 %","2 %","10 %","0,6 %"],a:0,e:"La prévalence du TP borderline est de 5,9 % en population générale (2 % est souvent cité aussi mais le cours indique 5,9 %)."},
+
+  // ===== OCEAN / BIG FIVE =====
+  {type:"qcm",q:"Que signifie l'acronyme OCEAN ?",o:["Ouverture, Conscience, Extraversion, Agréabilité, Névrosisme","Obsession, Conscience, Émotion, Anxiété, Narcissisme","Ouverture, Créativité, Empathie, Agréabilité, Névrosisme","Obsession, Compulsion, Extraversion, Agressivité, Négativisme"],a:0,e:"OCEAN = Ouverture, Conscience, Extraversion, Agréabilité, Névrosisme (Big Five)."},
+  {type:"qcm",q:"Le NEO PI-R (Costa et McCrae) comporte combien d'items ?",o:["240","120","60","300"],a:0,e:"Le NEO PI-R comporte 240 items et prend 20-30 minutes à compléter."},
+  {type:"qcm",q:"Quelle est la différence entre personnalité normale et pathologique selon le modèle OCEAN ?",o:["Normale = traits divers et modulables ; pathologique = traits rigides et inadaptés","Normale = absence de traits ; pathologique = présence de traits","Normale = extraversion ; pathologique = introversion","Normale = agréabilité élevée ; pathologique = névrosisme élevé"],a:0,e:"Personnalité normale = traits divers et modulables ; pathologique = traits rigides et inadaptés."},
+  {type:"qcm",q:"Le modèle HEXACO ajoute quel facteur par rapport au Big Five ?",o:["Honnêteté-humilité","Hostilité","Hyperactivité","Hédonisme"],a:0,e:"HEXACO (Ashton et Lee) : Honnêteté-humilité, Émotivité, eXtraversion, Agréabilité, Conscienciosité, Ouverture."},
+  {type:"vf",q:"Le modèle HEXACO comporte 6 facteurs.",a:true,e:"Vrai. HEXACO = 6 facteurs : H, E, X, A, C, O."},
+
+  // ===== CLUSTERS =====
+  {type:"qcm",q:"Le Cluster A du DSM-5 est décrit comme :",o:["Bizarre / excentrique","Dramatique / émotionnel","Anxieux / peureux","Impulsif / instable"],a:0,e:"Cluster A = bizarre/excentrique : paranoïaque, schizoïde, schizotypique."},
+  {type:"qcm",q:"Le Cluster B du DSM-5 est décrit comme :",o:["Dramatique / émotionnel","Bizarre / excentrique","Anxieux / peureux","Détaché / froid"],a:0,e:"Cluster B = dramatique/émotionnel : antisociale, borderline, histrionique, narcissique."},
+  {type:"qcm",q:"Le Cluster C du DSM-5 est décrit comme :",o:["Anxieux / peureux","Bizarre / excentrique","Dramatique / émotionnel","Psychotique / délirant"],a:0,e:"Cluster C = anxieux/peureux : évitante, dépendante, obsessionnelle-compulsive."},
+  {type:"qcm",q:"Quels TP appartiennent au Cluster A ?",o:["Paranoïaque, schizoïde, schizotypique","Antisociale, borderline, histrionique","Évitante, dépendante, obsessionnelle-compulsive","Narcissique, borderline, paranoïaque"],a:0,e:"Cluster A (bizarre/excentrique) : paranoïaque, schizoïde, schizotypique."},
+  {type:"qcm",q:"Quels TP appartiennent au Cluster B ?",o:["Antisociale, borderline, histrionique, narcissique","Paranoïaque, schizoïde, schizotypique","Évitante, dépendante, obsessionnelle-compulsive","Borderline, évitante, paranoïaque"],a:0,e:"Cluster B (dramatique/émotionnel) : antisociale, borderline, histrionique, narcissique."},
+  {type:"qcm",q:"Quels TP appartiennent au Cluster C ?",o:["Évitante, dépendante, obsessionnelle-compulsive","Antisociale, borderline, narcissique","Paranoïaque, schizoïde, schizotypique","Histrionique, narcissique, dépendante"],a:0,e:"Cluster C (anxieux/peureux) : évitante, dépendante, obsessionnelle-compulsive."},
+  {type:"qcm",q:"La prévalence du Cluster A est d'environ :",o:["5 %","1,6 %","6 %","10 %"],a:0,e:"Cluster A : environ 5 % de la population."},
+  {type:"qcm",q:"La prévalence du Cluster C est d'environ :",o:["6 %","5 %","1,6 %","10 %"],a:0,e:"Cluster C : environ 6 % de la population."},
+
+  // ===== CRITÈRES GÉNÉRAUX DSM-5 =====
+  {type:"qcm",q:"Combien de critères généraux le DSM-5 utilise-t-il pour diagnostiquer un TP ?",o:["6 (A à F)","4","8","10"],a:0,e:"Le DSM-5 utilise 6 critères généraux (A à F) pour diagnostiquer un TP."},
+  {type:"vf",q:"Le critère D du DSM-5 pour les TP indique que le mode est stable et de longue durée, avec début à l'adolescence ou au début de l'âge adulte.",a:true,e:"Vrai. Critère D : stable et de longue durée, début à l'adolescence ou au début de l'âge adulte."},
+  {type:"vf",q:"Un TP peut être diagnostiqué même si le comportement est mieux expliqué par un autre trouble mental.",a:false,e:"Faux. Critère E : le mode n'est pas mieux expliqué par un autre trouble mental."},
+
+  // ===== BERGERET =====
+  {type:"qcm",q:"Selon Bergeret, le stade oral correspond à :",o:["La structure psychotique","L'a-structure / état-limite","La structure névrotique","La structure borderline"],a:0,e:"Bergeret : stade oral → structure psychotique."},
+  {type:"qcm",q:"Selon Bergeret, le stade anal correspond à :",o:["L'a-structure / état-limite","La structure psychotique","La structure névrotique","La structure paranoïaque"],a:0,e:"Bergeret : stade anal → a-structure / état-limite."},
+  {type:"qcm",q:"Selon Bergeret, le stade œdipien correspond à :",o:["La structure névrotique","La structure psychotique","L'a-structure / état-limite","La structure borderline"],a:0,e:"Bergeret : stade œdipien → structure névrotique."},
+  {type:"vf",q:"Les troubles névrotiques sont caractérisés par des délires et hallucinations.",a:false,e:"Faux. Les troubles névrotiques sont caractérisés par l'anxiété, sont fréquents et peu invalidants. Ce sont les troubles psychotiques qui présentent délires et hallucinations."},
+
+  // ===== TP PARANOÏAQUE =====
+  {type:"qcm",q:"Le TP paranoïaque appartient au Cluster :",o:["A","B","C","Aucun"],a:0,e:"Le TP paranoïaque appartient au Cluster A (bizarre/excentrique)."},
+  {type:"qcm",q:"Les 4 traits du TP paranoïaque sont :",o:["Surestimation de soi, méfiance/susceptibilité, fausseté du jugement, inadaptation sociale","Grandiosité, manque d'empathie, besoin d'admiration, exploitation","Instabilité, impulsivité, vide intérieur, peurs abandonniques","Froideur, apathie, retrait social, indifférence"],a:0,e:"Les 4 traits du TP paranoïaque : surestimation de soi, méfiance/susceptibilité, fausseté du jugement (pensée paralogique), inadaptation sociale."},
+  {type:"qcm",q:"Le DSM-5 exige au moins combien de critères pour le TP paranoïaque ?",o:["4 sur 7","3 sur 7","5 sur 9","4 sur 8"],a:0,e:"Le DSM-5 exige au moins 4 critères sur 7 pour le TP paranoïaque."},
+  {type:"vf",q:"Le TP paranoïaque et le délire paranoïaque sont la même chose.",a:false,e:"Faux. Il ne faut PAS confondre le TP paranoïaque (trouble de la personnalité, Cluster A) et le délire paranoïaque (symptôme psychotique)."},
+  {type:"qcm",q:"Michel, 39 ans, surveille les emails de sa femme car il est persuadé qu'elle le trompe sans preuve. Quel TP suspecter ?",o:["Paranoïaque","Narcissique","Borderline","Obsessionnelle-compulsive"],a:0,e:"Michel présente de la méfiance et de la suspicion : TP paranoïaque."},
+  {type:"qcm",q:"La prévalence du TP paranoïaque est de :",o:["4,4 %","0,4 %","6,2 %","3,1 %"],a:0,e:"Prévalence du TP paranoïaque : 4,4 %. Le sex-ratio est de 2 hommes pour 1 femme."},
+
+  // ===== TP SCHIZOÏDE =====
+  {type:"qcm",q:"Le terme « schizoïde » a été introduit par :",o:["Bleuler","Freud","Kernberg","Hare"],a:0,e:"Le terme schizoïde a été introduit par Bleuler pour décrire l'investissement de la vie intérieure au détriment de la vie extérieure."},
+  {type:"qcm",q:"Le TP schizoïde se caractérise principalement par :",o:["Manque d'intérêt pour les relations, froideur, apathie","Méfiance et suspicion","Bizarreries et distorsions cognitives","Recherche d'attention et séduction"],a:0,e:"Le TP schizoïde : manque d'intérêt pour les relations, froideur, apathie. Ce sont des « observateurs » du monde."},
+  {type:"qcm",q:"Manuel, 29 ans, vit seul, célibataire, dit « c'est la vie » quand son chien meurt. Quel TP ?",o:["Schizoïde","Schizotypique","Évitante","Dépendante"],a:0,e:"L'indifférence émotionnelle et le détachement de Manuel correspondent au TP schizoïde."},
+  {type:"qcm",q:"Le DSM-5 exige au moins combien de critères pour le TP schizoïde ?",o:["4 sur 7","5 sur 9","3 sur 7","4 sur 8"],a:0,e:"Le DSM-5 exige au moins 4 critères sur 7 pour le TP schizoïde."},
+
+  // ===== TP SCHIZOTYPIQUE =====
+  {type:"qcm",q:"Le TP schizotypique est sur un continuum avec :",o:["La schizophrénie","La dépression","Le TOC","Le trouble bipolaire"],a:0,e:"Le schizotype est le phénotype schizophrène. Il existe un continuum entre TP schizotypique et schizophrénie."},
+  {type:"qcm",q:"Raymond, 55 ans, SDF nomade, pratique la chiromancie, croit au paranormal et dit qu'un esprit a habité en lui. Quel TP ?",o:["Schizotypique","Schizoïde","Paranoïaque","Antisociale"],a:0,e:"Les croyances bizarres, pensée magique et excentricité de Raymond correspondent au TP schizotypique."},
+  {type:"qcm",q:"Le DSM-5 exige au moins combien de critères pour le TP schizotypique ?",o:["5 sur 9","4 sur 7","3 sur 7","4 sur 8"],a:0,e:"Le DSM-5 exige au moins 5 critères sur 9 pour le TP schizotypique."},
+  {type:"vf",q:"Le TP schizotypique a une prédominance masculine.",a:true,e:"Vrai. Le TP schizotypique touche environ 3 % de la population avec une prédominance masculine."},
+
+  // ===== TP NARCISSIQUE =====
+  {type:"qcm",q:"Le TP narcissique appartient au Cluster :",o:["B","A","C","Aucun"],a:0,e:"Le TP narcissique appartient au Cluster B (dramatique/émotionnel)."},
+  {type:"qcm",q:"Les caractéristiques principales du TP narcissique sont :",o:["Égocentrisme, grandeur, besoin d'admiration, manque d'empathie","Méfiance, suspicion, fausseté du jugement","Instabilité, impulsivité, peurs abandonniques","Recherche d'attention, séduction, théâtralité"],a:0,e:"TP narcissique : égocentrisme, grandeur, besoin d'admiration, manque d'empathie."},
+  {type:"vf",q:"Le concept de « pervers narcissique » existe dans les classifications officielles (DSM-5, CIM-10).",a:false,e:"Faux. Le concept de « pervers narcissique » N'EXISTE PAS dans les classifications officielles."},
+  {type:"qcm",q:"Paul, 49 ans, directeur, méprise ses collègues, séducteur, agacé quand on lui résiste. Quel TP ?",o:["Narcissique","Antisociale","Histrionique","Paranoïaque"],a:0,e:"Le mépris, la grandiosité et le besoin d'admiration de Paul correspondent au TP narcissique."},
+  {type:"qcm",q:"Le DSM-5 exige au moins combien de critères pour le TP narcissique ?",o:["5 sur 9","4 sur 7","3 sur 7","4 sur 8"],a:0,e:"Le DSM-5 exige au moins 5 critères sur 9 pour le TP narcissique."},
+  {type:"qcm",q:"La prévalence du TP narcissique est de :",o:["6,2 %","0,5 %","1 %","3,3 %"],a:0,e:"Prévalence du TP narcissique : 6,2 %. 50-75 % sont des hommes."},
+
+  // ===== TP ANTISOCIALE =====
+  {type:"qcm",q:"Le TP antisociale appartient au Cluster :",o:["B","A","C","Aucun"],a:0,e:"Le TP antisociale appartient au Cluster B (dramatique/émotionnel)."},
+  {type:"qcm",q:"Pour diagnostiquer un TP antisociale, le sujet doit avoir au minimum :",o:["18 ans ET trouble des conduites avant 15 ans","15 ans","21 ans","18 ans sans autre condition"],a:0,e:"Le sujet doit avoir 18 ans minimum ET présenter un trouble des conduites avant 15 ans."},
+  {type:"qcm",q:"La triade de MacDonald comprend :",o:["Énurésie, cruauté envers animaux, pyromanie","Manipulation, impulsivité, agressivité","Méfiance, suspicion, paranoïa","Grandiosité, empathie, admiration"],a:0,e:"Triade de MacDonald : énurésie, cruauté envers les animaux, pyromanie."},
+  {type:"qcm",q:"Le DSM-5 exige au moins combien de critères pour le TP antisociale ?",o:["3 sur 7","4 sur 7","5 sur 9","4 sur 8"],a:0,e:"Le DSM-5 exige au moins 3 critères sur 7 pour le TP antisociale."},
+  {type:"qcm",q:"Selon Hare (PCL-R), en prison, quel pourcentage de détenus sont TP antisociale vs psychopathes ?",o:["50-80 % TP antisociale, seulement 5-10 % psychopathes","50 % chacun","5-10 % TP antisociale, 50-80 % psychopathes","25 % chacun"],a:0,e:"En prison, 50-80 % ont un TP antisociale, mais seulement 5-10 % sont de vrais psychopathes selon Hare."},
+  {type:"vf",q:"TP antisocial et psychopathe sont synonymes.",a:false,e:"Faux. TP antisocial ≠ psychopathe. Selon Hare, en prison 50-80 % sont TP antisociale mais seulement 5-10 % sont psychopathes."},
+  {type:"qcm",q:"La triade noire (Paulhus et Williams) comprend :",o:["Narcissisme, psychopathie, machiavélisme","Énurésie, cruauté, pyromanie","Paranoïa, antisocialité, narcissisme","Impulsivité, grandiosité, manipulation"],a:0,e:"Triade noire : narcissisme + psychopathie + machiavélisme. La tétrade noire y ajoute le sadisme."},
+  {type:"qcm",q:"La tétrade noire ajoute quel élément à la triade noire ?",o:["Le sadisme","L'énurésie","La paranoïa","L'impulsivité"],a:0,e:"Tétrade noire = triade noire (narcissisme, psychopathie, machiavélisme) + sadisme."},
+  {type:"qcm",q:"Quel pourcentage de dépendants à l'alcool présentent un TP antisociale ?",o:["14 %","50 %","5 %","30 %"],a:0,e:"14 % des dépendants à l'alcool et 17 % des toxicomanes présentent un TP antisociale."},
+
+  // ===== TP BORDERLINE =====
+  {type:"qcm",q:"Le TP borderline appartient au Cluster :",o:["B","A","C","Aucun"],a:0,e:"Le TP borderline appartient au Cluster B (dramatique/émotionnel)."},
+  {type:"qcm",q:"Le terme « état-limite » a été utilisé pour la première fois par :",o:["Hughes (1884)","Kernberg (1975)","Bergeret (1975)","Freud (1900)"],a:0,e:"Hughes (1884) a utilisé le terme « état-limite » pour la première fois."},
+  {type:"qcm",q:"Kernberg (1975) a apporté le concept de :",o:["Organisation limite / clivage","État-limite","Rapprochement avec la dépression","Triade de MacDonald"],a:0,e:"Kernberg (1975) a introduit les concepts d'organisation limite et de clivage."},
+  {type:"qcm",q:"Bergeret (1975) a fait le rapprochement entre le borderline et :",o:["La dépression","La schizophrénie","L'anxiété","Le TOC"],a:0,e:"Bergeret (1975) a fait le rapprochement entre l'état-limite et la dépression."},
+  {type:"qcm",q:"Le risque de TP borderline chez les apparentés du premier degré est :",o:["10 fois plus grand","2 fois plus grand","5 fois plus grand","Identique à la population générale"],a:0,e:"Le risque est 10 fois plus grand chez les apparentés du premier degré."},
+  {type:"qcm",q:"Quel pourcentage de patients borderline rapportent des maltraitances dans l'enfance ?",o:["40 à 90 %","10 à 20 %","20 à 30 %","5 à 10 %"],a:0,e:"40 à 90 % des patients borderline rapportent des maltraitances dans l'enfance."},
+  {type:"qcm",q:"Quel pourcentage de patients borderline présentent des conduites suicidaires ?",o:["50 %","10 %","25 %","75 %"],a:0,e:"50 % des patients borderline présentent des conduites suicidaires."},
+  {type:"qcm",q:"Le DSM-5 exige au moins combien de critères pour le TP borderline ?",o:["5 sur 9","4 sur 7","3 sur 7","4 sur 8"],a:0,e:"Le DSM-5 exige au moins 5 critères sur 9 pour le TP borderline."},
+  {type:"qcm",q:"Quelle est la prévalence du TP borderline en milieu hospitalier psychiatrique ?",o:["20 %","5 %","10 %","40 %"],a:0,e:"Prévalence du TP borderline : 2 % (générale), 10 % (consultation), 20 % (hospitalisés)."},
+  {type:"qcm",q:"Aline, 20 ans, TS après dispute avec son copain, scarifications, achats inconsidérés. Quel TP ?",o:["Borderline","Histrionique","Narcissique","Dépendante"],a:0,e:"L'instabilité émotionnelle, l'impulsivité, les TS et les scarifications d'Aline correspondent au TP borderline."},
+  {type:"qcm",q:"Qu'est-ce qui est spécifique au TP borderline par rapport au TP narcissique ?",o:["Impulsivité et peurs abandonniques","Grandiosité et besoin d'admiration","Sensibilité aux critiques","Manque d'empathie"],a:0,e:"Spécifique au BDL : impulsivité et peurs abandonniques. Spécifique au narcissique : grandiosité et besoin d'admiration. Commun : sensibilité aux critiques."},
+  {type:"vf",q:"Le sex-ratio du TP borderline est de 1 homme pour 1 femme.",a:true,e:"Vrai. Le TP borderline touche autant les hommes que les femmes (H/F = 1/1)."},
+
+  // ===== TP HISTRIONIQUE =====
+  {type:"qcm",q:"Le TP histrionique appartient au Cluster :",o:["B","A","C","Aucun"],a:0,e:"Le TP histrionique appartient au Cluster B (dramatique/émotionnel)."},
+  {type:"qcm",q:"Le terme « histrion » signifie :",o:["Mauvais acteur","Grand orateur","Philosophe","Guérisseur"],a:0,e:"Histrion = mauvais acteur. Le TP histrionique implique une recherche active de l'attention."},
+  {type:"qcm",q:"Le TP histrionique était anciennement appelé :",o:["Névrose hystérique","Névrose obsessionnelle","Psychose maniaco-dépressive","Démence précoce"],a:0,e:"Le TP histrionique était anciennement appelé « névrose hystérique »."},
+  {type:"qcm",q:"Louise, 30 ans, veut être le centre de l'attention, provocante, pense que son psy est son ami. Quel TP ?",o:["Histrionique","Narcissique","Borderline","Dépendante"],a:0,e:"La recherche d'attention, la séduction et les relations superficielles de Louise correspondent au TP histrionique."},
+  {type:"qcm",q:"Le DSM-5 exige au moins combien de critères pour le TP histrionique ?",o:["5 sur 8","4 sur 7","3 sur 7","5 sur 9"],a:0,e:"Le DSM-5 exige au moins 5 critères sur 8 pour le TP histrionique."},
+
+  // ===== TP ÉVITANTE =====
+  {type:"qcm",q:"Le TP évitante appartient au Cluster :",o:["C","A","B","Aucun"],a:0,e:"Le TP évitante appartient au Cluster C (anxieux/peureux)."},
+  {type:"qcm",q:"Le trouble central du TP évitante est :",o:["L'estime de soi","Le contrôle des impulsions","La méfiance","Le besoin d'admiration"],a:0,e:"Le TP évitante a pour trouble central l'estime de soi."},
+  {type:"qcm",q:"Le continuum du TP évitante est :",o:["Timidité → timidité sévère → anxiété sociale → personnalité évitante","Tristesse → dépression → personnalité dépressive","Méfiance → paranoïa → délire paranoïaque","Impulsivité → borderline → psychopathie"],a:0,e:"Le continuum va de la timidité à la timidité sévère, puis à l'anxiété sociale, et enfin à la personnalité évitante."},
+  {type:"qcm",q:"Lisa, 27 ans, bonne élève, n'ose pas demander d'augmentation, ne s'oppose jamais. Quel TP ?",o:["Évitante","Dépendante","Schizoïde","Obsessionnelle-compulsive"],a:0,e:"L'inhibition sociale et la peur du rejet de Lisa correspondent au TP évitante."},
+  {type:"qcm",q:"Le DSM-5 exige au moins combien de critères pour le TP évitante ?",o:["4 sur 7","5 sur 9","3 sur 7","5 sur 8"],a:0,e:"Le DSM-5 exige au moins 4 critères sur 7 pour le TP évitante."},
+
+  // ===== TP DÉPENDANTE =====
+  {type:"qcm",q:"Le TP dépendante appartient au Cluster :",o:["C","A","B","Aucun"],a:0,e:"Le TP dépendante appartient au Cluster C (anxieux/peureux)."},
+  {type:"qcm",q:"Brigitte, 55 ans, couple depuis 35 ans, son mari décide tout, toujours d'accord. Quel TP ?",o:["Dépendante","Évitante","Obsessionnelle-compulsive","Histrionique"],a:0,e:"La soumission et le besoin que l'autre prenne les décisions de Brigitte correspondent au TP dépendante."},
+  {type:"qcm",q:"Le DSM-5 exige au moins combien de critères pour le TP dépendante ?",o:["5 sur 8","4 sur 7","3 sur 7","5 sur 9"],a:0,e:"Le DSM-5 exige au moins 5 critères sur 8 pour le TP dépendante."},
+  {type:"vf",q:"Le TP dépendante touche en majorité les femmes.",a:true,e:"Vrai. Le TP dépendante touche en majorité les femmes, avec une prévalence d'environ 1 %."},
+
+  // ===== TP OBSESSIONNELLE-COMPULSIVE =====
+  {type:"qcm",q:"Le TP obsessionnelle-compulsive appartient au Cluster :",o:["C","A","B","Aucun"],a:0,e:"Le TP obsessionnelle-compulsive appartient au Cluster C (anxieux/peureux)."},
+  {type:"qcm",q:"Le TP obsessionnelle-compulsive est considéré comme :",o:["La forme « stable » du TOC","La forme aiguë du TOC","L'opposé du TOC","Un sous-type de la schizophrénie"],a:0,e:"Le TP obsessionnelle-compulsive est la forme « stable » du TOC : perfectionnisme, rigidité, contrôle."},
+  {type:"qcm",q:"Luc, 51 ans, comptable, 12h/jour, vérifie chaque détail, « un sou est un sou ». Quel TP ?",o:["Obsessionnelle-compulsive","Paranoïaque","Narcissique","Évitante"],a:0,e:"Le perfectionnisme, la rigidité et le contrôle excessif de Luc correspondent au TP obsessionnelle-compulsive."},
+  {type:"qcm",q:"Le DSM-5 exige au moins combien de critères pour le TP obsessionnelle-compulsive ?",o:["4 sur 8","5 sur 9","3 sur 7","4 sur 7"],a:0,e:"Le DSM-5 exige au moins 4 critères sur 8 pour le TP obsessionnelle-compulsive."},
+  {type:"qcm",q:"Le TP obsessionnelle-compulsive est :",o:["2 fois plus fréquent chez les hommes","2 fois plus fréquent chez les femmes","Également réparti","3 fois plus fréquent chez les femmes"],a:0,e:"Le TP obsessionnelle-compulsive est 2 fois plus fréquent chez les hommes."},
+
+  // ===== SCHÉMAS / CROYANCES =====
+  {type:"qcm",q:"La croyance « Les gens sont des adversaires » correspond au TP :",o:["Paranoïaque","Antisociale","Narcissique","Évitante"],a:0,e:"« Les gens sont des adversaires » → méfiance → TP paranoïaque."},
+  {type:"qcm",q:"La croyance « Je ne peux pas me contrôler » correspond au TP :",o:["Borderline","Antisociale","Dépendante","Obsessionnelle-compulsive"],a:0,e:"« Je ne peux pas me contrôler » → impulsivité → TP borderline."},
+  {type:"qcm",q:"La croyance « Je suis exceptionnel » correspond au TP :",o:["Narcissique","Paranoïaque","Histrionique","Antisociale"],a:0,e:"« Je suis exceptionnel » → inflation de soi → TP narcissique."},
+  {type:"qcm",q:"La croyance « Je pourrais être blessé » correspond au TP :",o:["Évitante","Borderline","Dépendante","Paranoïaque"],a:0,e:"« Je pourrais être blessé » → inhibition → TP évitante."},
+  {type:"qcm",q:"La croyance « Les gens sont là pour être dupés » correspond au TP :",o:["Antisociale","Paranoïaque","Narcissique","Borderline"],a:0,e:"« Les gens sont là pour être dupés » → exploitation → TP antisociale."},
+  {type:"qcm",q:"La croyance « Je ne peux rien faire tout seul » correspond au TP :",o:["Dépendante","Évitante","Borderline","Schizoïde"],a:0,e:"« Je ne peux rien faire tout seul » → besoin de soutien → TP dépendante."},
+
+  // ===== PID-5 / MILLON =====
+  {type:"qcm",q:"Selon Millon, quels TP n'ont PAS de variante normale ?",o:["Borderline, schizotypique, paranoïaque","Narcissique, antisociale, histrionique","Évitante, dépendante, obsessionnelle-compulsive","Schizoïde, narcissique, borderline"],a:0,e:"Selon Millon, 3 TP n'ont pas de variante normale : borderline, schizotypique, paranoïaque."},
+  {type:"qcm",q:"Les 5 dimensions pathologiques du PID-5 sont :",o:["Affectivité négative, Détachement, Antagonisme, Désinhibition, Psychotisme","OCEAN : Ouverture, Conscience, Extraversion, Agréabilité, Névrosisme","Anxiété, Dépression, Impulsivité, Psychose, Addiction","Méfiance, Grandiosité, Instabilité, Évitement, Rigidité"],a:0,e:"PID-5 : Affectivité négative, Détachement, Antagonisme, Désinhibition, Psychotisme."},
+
+  // ===== TP À L'ADOLESCENCE =====
+  {type:"qcm",q:"La stabilité de la personnalité augmente avec l'âge. Quel est le coefficient r entre 0 et 3 ans ?",o:["0,35","0,72","0,50","0,10"],a:0,e:"La stabilité de la personnalité : r = 0,35 (0-3 ans) → 0,72 (60-73 ans)."},
+  {type:"qcm",q:"Le TP borderline peut être identifié dès l'âge de :",o:["11 ans","15 ans","18 ans","6 ans"],a:0,e:"Le TP borderline est identifiable dès 11 ans, avec une prévalence de 3,3 % à cet âge."},
+  {type:"vf",q:"La stabilité de la personnalité diminue avec l'âge.",a:false,e:"Faux. La stabilité de la personnalité AUGMENTE avec l'âge : r = 0,35 (0-3 ans) → 0,72 (60-73 ans)."},
+
+  // ===== AFFAIRE VERMEESCH =====
+  {type:"qcm",q:"Dans l'affaire Vermeesch (2017), Alexandre (21 ans) présentait un profil :",o:["Paranoïaque et psychopathique","Borderline et anxieux","Évitant et dépressif","Histrionique et narcissique"],a:0,e:"Alexandre (21 ans) : paranoïaque, psychopathique."},
+  {type:"qcm",q:"Dans l'affaire Vermeesch, Dorian (22 ans) présentait une structure :",o:["Borderline","Paranoïaque","Antisociale","Narcissique"],a:0,e:"Dorian (22 ans) présentait une structure borderline."},
+  {type:"qcm",q:"Dans l'affaire Vermeesch, Loïck (23 ans) était décrit comme :",o:["Anxieux et évitant","Paranoïaque et psychopathique","Borderline et impulsif","Narcissique et manipulateur"],a:0,e:"Loïck (23 ans) : anxieux et évitant."},
+
+  // ===== VRAI/FAUX VARIÉS =====
+  {type:"vf",q:"Le TP histrionique touche surtout les femmes.",a:true,e:"Vrai. Le TP histrionique a une prévalence de 1,3 à 3 % et touche surtout les femmes."},
+  {type:"vf",q:"Le TP antisociale peut être diagnostiqué avant 18 ans.",a:false,e:"Faux. Le sujet doit avoir au minimum 18 ans pour un diagnostic de TP antisociale (mais le trouble des conduites doit être présent avant 15 ans)."},
+  {type:"vf",q:"Le TP borderline signifie « à la lisière entre névrose et psychose ».",a:true,e:"Vrai. Le terme borderline signifie « à la lisière » entre névrose et psychose."},
+  {type:"vf",q:"60 % des TP en milieu carcéral sont des TP antisociales.",a:true,e:"Vrai. En population carcérale, 65 % présentent un TP dont 60 % de TP antisociale."},
+  {type:"vf",q:"Le TP schizoïde est caractérisé par des croyances bizarres et de la pensée magique.",a:false,e:"Faux. Ce sont les caractéristiques du TP schizotypique. Le TP schizoïde se caractérise par la froideur et le retrait social."},
+  {type:"vf",q:"Le NEO PI-R prend 20 à 30 minutes à compléter.",a:true,e:"Vrai. Le NEO PI-R (Costa et McCrae) comporte 240 items et prend 20-30 minutes."},
+  {type:"vf",q:"La prévalence du TP narcissique est de 6,2 %.",a:true,e:"Vrai. La prévalence du TP narcissique en population générale est de 6,2 %."},
+  {type:"vf",q:"Le TP paranoïaque a un sex-ratio de 2 hommes pour 1 femme.",a:true,e:"Vrai. Le TP paranoïaque : 0,4-3,3 %, sex-ratio H/F = 2/1."},
+
+  // ===== QCM TRANSVERSAUX =====
+  {type:"qcm",q:"Quel TP a le seuil diagnostique le plus bas dans le DSM-5 ?",o:["Antisociale (3/7)","Paranoïaque (4/7)","Borderline (5/9)","Narcissique (5/9)"],a:0,e:"Le TP antisociale a le seuil le plus bas : 3 critères sur 7."},
+  {type:"qcm",q:"Parmi ces TP, lequel a le plus de critères dans le DSM-5 ?",o:["Schizotypique (9 critères) et borderline (9 critères)","Paranoïaque (7 critères)","Antisociale (7 critères)","Histrionique (8 critères)"],a:0,e:"Le TP schizotypique, borderline et narcissique ont chacun 9 critères dans le DSM-5."},
+  {type:"qcm",q:"Le TP évitante et le TP schizoïde ont en commun :",o:["Le retrait social","La pensée magique","L'impulsivité","Le besoin d'admiration"],a:0,e:"Les deux présentent un retrait social, mais pour des raisons différentes : peur du rejet (évitante) vs indifférence (schizoïde)."},
+  {type:"qcm",q:"Quel est le point commun entre le TP borderline et le TP narcissique ?",o:["La sensibilité aux critiques","L'impulsivité","La grandiosité","Les peurs abandonniques"],a:0,e:"Le point commun est la sensibilité aux critiques. L'impulsivité est spécifique au BDL, la grandiosité au narcissique."},
+  {type:"qcm",q:"Parmi les comorbidités fréquentes des TP, on trouve :",o:["Dépression, anxiété, abus d'alcool et de substances","Schizophrénie et troubles bipolaires uniquement","Troubles neurodéveloppementaux","Troubles du sommeil exclusivement"],a:0,e:"Les comorbidités fréquentes des TP sont : dépression, anxiété, abus d'alcool et de substances."},
+  {type:"qcm",q:"70 % des alcooliques en prison présentent quel TP ?",o:["Antisociale","Borderline","Narcissique","Paranoïaque"],a:0,e:"70 % des alcooliques en prison présentent un TP antisociale."},
+  {type:"qcm",q:"Quel pourcentage de toxicomanes ont un TP antisociale ?",o:["17 %","50 %","5 %","35 %"],a:0,e:"17 % des toxicomanes présentent un TP antisociale, et 14 % des dépendants à l'alcool."},
+  {type:"qcm",q:"Lequel de ces TP tend à persister avec l'âge plutôt qu'à s'atténuer ?",o:["Schizotypique","Borderline","Antisociale","Histrionique"],a:0,e:"Le TP schizotypique (et obsessionnelle-compulsive) tend à persister, tandis que le borderline et l'antisociale s'atténuent."},
+  {type:"qcm",q:"Les troubles névrotiques sont caractérisés par :",o:["Fréquents, anxiété, peu invalidants, ambulatoire","Rares, délires, très invalidants","Modérément fréquents, hallucinations, soins spécialisés","Fréquents, délires, très invalidants"],a:0,e:"Troubles névrotiques : fréquents, anxiété, peu invalidants, traitement ambulatoire."},
+  {type:"qcm",q:"Les troubles psychotiques sont caractérisés par :",o:["Moins fréquents, délire/hallucinations, très invalidants, soins spécialisés","Fréquents, anxiété, peu invalidants, ambulatoire","Très fréquents, légers, traitement rapide","Rares, anxiété modérée, traitement ambulatoire"],a:0,e:"Troubles psychotiques : moins fréquents, délire/hallucinations, très invalidants, soins spécialisés."},
+  {type:"qcm",q:"Quel cluster contient le plus de TP ?",o:["Cluster B (4 TP)","Cluster A (3 TP)","Cluster C (3 TP)","Ils en ont tous le même nombre"],a:0,e:"Cluster B contient 4 TP (antisociale, borderline, histrionique, narcissique), tandis que A et C en contiennent 3 chacun."},
+  {type:"qcm",q:"L'interaction gène × environnement joue un rôle dans :",o:["Le développement des troubles de la personnalité","Uniquement les troubles psychotiques","Uniquement les troubles anxieux","Aucun trouble de la personnalité"],a:0,e:"Le développement des TP implique une interaction gène × environnement."},
+  {type:"vf",q:"Le TP borderline peut être identifié chez des enfants de 11 ans avec une prévalence de 3,3 %.",a:true,e:"Vrai. Le TP borderline est identifiable dès 11 ans avec une prévalence de 3,3 %."},
+  {type:"vf",q:"Le TP dépendante a une prévalence plus élevée que le TP narcissique.",a:false,e:"Faux. TP dépendante : 0,6 % vs TP narcissique : 6,2 %. Le narcissique est bien plus prévalent."},
+  {type:"vf",q:"Le TP histrionique était anciennement appelé « névrose obsessionnelle ».",a:false,e:"Faux. Le TP histrionique était anciennement appelé « névrose hystérique ». La « névrose obsessionnelle » est liée au TOC."},
+  {type:"vf",q:"Le Cluster B a la prévalence la plus faible (~1,6 %).",a:true,e:"Vrai. Cluster A : ~5 %, Cluster B : ~1,6 %, Cluster C : ~6 %. Le Cluster B a la prévalence la plus faible."},
+  {type:"qcm",q:"Killian (18 ans) dans l'affaire Vermeesch présentait :",o:["Des traits antisociaux et une froideur émotionnelle","Une structure borderline","Un profil anxieux et évitant","Un profil paranoïaque"],a:0,e:"Killian (18 ans) : traits antisociaux et froideur émotionnelle."},
+  {type:"qcm",q:"Belinda (22 ans) dans l'affaire Vermeesch était décrite comme :",o:["Menteuse et manipulatrice","Anxieuse et évitante","Borderline et impulsive","Paranoïaque et psychopathique"],a:0,e:"Belinda (22 ans) : menteuse et manipulatrice."},
+];
+
+// ===================== ENGINE =====================
+const QUESTIONS_PER_SESSION = 20;
+let sessionQuestions = [];
+let currentIndex = 0;
+let score = 0;
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startQuiz() {
+  let pool = [...ALL_QUESTIONS];
+  shuffle(pool);
+  sessionQuestions = pool.slice(0, QUESTIONS_PER_SESSION);
+  currentIndex = 0;
+  score = 0;
+
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('end-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  document.getElementById('score').textContent = '0';
+  document.getElementById('total-display').textContent = QUESTIONS_PER_SESSION;
+  document.getElementById('q-total').textContent = QUESTIONS_PER_SESSION;
+
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = sessionQuestions[currentIndex];
+  document.getElementById('q-num').textContent = currentIndex + 1;
+  document.getElementById('progress-bar').style.width = ((currentIndex) / QUESTIONS_PER_SESSION * 100) + '%';
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('explanation').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'none';
+
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+
+  if (q.type === 'vf') {
+    document.getElementById('q-tag').textContent = 'Vrai / Faux';
+    ['Vrai','Faux'].forEach((label, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = label;
+      btn.onclick = () => handleAnswer(btn, i === 0, q.a, q);
+      container.appendChild(btn);
+    });
+  } else {
+    document.getElementById('q-tag').textContent = q.q.includes('vignette') || q.q.includes('ans,') ? 'Vignette clinique' : 'QCM';
+    const correctText = q.o[q.a];
+    let options = [...q.o];
+    shuffle(options);
+    options.forEach((opt) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = opt;
+      btn.onclick = () => handleAnswerQCM(btn, opt, correctText, q);
+      container.appendChild(btn);
+    });
+  }
+}
+
+function handleAnswerQCM(btn, selected, correct, q) {
+  const container = document.getElementById('options-container');
+  const buttons = container.querySelectorAll('.option-btn');
+  buttons.forEach(b => {
+    b.classList.add('disabled');
+    b.onclick = null;
+    if (b.textContent === correct) b.classList.add('correct');
+  });
+  if (selected !== correct) {
+    btn.classList.add('wrong');
+  } else {
+    score++;
+    document.getElementById('score').textContent = score;
+  }
+  showExplanation(q.e);
+}
+
+function handleAnswer(btn, selectedTrue, correctTrue, q) {
+  const container = document.getElementById('options-container');
+  const buttons = container.querySelectorAll('.option-btn');
+  const isCorrect = selectedTrue === correctTrue;
+  buttons.forEach(b => { b.classList.add('disabled'); b.onclick = null; });
+  const correctIdx = correctTrue ? 0 : 1;
+  buttons[correctIdx].classList.add('correct');
+  if (!isCorrect) btn.classList.add('wrong');
+  else { score++; document.getElementById('score').textContent = score; }
+  showExplanation(q.e);
+}
+
+function showExplanation(text) {
+  const el = document.getElementById('explanation');
+  el.innerHTML = '<strong>Explication :</strong> ' + text;
+  el.style.display = 'block';
+  document.getElementById('btn-next').style.display = 'block';
+}
+
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex >= QUESTIONS_PER_SESSION) {
+    endQuiz();
+  } else {
+    showQuestion();
+  }
+}
+
+function endQuiz() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  const pct = Math.round(score / QUESTIONS_PER_SESSION * 100);
+  document.getElementById('final-score').textContent = score + ' / ' + QUESTIONS_PER_SESSION + ' (' + pct + '%)';
+  let msg = '';
+  if (pct >= 90) msg = 'Excellent ! Tu maîtrises les troubles de la personnalité !';
+  else if (pct >= 70) msg = 'Très bien ! Quelques révisions ciblées et ce sera parfait.';
+  else if (pct >= 50) msg = 'Pas mal ! Continue à t\'entraîner pour consolider tes connaissances.';
+  else msg = 'Il y a encore du travail. Relis le chapitre et rejoue !';
+  document.getElementById('final-msg').textContent = msg;
+  document.getElementById('end-screen').style.display = 'flex';
+  document.getElementById('progress-bar').style.width = '100%';
+}
+</script>
+</body>
+</html>

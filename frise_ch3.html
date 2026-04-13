@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Frise Chrono - Chapitre 3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f1a;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  header {
+    text-align: center;
+    padding: 24px 20px 8px;
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+
+  header .subtitle {
+    font-size: 1rem;
+    color: #94a3b8;
+    font-weight: 300;
+  }
+
+  .score-bar {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    padding: 12px 0 8px;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .score-bar span {
+    background: rgba(124,58,237,0.12);
+    border: 1px solid rgba(124,58,237,0.25);
+    padding: 5px 16px;
+    border-radius: 20px;
+    color: #c4b5fd;
+  }
+
+  /* Current card to place */
+  .card-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px 20px;
+    min-height: 140px;
+    flex-shrink: 0;
+  }
+
+  .event-card {
+    background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(124,58,237,0.05));
+    border: 2px solid rgba(124,58,237,0.4);
+    border-radius: 20px;
+    padding: 22px 30px;
+    max-width: 550px;
+    width: 90%;
+    text-align: center;
+    animation: floatIn 0.5s ease;
+    position: relative;
+  }
+
+  .event-card .card-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #a78bfa;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .event-card .card-text {
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: #e2e8f0;
+  }
+
+  .event-card .card-hint {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  .event-card.correct-flash {
+    animation: correctPulse 0.6s ease;
+    border-color: #22c55e;
+  }
+
+  .event-card.wrong-flash {
+    animation: wrongShake 0.5s ease;
+    border-color: #ef4444;
+  }
+
+  @keyframes floatIn {
+    from { transform: translateY(-20px) scale(0.95); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  @keyframes correctPulse {
+    0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+    50% { box-shadow: 0 0 30px 10px rgba(34,197,94,0.3); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  }
+
+  @keyframes wrongShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-12px); }
+    40% { transform: translateX(12px); }
+    60% { transform: translateX(-8px); }
+    80% { transform: translateX(8px); }
+  }
+
+  /* Feedback toast */
+  .feedback-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: #1a1a2e;
+    border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 16px;
+    padding: 24px 30px;
+    max-width: 460px;
+    width: 90%;
+    text-align: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .feedback-toast.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+
+  .feedback-toast .toast-icon { font-size: 2rem; margin-bottom: 8px; }
+  .feedback-toast .toast-year {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #a78bfa;
+    margin-bottom: 4px;
+  }
+  .feedback-toast .toast-fact {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+
+  /* Timeline area */
+  .timeline-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px 0 30px;
+    min-height: 0;
+  }
+
+  .timeline-instruction {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+  }
+
+  .timeline-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 20px 30px 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .timeline-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+  .timeline-scroll::-webkit-scrollbar-track {
+    background: rgba(124,58,237,0.05);
+    border-radius: 3px;
+  }
+  .timeline-scroll::-webkit-scrollbar-thumb {
+    background: rgba(124,58,237,0.3);
+    border-radius: 3px;
+  }
+
+  .timeline {
+    display: flex;
+    align-items: center;
+    min-width: max-content;
+    position: relative;
+    padding: 0 20px;
+    gap: 0;
+  }
+
+  /* Placed event on timeline */
+  .tl-event {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 110px;
+    max-width: 160px;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .tl-event .tl-card {
+    background: rgba(124,58,237,0.1);
+    border: 1px solid rgba(124,58,237,0.25);
+    border-radius: 12px;
+    padding: 10px 12px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #c4b5fd;
+    line-height: 1.3;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    width: 130px;
+  }
+
+  .tl-event .tl-card.just-placed {
+    animation: popIn 0.4s ease;
+  }
+
+  .tl-event .tl-dot {
+    width: 14px;
+    height: 14px;
+    background: #7c3aed;
+    border-radius: 50%;
+    margin: 8px 0 4px;
+    box-shadow: 0 0 10px rgba(124,58,237,0.5);
+    flex-shrink: 0;
+  }
+
+  .tl-event .tl-year {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #a78bfa;
+  }
+
+  /* Drop zone between events */
+  .tl-dropzone {
+    width: 50px;
+    min-width: 50px;
+    height: 100%;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .tl-dropzone::before {
+    content: '';
+    width: 100%;
+    height: 3px;
+    background: #1e1b4b;
+    position: absolute;
+    top: 50%;
+    transform: translateY(12px);
+  }
+
+  .tl-dropzone .dz-marker {
+    width: 30px;
+    height: 30px;
+    border: 2px dashed rgba(124,58,237,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(124,58,237,0.4);
+    font-size: 1.2rem;
+    font-weight: 300;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 2;
+    margin-top: 24px;
+  }
+
+  .tl-dropzone:hover .dz-marker {
+    border-color: #7c3aed;
+    color: #a78bfa;
+    background: rgba(124,58,237,0.15);
+    transform: scale(1.2);
+    box-shadow: 0 0 15px rgba(124,58,237,0.3);
+  }
+
+  /* Connector line through events */
+  .tl-event::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -25px;
+    right: -25px;
+    height: 3px;
+    background: linear-gradient(90deg, rgba(124,58,237,0.2), rgba(124,58,237,0.4), rgba(124,58,237,0.2));
+    transform: translateY(12px);
+    z-index: 0;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  /* Game over / new game */
+  .game-over {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15,15,26,0.94);
+    z-index: 300;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(6px);
+  }
+
+  .game-over.show { display: flex; }
+
+  .game-over-card {
+    background: #1a1a2e;
+    border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 460px;
+    width: 90%;
+    text-align: center;
+    animation: popIn 0.4s ease;
+  }
+
+  .game-over-card h2 {
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+  }
+
+  .game-over-card .final-score {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #a78bfa;
+    text-shadow: 0 0 30px rgba(124,58,237,0.4);
+    margin: 10px 0;
+  }
+
+  .game-over-card p {
+    color: #94a3b8;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    color: #fff;
+    border: none;
+    padding: 14px 36px;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(124,58,237,0.4);
+  }
+
+  .disabled-zone {
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  @media (max-width: 700px) {
+    header h1 { font-size: 1.6rem; }
+    .event-card { padding: 16px 20px; }
+    .event-card .card-text { font-size: 1rem; }
+    .tl-event .tl-card { width: 100px; font-size: 0.7rem; padding: 8px; }
+    .tl-dropzone { width: 36px; min-width: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>La Frise Chrono</h1>
+  <p class="subtitle">Chapitre 3 : Historique &amp; Approches</p>
+</header>
+
+<div class="score-bar">
+  <span id="score-correct">Correct : 0</span>
+  <span id="score-attempts">Tentatives : 0</span>
+  <span id="score-remaining">Restant : 0</span>
+</div>
+
+<div class="card-area" id="card-area">
+  <div class="event-card" id="current-card">
+    <div class="card-label">Placez cet &eacute;v&eacute;nement sur la frise</div>
+    <div class="card-text" id="card-text"></div>
+  </div>
+</div>
+
+<div class="timeline-area">
+  <div class="timeline-instruction" id="timeline-instruction">Cliquez sur un espace entre les &eacute;v&eacute;nements pour placer la carte</div>
+  <div class="timeline-scroll" id="timeline-scroll">
+    <div class="timeline" id="timeline"></div>
+  </div>
+</div>
+
+<div class="feedback-toast" id="feedback-toast">
+  <div class="toast-icon" id="toast-icon"></div>
+  <div class="toast-year" id="toast-year"></div>
+  <div class="toast-fact" id="toast-fact"></div>
+</div>
+
+<div class="game-over" id="game-over">
+  <div class="game-over-card">
+    <h2>Partie termin&eacute;e !</h2>
+    <div class="final-score" id="final-score"></div>
+    <p id="final-message"></p>
+    <button class="btn" onclick="newGame()">Nouvelle partie</button>
+  </div>
+</div>
+
+<script>
+const ALL_EVENTS = [
+  { year: -460, label: "Hippocrate : th\u00e9orie des humeurs", fact: "Il identifie 5 maladies mentales : phr\u00e9nitis, manie, m\u00e9lancolie, \u00e9pilepsie, hyst\u00e9rie", display: "460 av. J.-C." },
+  { year: 129, label: "Galien : dyscrasie et traitement par les contraires", fact: "Il reprend la th\u00e9orie des humeurs d\u2019Hippocrate", display: "129" },
+  { year: 1199, label: "Cr\u00e9ation des tribunaux de l\u2019Inquisition", fact: "Les \u00ab\u00a0poss\u00e9d\u00e9s\u00a0\u00bb risquent le b\u00fbcher", display: "1199" },
+  { year: 1409, label: "Manicome de Valence : 1er h\u00f4pital psychiatrique", fact: "D\u2019autres existent dans les pays arabes (F\u00e8s, Bagdad, Le Caire)", display: "1409" },
+  { year: 1487, label: "Publication du Malleus Maleficarum", fact: "Manuel de Kramer et Spencer pour identifier les sorci\u00e8res", display: "1487" },
+  { year: 1563, label: "Weyer : les sorci\u00e8res sont des malades mentales", fact: "Il affirme qu\u2019elles n\u00e9cessitent des soins, pas des b\u00fbchers", display: "1563" },
+  { year: 1575, label: "J\u00e9r\u00f4me Cardan : bases de la m\u00e9toposcopie", fact: "D\u00e9duire le caract\u00e8re d\u2019apr\u00e8s le visage", display: "1575" },
+  { year: 1604, label: "Felix Plater : Praxis Medica", fact: "Premier classement rudimentaire des maladies mentales", display: "1604" },
+  { year: 1656, label: "Louis XIV fonde l\u2019H\u00f4pital G\u00e9n\u00e9ral", fact: "C\u2019est le d\u00e9but de l\u2019isolation et de l\u2019internement coercitif", display: "1656" },
+  { year: 1667, label: "Jean-Baptiste Denis : transfusion de sang d\u2019agneau", fact: "Un des traitements brutaux de l\u2019\u00e9poque", display: "1667" },
+  { year: 1769, label: "Cullen invente le terme \u00ab\u00a0n\u00e9vrose\u00a0\u00bb", fact: "N\u00e9vroses = maladies nerveuses en l\u2019absence de fi\u00e8vre", display: "1769" },
+  { year: 1783, label: "Moritz : 1er usage du terme \u00ab\u00a0psychopathologie\u00a0\u00bb", fact: "Il fonde aussi la premi\u00e8re revue de psychologie", display: "1783" },
+  { year: 1801, label: "Pinel publie son Trait\u00e9 m\u00e9dico-philosophique", fact: "Il reconna\u00eet la parole comme moyen th\u00e9rapeutique", display: "1801" },
+  { year: 1842, label: "Apparition du mot \u00ab\u00a0psychiatrie\u00a0\u00bb", fact: "59 ans apr\u00e8s le terme \u00ab\u00a0psychopathologie\u00a0\u00bb !", display: "1842" },
+  { year: 1854, label: "Hersilie Rouy intern\u00e9e \u00e0 la Salp\u00eatri\u00e8re", fact: "Pianiste intern\u00e9e par erreur pendant 14 ans", display: "1854" },
+  { year: 1868, label: "Lib\u00e9ration d\u2019Hersilie Rouy", fact: "Ses courriers \u00e0 l\u2019Imp\u00e9ratrice Eug\u00e9nie ont contribu\u00e9 au mouvement anti-asilaire", display: "1868" },
+  { year: 1883, label: "Kraepelin : 1\u00e8re \u00e9dition de Psychiatrie", fact: "Il r\u00e9alisera 9 \u00e9ditions jusqu\u2019en 1927", display: "1883" },
+  { year: 1889, label: "Burckhardt : premi\u00e8res leucotomies partielles", fact: "D\u00e9but de la psychochirurgie", display: "1889" },
+  { year: 1899, label: "Kraepelin d\u00e9crit la maladie maniaco-d\u00e9pressive", fact: "La 6e \u00e9dition de son Psychiatrie contient 13 cat\u00e9gories", display: "1899" },
+  { year: 1906, label: "Morton Prince : cas de Christine Beauchamp", fact: "R\u00e9f\u00e9rence historique du trouble dissociatif de l\u2019identit\u00e9", display: "1906" },
+  { year: 1909, label: "S\u00e9rieux et Capgras : d\u00e9lire d\u2019interpr\u00e9tation", fact: "Organisation en un syst\u00e8me coh\u00e9rent de pers\u00e9cution et m\u00e9galomanie", display: "1909" },
+  { year: 1911, label: "Ballet : Psychose Hallucinatoire Chronique", fact: "7 femmes pour 1 homme, d\u00e9but soudain entre 30-50 ans", display: "1911" },
+  { year: 1913, label: "Karl Jaspers : Psychopathologie g\u00e9n\u00e9rale", fact: "Il d\u00e9finit l\u2019objet comme l\u2019activit\u00e9 psychique r\u00e9elle et consciente", display: "1913" },
+  { year: 1917, label: "Von Jauregg : impaludation", fact: "Inoculer le paludisme pour traiter la paralysie g\u00e9n\u00e9rale. Prix Nobel en 1927", display: "1917" },
+  { year: 1921, label: "Cl\u00e9rambault d\u00e9crit l\u2019\u00e9rotomanie", fact: "Intuition d\u00e9lirante d\u2019\u00eatre aim\u00e9, surtout chez les femmes de 40-55 ans", display: "1921" },
+  { year: 1927, label: "Von Jauregg re\u00e7oit le Prix Nobel", fact: "Pour l\u2019impaludation dans le traitement de la paralysie g\u00e9n\u00e9rale", display: "1927" },
+  { year: 1933, label: "Cure de Sakel : comas hypoglyc\u00e9miques", fact: "D\u00e9but de la sismoth\u00e9rapie", display: "1933" },
+  { year: 1934, label: "Von Meduna : Convulsivoth\u00e9rapie au Cardiazol", fact: "Injection d\u2019huile camphre pour provoquer des convulsions", display: "1934" },
+  { year: 1938, label: "Cerletti et Bini : \u00c9lectroconvulsivoth\u00e9rapie", fact: "Les \u00e9lectrochocs, d\u2019abord pour la SCZ, puis pour les d\u00e9pressions s\u00e9v\u00e8res", display: "1938" },
+  { year: 1948, label: "Belgique : M\u00e9dicalisation des asiles", fact: "La responsabilit\u00e9 passe du Minist\u00e8re de la Justice \u00e0 celui de la Sant\u00e9", display: "1948" },
+  { year: 1949, label: "Moniz re\u00e7oit le Prix Nobel (leucotomie)", fact: "Freeman & Watts feront 20\u00a0000 lobotomies transorbitaires en 1951", display: "1949" },
+  { year: 1951, label: "20\u00a0000 lobotomies transorbitaires (Freeman & Watts)", fact: "Le pic de la psychochirurgie", display: "1951" },
+  { year: 1952, label: "DSM-I : 106 diagnostics", fact: "Premi\u00e8re \u00e9dition du Manuel diagnostique et statistique", display: "1952" },
+  { year: 1966, label: "Canguilhem : Le normal et le pathologique", fact: "L\u2019individu sain est celui qui peut tomber malade ET se r\u00e9tablir", display: "1966" },
+  { year: 1968, label: "DSM-II : 182 diagnostics", fact: "76 diagnostics de plus qu\u2019en 1952", display: "1968" },
+  { year: 1970, label: "Belgique : d\u00e9but de la d\u00e9sinstitutionnalisation", fact: "Dynamique de r\u00e9insertion des patients psychiatriques", display: "1970" },
+  { year: 1975, label: "Kernberg : organisation limite avec clivage", fact: "Concept cl\u00e9 pour comprendre la personnalit\u00e9 borderline", display: "1975" },
+  { year: 1976, label: "Foucault : Histoire de la folie", fact: "Analyse de l\u2019enfermement des \u00ab\u00a0fous\u00a0\u00bb depuis le 17e si\u00e8cle", display: "1976" },
+  { year: 1980, label: "DSM-III : 265 diagnostics", fact: "Tournant majeur vers une approche ath\u00e9orique et descriptive", display: "1980" },
+  { year: 1993, label: "Huber : mod\u00e8le m\u00e9dical classique", fact: "Le comportement anormal = sympt\u00f4mes d\u2019une maladie sous-jacente", display: "1993" },
+  { year: 2005, label: "Samacher d\u00e9finit la psychopathologie", fact: "\u00c9tude des troubles mentaux, maladies mentales, fonctionnement mental anormal", display: "2005" },
+  { year: 2013, label: "DSM-5 : 300 diagnostics", fact: "Derni\u00e8re \u00e9dition, avec 22 cat\u00e9gories. \u00c7a a explos\u00e9 !", display: "2013" },
+  { year: 2016, label: "Belgique : loi sur la psychologie clinique", fact: "La psychologie clinique devient une profession de soin ind\u00e9pendante", display: "2016" },
+];
+
+const EVENTS_PER_GAME = 13;
+let placedEvents = [];
+let eventsToPlace = [];
+let currentEvent = null;
+let correctCount = 0;
+let attemptCount = 0;
+let isProcessing = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function newGame() {
+  document.getElementById('game-over').classList.remove('show');
+  correctCount = 0;
+  attemptCount = 0;
+  placedEvents = [];
+  isProcessing = false;
+  updateScore();
+
+  // Pick random events
+  const shuffled = shuffle(ALL_EVENTS);
+  const selected = shuffled.slice(0, EVENTS_PER_GAME + 1); // +1 for anchor
+  // Sort by year to pick an anchor near the middle
+  selected.sort((a, b) => a.year - b.year);
+  const anchorIdx = Math.floor(selected.length / 2);
+  const anchor = selected[anchorIdx];
+  const rest = selected.filter((_, i) => i !== anchorIdx);
+
+  placedEvents = [anchor];
+  eventsToPlace = shuffle(rest);
+
+  renderTimeline();
+  showNextCard();
+}
+
+function updateScore() {
+  document.getElementById('score-correct').textContent = `Correct : ${correctCount}`;
+  document.getElementById('score-attempts').textContent = `Tentatives : ${attemptCount}`;
+  document.getElementById('score-remaining').textContent = `Restant : ${eventsToPlace.length}`;
+}
+
+function showNextCard() {
+  if (eventsToPlace.length === 0) {
+    endGame();
+    return;
+  }
+  currentEvent = eventsToPlace.pop();
+  const cardText = document.getElementById('card-text');
+  const card = document.getElementById('current-card');
+
+  // Reset card
+  card.classList.remove('correct-flash', 'wrong-flash');
+  void card.offsetWidth; // force reflow
+  card.style.animation = 'none';
+  void card.offsetWidth;
+  card.style.animation = '';
+
+  cardText.textContent = currentEvent.label;
+  updateScore();
+}
+
+function renderTimeline() {
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+
+  // Sort placed events by year
+  placedEvents.sort((a, b) => a.year - b.year);
+
+  // Add dropzone at start
+  tl.appendChild(createDropzone(0));
+
+  for (let i = 0; i < placedEvents.length; i++) {
+    const ev = placedEvents[i];
+    const eventEl = document.createElement('div');
+    eventEl.className = 'tl-event';
+    eventEl.innerHTML = `
+      <div class="tl-card">${ev.label}</div>
+      <div class="tl-dot"></div>
+      <div class="tl-year">${ev.display}</div>
+    `;
+    tl.appendChild(eventEl);
+
+    // Add dropzone after each event
+    tl.appendChild(createDropzone(i + 1));
+  }
+
+  // Scroll to center
+  const scroll = document.getElementById('timeline-scroll');
+  setTimeout(() => {
+    scroll.scrollLeft = (scroll.scrollWidth - scroll.clientWidth) / 2;
+  }, 50);
+}
+
+function createDropzone(position) {
+  const dz = document.createElement('div');
+  dz.className = 'tl-dropzone';
+  dz.innerHTML = '<div class="dz-marker">+</div>';
+  dz.addEventListener('click', () => handlePlacement(position));
+  return dz;
+}
+
+function handlePlacement(position) {
+  if (!currentEvent || isProcessing) return;
+  isProcessing = true;
+
+  attemptCount++;
+  const year = currentEvent.year;
+
+  // Determine if placement is correct
+  const sorted = [...placedEvents].sort((a, b) => a.year - b.year);
+  let isCorrect = true;
+
+  // Check: year must be >= all events before position, and <= all events at/after position
+  if (position > 0 && year < sorted[position - 1].year) isCorrect = false;
+  if (position < sorted.length && year > sorted[position].year) isCorrect = false;
+
+  const card = document.getElementById('current-card');
+
+  if (isCorrect) {
+    correctCount++;
+    card.classList.add('correct-flash');
+    placedEvents.push(currentEvent);
+    renderTimeline();
+    highlightNewEvent(currentEvent);
+  } else {
+    card.classList.add('wrong-flash');
+    // Still place it correctly
+    placedEvents.push(currentEvent);
+    renderTimeline();
+    highlightNewEvent(currentEvent, true);
+  }
+
+  showFeedback(isCorrect, currentEvent);
+  updateScore();
+}
+
+function highlightNewEvent(event, isWrong = false) {
+  const sorted = [...placedEvents].sort((a, b) => a.year - b.year);
+  const idx = sorted.findIndex(e => e === event);
+  const tl = document.getElementById('timeline');
+  // Each event is at position: dropzone, event, dropzone, event... so event index = 1 + idx*2
+  const eventElements = tl.querySelectorAll('.tl-event');
+  if (eventElements[idx]) {
+    const card = eventElements[idx].querySelector('.tl-card');
+    card.classList.add('just-placed');
+    if (isWrong) {
+      card.style.borderColor = '#ef4444';
+      card.style.color = '#fca5a5';
+      setTimeout(() => {
+        card.style.borderColor = '';
+        card.style.color = '';
+      }, 2000);
+    } else {
+      card.style.borderColor = '#22c55e';
+      card.style.color = '#86efac';
+      setTimeout(() => {
+        card.style.borderColor = '';
+        card.style.color = '';
+      }, 2000);
+    }
+
+    // Scroll to the new event
+    const scroll = document.getElementById('timeline-scroll');
+    const rect = eventElements[idx].getBoundingClientRect();
+    const scrollRect = scroll.getBoundingClientRect();
+    const offset = rect.left - scrollRect.left + scroll.scrollLeft - scrollRect.width / 2 + rect.width / 2;
+    scroll.scrollTo({ left: offset, behavior: 'smooth' });
+  }
+}
+
+function showFeedback(isCorrect, event) {
+  const toast = document.getElementById('feedback-toast');
+  document.getElementById('toast-icon').textContent = isCorrect ? '\u2705' : '\u274c';
+  document.getElementById('toast-year').textContent = event.display;
+  document.getElementById('toast-fact').textContent = event.fact;
+  toast.classList.add('show');
+
+  // Disable dropzones while toast is showing
+  document.querySelectorAll('.tl-dropzone').forEach(dz => dz.classList.add('disabled-zone'));
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    document.querySelectorAll('.tl-dropzone').forEach(dz => dz.classList.remove('disabled-zone'));
+    isProcessing = false;
+    showNextCard();
+  }, 2200);
+}
+
+function endGame() {
+  const pct = Math.round((correctCount / attemptCount) * 100);
+  document.getElementById('final-score').textContent = `${correctCount} / ${attemptCount}`;
+
+  let msg;
+  if (pct === 100) msg = "Parfait ! Vous ma\u00eetrisez l\u2019histoire de la psychopathologie !";
+  else if (pct >= 75) msg = "Excellent ! Votre sens chronologique est tr\u00e8s bon.";
+  else if (pct >= 50) msg = "Pas mal ! Quelques dates \u00e0 revoir.";
+  else msg = "Continuez \u00e0 r\u00e9viser, la chronologie se ma\u00eetrise avec la pratique !";
+
+  document.getElementById('final-message').textContent = msg;
+  document.getElementById('card-area').innerHTML = '';
+
+  setTimeout(() => {
+    document.getElementById('game-over').classList.add('show');
+  }, 500);
+}
+
+newGame();
+</script>
+</body>
+</html>

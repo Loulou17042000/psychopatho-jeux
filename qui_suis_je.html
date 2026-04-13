@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qui suis-je ? - Psychopathologie</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0f1117;--card:#1a1d27;--card2:#232635;--accent:#6c63ff;--accent2:#ff6584;
+    --green:#2ecc71;--red:#e74c3c;--text:#e0e0e8;--muted:#8888a0;--border:#2a2d3e;
+    --radius:12px;
+  }
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:var(--bg);color:var(--text);min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;
+    padding:20px;line-height:1.6;
+  }
+  h1{font-size:1.8rem;margin-bottom:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .subtitle{color:var(--muted);font-size:.9rem;margin-bottom:20px;}
+  .container{max-width:700px;width:100%;}
+
+  /* Progress */
+  .progress-wrap{width:100%;margin-bottom:18px;}
+  .progress-info{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:6px;}
+  .progress-bar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .5s ease;}
+
+  /* Score badge */
+  .score-badge{
+    position:fixed;top:16px;right:20px;background:var(--card);border:1px solid var(--border);
+    padding:8px 18px;border-radius:99px;font-weight:600;font-size:.95rem;z-index:10;
+  }
+  .score-badge span{color:var(--accent);}
+
+  /* Card */
+  .case-card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:28px 32px;margin-bottom:16px;position:relative;overflow:hidden;
+  }
+  .case-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+  }
+  .patient-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .patient-icon{
+    width:48px;height:48px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;
+  }
+  .patient-name{font-size:1.15rem;font-weight:600;}
+  .patient-desc{color:var(--muted);font-size:.85rem;}
+
+  /* Clues */
+  .clues-list{list-style:none;margin-bottom:20px;}
+  .clue-item{
+    padding:10px 14px;margin-bottom:8px;background:var(--card2);border-radius:8px;
+    border-left:3px solid var(--accent);font-size:.95rem;
+    animation:slideIn .4s ease;
+  }
+  .clue-item .num{color:var(--accent);font-weight:700;margin-right:8px;}
+  @keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+
+  /* Answer area */
+  .answer-area{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;}
+  .answer-area select,.answer-area input{
+    flex:1;min-width:180px;padding:10px 14px;border-radius:8px;border:1px solid var(--border);
+    background:var(--card2);color:var(--text);font-size:.95rem;outline:none;
+    transition:border-color .2s;
+  }
+  .answer-area select:focus,.answer-area input:focus{border-color:var(--accent);}
+  .btn{
+    padding:10px 22px;border:none;border-radius:8px;font-size:.95rem;font-weight:600;
+    cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{filter:brightness(1.15);transform:translateY(-1px);}
+  .btn-secondary{background:var(--card2);color:var(--text);border:1px solid var(--border);}
+  .btn-secondary:hover{border-color:var(--accent);}
+  .btn-success{background:var(--green);color:#fff;}
+  .btn-danger{background:var(--red);color:#fff;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+  .btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+
+  /* Feedback */
+  .feedback{
+    padding:14px 18px;border-radius:8px;margin-top:14px;font-weight:600;
+    animation:popIn .35s ease;
+  }
+  .feedback.correct{background:rgba(46,204,113,.15);border:1px solid var(--green);color:var(--green);}
+  .feedback.wrong{background:rgba(231,76,60,.15);border:1px solid var(--red);color:var(--red);}
+  @keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+  /* Confetti */
+  .confetti-piece{position:fixed;width:10px;height:10px;border-radius:2px;pointer-events:none;z-index:999;animation:confettiFall 1.2s ease forwards;}
+  @keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
+
+  /* Shake */
+  .shake{animation:shake .4s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+
+  /* Results */
+  .results-card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:28px 32px;margin-bottom:16px;
+  }
+  .results-card h2{text-align:center;margin-bottom:6px;}
+  .final-score{text-align:center;font-size:2.8rem;font-weight:800;margin:10px 0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .final-sub{text-align:center;color:var(--muted);margin-bottom:20px;}
+  .review-item{
+    padding:12px 16px;background:var(--card2);border-radius:8px;margin-bottom:8px;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;
+  }
+  .review-item .ri-name{font-weight:600;}
+  .review-item .ri-answer{color:var(--muted);font-size:.88rem;}
+  .review-item .ri-pts{font-weight:700;white-space:nowrap;}
+  .ri-pts.good{color:var(--green)}.ri-pts.ok{color:orange}.ri-pts.bad{color:var(--red)}
+  .stars{text-align:center;font-size:1.5rem;margin-bottom:14px;}
+
+  /* Start screen */
+  .start-screen{text-align:center;padding:40px 20px;}
+  .start-screen p{color:var(--muted);max-width:500px;margin:14px auto;}
+  .start-icon{font-size:4rem;margin-bottom:10px;}
+  .rules{text-align:left;background:var(--card2);border-radius:8px;padding:16px 20px;margin:18px 0;font-size:.9rem;color:var(--muted);}
+  .rules li{margin-bottom:4px;list-style:disc inside;}
+
+  /* Responsive */
+  @media(max-width:500px){
+    body{padding:12px;}
+    .case-card,.results-card{padding:18px 16px;}
+    .answer-area{flex-direction:column;}
+    .score-badge{position:static;margin-bottom:12px;text-align:center;}
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <!-- Filled by JS -->
+</div>
+
+<script>
+// ---- DATA ----
+const CASES = [
+  {
+    name:"Jean", age:45, icon:"\u{1F468}\u200D\u{1F4BC}",
+    answer:"Trouble de la personnalite obsessionnelle-compulsive",
+    display:"TP obsessionnelle-compulsive",
+    clues:[
+      "Le patient se plaint que ses collegues sont \"incompetents\" et insiste pour tout verifier lui-meme.",
+      "Il passe des heures a reorganiser des dossiers deja bien classes, au detriment de taches plus urgentes.",
+      "Il refuse categoriquement de deleguer, meme les taches les plus simples.",
+      "Il est rigide sur les regles et les procedures, au point de se disputer regulierement avec sa famille.",
+      "Son perfectionnisme extreme l'empeche de terminer ses projets dans les delais."
+    ]
+  },
+  {
+    name:"Paul", age:35, icon:"\u{1F468}",
+    answer:"Trouble de la personnalite antisociale",
+    display:"TP antisociale",
+    clues:[
+      "Le patient a ete arrete plusieurs fois pour bagarres et escroqueries.",
+      "Il ment frequemment et manipule son entourage pour obtenir ce qu'il veut.",
+      "Il ne montre aucun remords apres avoir blesse quelqu'un physiquement ou emotionnellement.",
+      "Son dossier revele des troubles de conduite depuis l'adolescence.",
+      "Il est impulsif, ne planifie pas et prend des risques inconsideres."
+    ]
+  },
+  {
+    name:"Julie", age:32, icon:"\u{1F469}",
+    answer:"Trouble de la personnalite histrionique",
+    display:"TP histrionique",
+    clues:[
+      "La patiente se sent mal a l'aise quand elle n'est pas le centre de l'attention.",
+      "Elle adopte regulierement un comportement seducteur ou provocateur de maniere inappropriee.",
+      "Ses emotions changent tres rapidement et semblent superficielles a son entourage.",
+      "Elle utilise constamment son apparence physique pour attirer l'attention.",
+      "Elle considere ses relations comme plus intimes qu'elles ne le sont reellement."
+    ]
+  },
+  {
+    name:"Claire", age:28, icon:"\u{1F469}\u200D\u{1F393}",
+    answer:"Trouble de la personnalite evitante",
+    display:"TP evitante",
+    clues:[
+      "La patiente a refuse une promotion car elle impliquait des presentations devant des collegues.",
+      "Elle est extremement sensible aux critiques, meme les plus bienveillantes.",
+      "Elle evite les activites sociales par peur d'etre rejetee ou humiliee.",
+      "Elle se decrit comme socialement incompetente et peu attirante.",
+      "Elle ne s'engage dans de nouvelles relations que si elle est certaine d'etre appreciee."
+    ]
+  },
+  {
+    name:"Eric", age:42, icon:"\u{1F9D4}",
+    answer:"Trouble de la personnalite schizotypique",
+    display:"TP schizotypique",
+    clues:[
+      "Le patient affirme pouvoir sentir la presence de personnes decedees.",
+      "Il a des croyances bizarres, comme la pensee magique et la telepathie.",
+      "Son discours est vague, digressif et parseme de metaphores etranges.",
+      "Son apparence et son comportement sont decrits comme excentriques par ses proches.",
+      "Il presente une anxiete sociale intense qui ne diminue pas avec la familiarite."
+    ]
+  },
+  {
+    name:"Thomas", age:40, icon:"\u{1F468}\u200D\u{1F4BC}",
+    answer:"Trouble de la personnalite narcissique",
+    display:"TP narcissique",
+    clues:[
+      "Le patient exige un traitement special et s'attend a ce qu'on reponde immediatement a ses attentes.",
+      "Il parle constamment de ses \"reussites exceptionnelles\" et se compare avantageusement aux autres.",
+      "Il exploite ses relations interpersonnelles pour atteindre ses propres objectifs.",
+      "Il manque totalement d'empathie et ne comprend pas les besoins des autres.",
+      "Il est frequemment envieux des autres ou croit que les autres l'envient."
+    ]
+  },
+  {
+    name:"Marie", age:30, icon:"\u{1F469}",
+    answer:"Trouble de la personnalite dependante",
+    display:"TP dependante",
+    clues:[
+      "La patiente demande l'avis de son compagnon pour chaque decision, meme les plus banales.",
+      "Elle est incapable de commencer un projet seule par manque de confiance en son jugement.",
+      "Apres une rupture, elle a immediatement cherche une nouvelle relation pour se sentir soutenue.",
+      "Elle accepte de faire des choses desagreables pour garder le soutien de ses proches.",
+      "Elle est terrorisee a l'idee de devoir se debrouiller seule."
+    ]
+  },
+  {
+    name:"Sophie", age:26, icon:"\u{1F469}\u200D\u{1F3A4}",
+    answer:"Trouble de la personnalite borderline",
+    display:"TP borderline (limite)",
+    clues:[
+      "La patiente oscille entre idealiser et devaloriser ses proches de maniere imprevisible.",
+      "Elle fait des efforts desesperes pour eviter un abandon reel ou imaginaire.",
+      "Elle a des comportements d'automutilation et a fait plusieurs tentatives de suicide.",
+      "Elle rapporte un sentiment chronique de vide interieur.",
+      "Ses relations interpersonnelles sont intenses mais tres instables."
+    ]
+  },
+  {
+    name:"Marc", age:50, icon:"\u{1F474}",
+    answer:"Trouble de la personnalite paranoiaque",
+    display:"TP paranoiaque",
+    clues:[
+      "Le patient suspecte, sans preuve suffisante, que ses collegues complotent contre lui.",
+      "Il est extremement rancunier et ne pardonne pas les offenses percues.",
+      "Il interprete des remarques anodines comme des attaques personnelles deguisees.",
+      "Il hesite a se confier par crainte que l'information soit utilisee contre lui.",
+      "Il doute sans raison de la fidelite de sa conjointe."
+    ]
+  },
+  {
+    name:"Isabelle", age:38, icon:"\u{1F469}\u200D\u{1F52C}",
+    answer:"Trouble de la personnalite schizoide",
+    display:"TP schizoide",
+    clues:[
+      "La patiente ne desire ni ne recherche de relations proches, y compris familiales.",
+      "Elle choisit presque toujours des activites solitaires.",
+      "Elle parait indifferente aux eloges comme aux critiques.",
+      "Elle montre une froideur emotionnelle et un detachement affectif notables.",
+      "Elle n'a aucun ami proche en dehors de ses parents directs."
+    ]
+  },
+  {
+    name:"Claire L.", age:30, icon:"\u{1F469}\u200D\u{2695}\uFE0F",
+    answer:"Attaque de panique",
+    display:"Attaque de panique (trouble panique)",
+    clues:[
+      "La patiente a ete admise aux urgences apres un episode soudain de terreur intense au supermarche.",
+      "Elle decrit des palpitations cardiaques violentes et une sensation d'etouffement.",
+      "Elle etait convaincue qu'elle allait mourir pendant l'episode.",
+      "L'episode a atteint son pic en quelques minutes puis a diminue progressivement.",
+      "Depuis, elle evite les supermarchés par crainte que cela ne se reproduise."
+    ]
+  },
+  {
+    name:"Jacques", age:45, icon:"\u{1F468}\u200D\u{1F9B3}",
+    answer:"Trouble de symptome somatique",
+    display:"Trouble de symptome somatique (somatisation)",
+    clues:[
+      "Le patient consulte regulierement de nombreux specialistes pour des plaintes physiques variees.",
+      "Il se plaint de douleurs abdominales chroniques et d'une fatigue persistante.",
+      "Aucun examen medical n'a revele de cause organique a ses symptomes.",
+      "Il consacre un temps et une energie excessifs a ses preoccupations de sante.",
+      "Ses symptomes physiques entrainent une detresse significative et perturbent sa vie quotidienne."
+    ]
+  },
+  {
+    name:"Laura", age:28, icon:"\u{1F469}\u200D\u{1F9B0}",
+    answer:"Amnesie dissociative",
+    display:"Amnesie dissociative",
+    clues:[
+      "La patiente a ete trouvee errant dans un parc, dessorientee et confuse.",
+      "Elle est incapable de se rappeler son nom, son adresse ou toute information personnelle.",
+      "L'examen neurologique ne revele aucune cause organique a sa perte de memoire.",
+      "Son entourage rapporte qu'elle a subi un trauma severe peu avant l'episode.",
+      "Ses souvenirs ont commence a revenir progressivement en milieu securisant."
+    ]
+  },
+  {
+    name:"Michel", age:35, icon:"\u{1F468}\u200D\u{1F692}",
+    answer:"Etat de stress post-traumatique",
+    display:"Etat de stress post-traumatique (ESPT)",
+    clues:[
+      "Le patient revit de maniere repetee un grave accident de voiture sous forme de flashbacks.",
+      "Il evite systematiquement de conduire et les routes ou l'accident s'est produit.",
+      "Il sursaute violemment au moindre bruit fort (hypervigilance).",
+      "Il souffre de cauchemars recurrents lies a l'evenement traumatique.",
+      "Il se sent detache emotionnellement de ses proches depuis l'accident."
+    ]
+  },
+  {
+    name:"Antoine", age:32, icon:"\u{1F468}\u200D\u{1F3EB}",
+    answer:"Trouble obsessionnel-compulsif",
+    display:"TOC (Trouble obsessionnel-compulsif)",
+    clues:[
+      "Le patient se lave les mains plus de 50 fois par jour jusqu'a en avoir la peau irritee.",
+      "Il est envahi par des pensees intrusives recurrentes de contamination.",
+      "Il reconnait que ses rituels sont excessifs mais ne peut pas s'en empecher.",
+      "Ses rituels de nettoyage prennent plusieurs heures par jour.",
+      "Il evite de toucher les poignees de porte et les surfaces publiques."
+    ]
+  },
+  {
+    name:"Anna", age:25, icon:"\u{1F469}\u200D\u{1F3A8}",
+    answer:"Phobie specifique",
+    display:"Phobie specifique (arachnophobie)",
+    clues:[
+      "La patiente a fait une crise de panique en voyant une simple photo d'araignee.",
+      "Elle evite systematiquement les endroits ou elle pourrait rencontrer des araignees.",
+      "Elle reconnait que sa peur est disproportionnee par rapport au danger reel.",
+      "Cette peur intense est presente depuis l'enfance et ne diminue pas.",
+      "Son evitement perturbe sa vie quotidienne (refuse de descendre a la cave, d'aller en foret)."
+    ]
+  },
+  {
+    name:"Amelie", age:22, icon:"\u{1F469}\u200D\u{1F4BB}",
+    answer:"Trouble d'anxiete sociale",
+    display:"Trouble d'anxiete sociale (phobie sociale)",
+    clues:[
+      "La patiente est terrifiee a l'idee de parler en public ou devant un petit groupe.",
+      "Elle craint d'etre jugee negativement ou de se ridiculiser dans les situations sociales.",
+      "Elle rougit, tremble et transpire abondamment lors d'interactions sociales.",
+      "Elle evite les fetes, les reunions et les repas en groupe.",
+      "Sa peur interfere significativement avec ses etudes universitaires."
+    ]
+  },
+  {
+    name:"Luc", age:40, icon:"\u{1F468}\u200D\u{1F4BC}",
+    answer:"Trouble anxieux generalise",
+    display:"Trouble anxieux generalise (TAG)",
+    clues:[
+      "Le patient s'inquiete de maniere excessive et incontrôlable pour de multiples sujets depuis plus de 6 mois.",
+      "Il presente des tensions musculaires chroniques et des troubles du sommeil.",
+      "Ses inquietudes portent sur le travail, la sante, les finances et la famille simultanement.",
+      "Il a du mal a se detendre et se sent constamment \"sur le qui-vive\".",
+      "Il est facilement fatigue et a des difficultes de concentration."
+    ]
+  },
+  {
+    name:"Sarah", age:28, icon:"\u{1F469}",
+    answer:"Trouble dissociatif de l'identite",
+    display:"Trouble dissociatif de l'identite (TDI)",
+    clues:[
+      "La patiente rapporte des periodes d'amnesie ou elle ne se souvient pas de ce qu'elle a fait.",
+      "Son entourage decrit des changements brusques de personnalite, de voix et de comportement.",
+      "Elle a des identites distinctes avec des noms, ages et temperaments differents.",
+      "Son histoire revele un trauma severe et repetitif durant l'enfance.",
+      "Elle decouvre chez elle des objets et ecrits qu'elle ne se rappelle pas avoir acquis ou rediges."
+    ]
+  },
+  {
+    name:"Elise", age:27, icon:"\u{1F469}\u200D\u{1F3A4}",
+    answer:"Trouble de depersonnalisation",
+    display:"Trouble de depersonnalisation / derealisation",
+    clues:[
+      "La patiente decrit une sensation persistante d'etre detachee de son propre corps.",
+      "Elle se sent comme si elle observait sa vie de l'exterieur, comme dans un film.",
+      "Son environnement lui parait ireel, flou ou deformé, comme dans un reve.",
+      "Ces episodes surviennent surtout lors de situations stressantes.",
+      "L'epreuve de realite reste intacte : elle sait que ces sensations ne sont pas reelles."
+    ]
+  }
+];
+
+// Shuffled disorder names for the dropdown
+const ALL_ANSWERS = CASES.map(c => c.display).sort(() => Math.random() - .5);
+
+// ---- AUDIO ----
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playTone(freq, dur, type='sine', vol=.12){
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.value = vol;
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + dur);
+  o.stop(audioCtx.currentTime + dur);
+}
+function soundCorrect(){ playTone(523,.08); setTimeout(()=>playTone(659,.08),90); setTimeout(()=>playTone(784,.15),180); }
+function soundWrong(){ playTone(200,.25,'sawtooth',.08); }
+
+// ---- CONFETTI ----
+function spawnConfetti(n=30){
+  const colors=['#6c63ff','#ff6584','#2ecc71','#f1c40f','#3498db','#e67e22'];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.left=Math.random()*100+'vw';
+    el.style.top='-10px';
+    el.style.background=colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDelay=Math.random()*.5+'s';
+    el.style.animationDuration=(.8+Math.random()*.8)+'s';
+    el.style.transform='rotate('+Math.random()*360+'deg)';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),2000);
+  }
+}
+
+// ---- GAME STATE ----
+let currentCase = 0;
+let currentClue = 0;
+let score = 0;
+let answered = false;
+let caseOrder = [];
+let results = [];
+
+function shuffle(arr){
+  const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a;
+}
+
+// ---- RENDER ----
+const app = document.getElementById('app');
+
+function renderStart(){
+  app.innerHTML = `
+    <div class="start-screen">
+      <div class="start-icon">\u{1F9E0}</div>
+      <h1>Qui suis-je ?</h1>
+      <p class="subtitle">Le jeu de devinettes en psychopathologie</p>
+      <p>Un patient decrit ses symptomes un par un. Devinez le trouble le plus vite possible !</p>
+      <div class="rules">
+        <strong>Regles du jeu :</strong>
+        <ul>
+          <li>20 cas cliniques a identifier</li>
+          <li>Chaque cas revele 5 indices progressivement</li>
+          <li>5 points si vous devinez au 1er indice, 4 au 2e, etc.</li>
+          <li>Score maximum : 100 points</li>
+          <li>Selectionnez dans la liste ou tapez votre reponse</li>
+        </ul>
+      </div>
+      <button class="btn btn-primary" onclick="startGame()" style="font-size:1.1rem;padding:14px 36px;">
+        \u{1F3AE} Commencer la partie
+      </button>
+    </div>
+  `;
+}
+
+function startGame(){
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  caseOrder = shuffle([...Array(CASES.length).keys()]);
+  currentCase = 0; currentClue = 0; score = 0; answered = false; results = [];
+  renderCase();
+}
+
+function renderCase(){
+  const ci = caseOrder[currentCase];
+  const c = CASES[ci];
+  answered = false;
+  currentClue = 0;
+
+  const pct = ((currentCase)/CASES.length*100).toFixed(0);
+
+  let cluesHTML = '';
+  cluesHTML += `<li class="clue-item"><span class="num">#1</span>${c.clues[0]}</li>`;
+
+  const optionsHTML = ALL_ANSWERS.map(a => `<option value="${a}">${a}</option>`).join('');
+
+  app.innerHTML = `
+    <div class="score-badge">Score : <span id="scoreVal">${score}</span> / ${CASES.length * 5}</div>
+    <h1>Qui suis-je ?</h1>
+    <p class="subtitle">Psychopathologie - Identifiez le trouble</p>
+    <div class="progress-wrap">
+      <div class="progress-info"><span>Cas ${currentCase+1} / ${CASES.length}</span><span>${pct}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="case-card" id="caseCard">
+      <div class="patient-header">
+        <div class="patient-icon">${c.icon}</div>
+        <div>
+          <div class="patient-name">${c.name}, ${c.age} ans</div>
+          <div class="patient-desc">Patient(e) en consultation</div>
+        </div>
+      </div>
+      <ul class="clues-list" id="cluesList">
+        ${cluesHTML}
+      </ul>
+      <div class="answer-area" id="answerArea">
+        <select id="answerSelect">
+          <option value="">-- Choisir un trouble --</option>
+          ${optionsHTML}
+        </select>
+      </div>
+      <div class="btn-row" id="btnRow">
+        <button class="btn btn-secondary" id="btnClue" onclick="nextClue()">Indice suivant \u{27A1}</button>
+        <button class="btn btn-primary" id="btnSubmit" onclick="submitAnswer()">Valider \u2705</button>
+      </div>
+      <div id="feedback"></div>
+    </div>
+  `;
+}
+
+function nextClue(){
+  if(answered) return;
+  const ci = caseOrder[currentCase];
+  const c = CASES[ci];
+  currentClue++;
+  if(currentClue >= c.clues.length) return;
+
+  const list = document.getElementById('cluesList');
+  const li = document.createElement('li');
+  li.className = 'clue-item';
+  li.innerHTML = `<span class="num">#${currentClue+1}</span>${c.clues[currentClue]}`;
+  list.appendChild(li);
+
+  if(currentClue >= c.clues.length - 1){
+    document.getElementById('btnClue').disabled = true;
+    document.getElementById('btnClue').textContent = 'Tous les indices reveles';
+  }
+}
+
+function normalize(s){
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+}
+
+function submitAnswer(){
+  if(answered) return;
+  const ci = caseOrder[currentCase];
+  const c = CASES[ci];
+  const sel = document.getElementById('answerSelect').value;
+  const guess = sel;
+
+  if(!guess){
+    document.getElementById('caseCard').classList.add('shake');
+    setTimeout(()=>document.getElementById('caseCard').classList.remove('shake'),500);
+    return;
+  }
+
+  answered = true;
+  const normGuess = normalize(guess);
+  const normAnswer = normalize(c.display);
+  const normAnswer2 = normalize(c.answer);
+
+  const correct = normGuess === normAnswer || normGuess === normAnswer2 ||
+    normAnswer.includes(normGuess) || normGuess.includes(normAnswer);
+
+  const pts = correct ? Math.max(1, 5 - currentClue) : 0;
+  score += pts;
+
+  results.push({
+    name: c.name,
+    age: c.age,
+    display: c.display,
+    guess: guess,
+    correct: correct,
+    cluesUsed: currentClue + 1,
+    points: pts
+  });
+
+  const fb = document.getElementById('feedback');
+  if(correct){
+    soundCorrect();
+    spawnConfetti();
+    fb.className = 'feedback correct';
+    fb.innerHTML = `\u2705 Correct ! <strong>${c.display}</strong> &mdash; +${pts} point${pts>1?'s':''}`;
+  } else {
+    soundWrong();
+    document.getElementById('caseCard').classList.add('shake');
+    setTimeout(()=>document.getElementById('caseCard').classList.remove('shake'),500);
+    fb.className = 'feedback wrong';
+    fb.innerHTML = `\u274C Incorrect. La reponse etait : <strong>${c.display}</strong>`;
+  }
+
+  // Show all remaining clues
+  const list = document.getElementById('cluesList');
+  for(let i = currentClue + 1; i < c.clues.length; i++){
+    const li = document.createElement('li');
+    li.className = 'clue-item';
+    li.style.opacity = '.5';
+    li.innerHTML = `<span class="num">#${i+1}</span>${c.clues[i]}`;
+    list.appendChild(li);
+  }
+
+  document.getElementById('btnClue').style.display = 'none';
+  document.getElementById('btnSubmit').style.display = 'none';
+  document.getElementById('answerArea').style.display = 'none';
+
+  const btnRow = document.getElementById('btnRow');
+  if(currentCase < CASES.length - 1){
+    btnRow.innerHTML = `<button class="btn btn-primary" onclick="nextCase()" style="width:100%">Cas suivant \u27A1</button>`;
+  } else {
+    btnRow.innerHTML = `<button class="btn btn-success" onclick="showResults()" style="width:100%">Voir les resultats \u{1F3C6}</button>`;
+  }
+  document.getElementById('scoreVal').textContent = score;
+}
+
+function nextCase(){
+  currentCase++;
+  renderCase();
+}
+
+function showResults(){
+  const maxScore = CASES.length * 5;
+  const pct = Math.round(score / maxScore * 100);
+  let stars = '';
+  if(pct >= 90) stars = '\u2B50\u2B50\u2B50\u2B50\u2B50';
+  else if(pct >= 75) stars = '\u2B50\u2B50\u2B50\u2B50';
+  else if(pct >= 60) stars = '\u2B50\u2B50\u2B50';
+  else if(pct >= 40) stars = '\u2B50\u2B50';
+  else stars = '\u2B50';
+
+  let msg = '';
+  if(pct >= 90) msg = 'Excellent ! Vous maitrisez la psychopathologie !';
+  else if(pct >= 75) msg = 'Tres bien ! Quelques revisions et ce sera parfait.';
+  else if(pct >= 60) msg = 'Bien ! Continuez vos efforts.';
+  else if(pct >= 40) msg = 'Peut mieux faire. Relisez vos cours !';
+  else msg = 'Il est temps de reviser serieusement !';
+
+  let reviewHTML = results.map(r => {
+    const cls = r.points >= 4 ? 'good' : r.points >= 2 ? 'ok' : 'bad';
+    const icon = r.correct ? '\u2705' : '\u274C';
+    return `<div class="review-item">
+      <div>
+        <span class="ri-name">${icon} ${r.name}, ${r.age} ans</span><br>
+        <span class="ri-answer">${r.display}${!r.correct ? ' (vous : '+r.guess+')' : ''}</span>
+      </div>
+      <div class="ri-pts ${cls}">${r.points}/5 (${r.cluesUsed} indice${r.cluesUsed>1?'s':''})</div>
+    </div>`;
+  }).join('');
+
+  const correctCount = results.filter(r=>r.correct).length;
+
+  app.innerHTML = `
+    <div class="results-card">
+      <h2>\u{1F3C6} Resultats</h2>
+      <div class="stars">${stars}</div>
+      <div class="final-score">${score} / ${maxScore}</div>
+      <div class="final-sub">${pct}% &mdash; ${correctCount}/${CASES.length} corrects &mdash; ${msg}</div>
+      ${reviewHTML}
+      <div class="btn-row" style="justify-content:center;margin-top:20px;">
+        <button class="btn btn-primary" onclick="startGame()">\u{1F504} Rejouer</button>
+        <button class="btn btn-secondary" onclick="renderStart()">\u{1F3E0} Accueil</button>
+      </div>
+    </div>
+  `;
+
+  if(pct >= 75) spawnConfetti(50);
+}
+
+// ---- INIT ----
+renderStart();
+</script>
+</body>
+</html>
