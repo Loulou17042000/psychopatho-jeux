@@ -291,7 +291,7 @@
           <li>Clique sur l'intrus le plus vite possible</li>
           <li>Tu as 15 secondes par question</li>
           <li>Une explication s'affiche apres chaque reponse</li>
-          <li>20 questions au total</li>
+          <li>Plus de 45 questions (Ch.1-12, Ch.9-12 inclus)</li>
         </ul>
       </div>
       <button class="btn" onclick="startGame()">Commencer</button>
@@ -459,6 +459,172 @@ const ALL_ROUNDS = [
     items: ["Peur d'etre malade", "Interpretation de sensations normales", "Consultations medicales multiples", "Symptomes neurologiques fonctionnels"],
     intruder: 3,
     explanation: "Les symptomes neurologiques fonctionnels (paralysies, anesthesies) sont typiques du trouble de conversion, pas de l'hypocondrie."
+  },
+  // ============ Ch9 - Vieillissement ============
+  {
+    ch:"Ch9", disorder:"Vieillissement sain - fonctions alterees (gradient antero-posterieur)",
+    items:["Vitesse de traitement","Memoire de travail","Fonctions executives","Memoire semantique"],
+    intruder:3,
+    explanation:"La memoire semantique est preservee dans le vieillissement sain : c'est une fonction posterieure. Le gradient antero-posterieur altere les fonctions frontales (vitesse, memoire de travail, executif)."
+  },
+  {
+    ch:"Ch9", disorder:"Syndrome de Charles Bonnet",
+    items:["Hallucinations visuelles complexes","Deficit visuel (DMLA, cataracte)","Le patient croit a ses hallucinations","Syndrome parkinsonien"],
+    intruder:3,
+    explanation:"Le syndrome parkinsonien (extrapyramidal) est typique de la demence a corps de Lewy, pas du Charles Bonnet (qui est lie a un deficit sensoriel pur)."
+  },
+  {
+    ch:"Ch9", disorder:"Demence a corps de Lewy",
+    items:["Hallucinations visuelles detaillees","Syndrome parkinsonien","Troubles du comportement en sommeil paradoxal","Installation brutale en quelques heures"],
+    intruder:3,
+    explanation:"L'installation brutale est caracteristique de l'etat confusionnel (delirium), pas de la demence a corps de Lewy qui evolue progressivement."
+  },
+  {
+    ch:"Ch9", disorder:"Etat confusionnel (delirium) du sujet age",
+    items:["Installation brutale","Obnubilation intellectuelle","Fluctuation de l'humeur","Declin progressif sur des annees"],
+    intruder:3,
+    explanation:"Le declin progressif sur des annees caracterise la demence (TNM), pas le delirium qui est BRUTAL et reversible en quelques semaines."
+  },
+  {
+    ch:"Ch9", disorder:"Maladie d'Alzheimer (criteres NIA-AA 2018)",
+    items:["Declin cognitif progressif","Insidieux","Au moins 2 domaines atteints","Reversible spontanement"],
+    intruder:3,
+    explanation:"La maladie d'Alzheimer est IRREVERSIBLE et progressive. La reversibilite caracterise le delirium ou la depression avec etat dementiel reversible (Morimoto, 2015)."
+  },
+  {
+    ch:"Ch9", disorder:"Délires tardifs - facteurs de risque",
+    items:["Isolement et solitude","Deuil ou separation","Institutionnalisation","Hyperactivite sociale"],
+    intruder:3,
+    explanation:"L'hyperactivite sociale n'est PAS un facteur de risque - au contraire, c'est l'isolement, la solitude et le deuil qui favorisent les delires tardifs."
+  },
+  {
+    ch:"Ch9", disorder:"Depression du sujet age vs Alzheimer (plus fréquent en depression)",
+    items:["Tristesse, pleurs","Idees suicidaires","Sentiment de culpabilite","Manque du mot et difficultes spatiales"],
+    intruder:3,
+    explanation:"Le manque du mot et les difficultes spatiales/visuospatiales sont plus frequents dans la maladie d'Alzheimer que dans la depression."
+  },
+  // ============ Ch10 - TCA ============
+  {
+    ch:"Ch10", disorder:"Anorexie mentale (criteres centraux)",
+    items:["Restriction alimentaire","Peur intense de grossir","Dysmorphophobie","Crises de boulimie sans purge"],
+    intruder:3,
+    explanation:"Les crises de boulimie sans purge definissent le BED (hyperphagie boulimique), pas l'anorexie restrictive. Le sous-type avec acces hyperphagiques/purgatif a vomissements/laxatifs."
+  },
+  {
+    ch:"Ch10", disorder:"Boulimie",
+    items:["Acces hyperphagiques","Comportements compensatoires (vomissements, laxatifs)","Estime de soi liee au poids","IMC < 17 (poids tres bas)"],
+    intruder:3,
+    explanation:"Dans la boulimie, le poids est SOUVENT NORMAL. Un IMC < 17 caracterise l'anorexie mentale, pas la boulimie."
+  },
+  {
+    ch:"Ch10", disorder:"BED (Binge Eating Disorder / hyperphagie boulimique)",
+    items:["Crises hyperphagiques","Manger seul par gene","Sentiment de degoût/culpabilite","Vomissements provoqués"],
+    intruder:3,
+    explanation:"L'absence de comportements compensatoires (vomissements, purges) distingue le BED de la boulimie. C'est meme le critere differentiel principal."
+  },
+  {
+    ch:"Ch10", disorder:"Dysmorphie corporelle (TOC)",
+    items:["Inquietude pour un defaut d'apparence","Verifications repetees au miroir","Camouflage/retouches","IMC bas et restriction alimentaire"],
+    intruder:3,
+    explanation:"L'IMC bas et la restriction alimentaire sont des criteres d'anorexie mentale. La dysmorphie est classee TOC dans le DSM-5 et porte sur un defaut SPECIFIQUE (nez, peau)."
+  },
+  {
+    ch:"Ch10", disorder:"ARFID (evitement/restriction alimentaire)",
+    items:["Aversion sensorielle (texture, odeur)","Peur de fausse route ou d'etouffer","Desinteret pour la nourriture","Peur intense de grossir"],
+    intruder:3,
+    explanation:"La peur intense de grossir est le critere de l'anorexie mentale. L'ARFID est defini par l'evitement SANS peur de prendre du poids."
+  },
+  {
+    ch:"Ch10", disorder:"TCA - Facteurs psychologiques de vulnerabilite",
+    items:["Attachement insecure","Faible estime de soi","Perfectionnisme","Hyperphagie maitrisee"],
+    intruder:3,
+    explanation:"L'hyperphagie maitrisee n'est pas un facteur de vulnerabilite. Les facteurs sont : attachement insecure, estime de soi basse, perfectionnisme, image negative."
+  },
+  // ============ Ch11 - Sexualite ============
+  {
+    ch:"Ch11", disorder:"Trouble de l'erection",
+    items:["Difficulte a obtenir l'erection","Difficulte a maintenir l'erection","Diminution de la rigidite","Ejaculation < 1 minute apres penetration"],
+    intruder:3,
+    explanation:"L'ejaculation < 1 minute definit l'ejaculation prematuree, pas le trouble de l'erection."
+  },
+  {
+    ch:"Ch11", disorder:"Trouble lié à des douleurs génito-pelviennes (femme)",
+    items:["Difficulte de penetration","Douleur vulvo-vaginale","Crispation du plancher pelvien","Absence d'orgasme"],
+    intruder:3,
+    explanation:"L'absence d'orgasme caracterise le trouble de l'orgasme chez la femme. Le trouble douloureux porte sur la douleur et la crispation, pas l'orgasme."
+  },
+  {
+    ch:"Ch11", disorder:"Dysphorie de genre (criteres)",
+    items:["Non-congruence genre vecu/assigne","Detresse cliniquement significative","Duree ≥ 6 mois","Intérêt sexuel pour des objets non animes"],
+    intruder:3,
+    explanation:"L'interet sexuel pour des objets non animes definit le fetichisme (paraphilie). La dysphorie de genre concerne l'identite, pas l'excitation."
+  },
+  {
+    ch:"Ch11", disorder:"Voyeurisme (paraphilie)",
+    items:["Observer une personne nue","La personne ne se doute de rien","Excitation persistante ≥ 6 mois","Toucher sans consentement"],
+    intruder:3,
+    explanation:"Toucher/se frotter contre une personne non consentante caracterise le frotteurisme, pas le voyeurisme qui repose sur l'observation a l'insu."
+  },
+  {
+    ch:"Ch11", disorder:"Fetichisme",
+    items:["Excitation par objets non animes","Excitation par parties non genitales (pieds, cheveux)","Persiste ≥ 6 mois","Excitation par se travestir"],
+    intruder:3,
+    explanation:"L'excitation par le fait de se travestir definit le transvestisme, pas le fetichisme qui porte sur des objets ou parties non genitales."
+  },
+  {
+    ch:"Ch11", disorder:"Pedophilie (criteres)",
+    items:["Excitation sexuelle pour enfants prepuberes (≤ 13 ans)","Auteur ≥ 16 ans","Au moins 5 ans plus age que l'enfant","Excitation par humilier/battre un adulte"],
+    intruder:3,
+    explanation:"L'excitation par humilier/battre definit le sadisme sexuel. La pedophilie porte specifiquement sur les enfants prepuberes."
+  },
+  // ============ Ch12 - Addictions ============
+  {
+    ch:"Ch12", disorder:"Trouble de l'usage de la substance - DSM-5 (criteres pharmacologiques)",
+    items:["Tolerance","Sevrage","Craving","Problemes legaux"],
+    intruder:3,
+    explanation:"Le critere des problemes legaux a ete SUPPRIME du DSM-5 par rapport au DSM-IV. Le craving a ete ajoute. Tolerance et sevrage restent des criteres pharmacologiques."
+  },
+  {
+    ch:"Ch12", disorder:"Concepts cles de l'addiction",
+    items:["Tolerance","Craving","Sevrage","Resistance"],
+    intruder:3,
+    explanation:"La RESISTANCE compare la sensibilite ENTRE plusieurs personnes (inter-individuelle), alors que tolerance, craving et sevrage sont intra-individuels et font partie des criteres d'addiction."
+  },
+  {
+    ch:"Ch12", disorder:"Phase 1 (Binge/Intoxication) - Koob & Volkow",
+    items:["Plaisir intense","Activation des ganglions de la base","CPF garde le controle","Hyperactivation de l'amygdale etendue"],
+    intruder:3,
+    explanation:"L'amygdale etendue (systeme de stress) n'est PAS encore activee en phase 1. Elle s'active en phase 2 (Withdrawal/affect negatif)."
+  },
+  {
+    ch:"Ch12", disorder:"Triade de l'addiction - Pole Individu",
+    items:["Genetique","Vulnerabilite psychique","Evenements de vie","Pression normative sociétale"],
+    intruder:3,
+    explanation:"La pression normative societale releve du POLE ENVIRONNEMENT, pas du pole Individu (genetique, vulnerabilite, evenements de vie)."
+  },
+  {
+    ch:"Ch12", disorder:"Jeu pathologique - critères diagnostiques",
+    items:["Pratique inadaptee, persistante, repetee","Altération du fonctionnement","Souffrance cliniquement significative","Sevrage physique avec convulsions"],
+    intruder:3,
+    explanation:"Le sevrage physique avec convulsions caracterise les addictions a substances (alcool, opioides). Le jeu pathologique a un sevrage psychologique (irritabilite, anxiete)."
+  },
+  {
+    ch:"Ch12", disorder:"Sophisme du joueur (Gambler's fallacy)",
+    items:["Croyance que les events passes influencent les chances futures","Pensee dans des jeux de hasard","Erreur cognitive systematique","Continuer a jouer pour recuperer ses pertes"],
+    intruder:3,
+    explanation:"Continuer a jouer pour recuperer ses pertes definit le CHASING, pas le sophisme du joueur (qui est une croyance erronee sur la probabilite)."
+  },
+  {
+    ch:"Ch12", disorder:"Modele Dual Process (Bechara, 2005)",
+    items:["Systeme d'impulsion (amygdalien)","Systeme de controle (prefrontal)","Hyperactivite impulsion + diminution controle","Renforcement intermittent comme cause unique"],
+    intruder:3,
+    explanation:"Le renforcement intermittent est specifique au jeu pathologique. Le Dual Process est un modele cognitif general expliquant l'addiction par le desequilibre impulsion/controle."
+  },
+  {
+    ch:"Ch12", disorder:"Joueur recreatif (Thomas) - critères d'EXCLUSION du jeu pathologique",
+    items:["Budget strict habituel","Pas de craving","Vie pro/sociale OK","Decline les sorties pour jouer"],
+    intruder:3,
+    explanation:"Decliner les sorties pour jouer = abandon d'activites = critere POSITIF de jeu pathologique (cas Martin). Le joueur recreatif (Thomas) maintient sa vie sociale."
   }
 ];
 

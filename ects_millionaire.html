@@ -673,7 +673,8 @@ const levels = [
   { num: 15, ects: 30, safety: true  },
 ];
 
-const questions = [
+// Pool complet des questions (Ch.1-12). 15 sont selectionnees aleatoirement par partie.
+const QUESTION_POOL = [
   {
     q: "Le mot psychopathologie vient de trois racines grecques. Que signifie 'Pathos' ?",
     answers: ["Souffrance", "Esprit", "Discours", "Maladie"],
@@ -763,8 +764,210 @@ const questions = [
     answers: ["227", "50", "127", "300"],
     correct: 0,
     hint: "C'est un nombre surprenant qui montre l'hétérogénéité... 227 combinaisons possibles !"
+  },
+  // ============ Ch9 - Vieillissement ============
+  {
+    ch:"Ch9", q:"Quel concept central decrit le vieillissement cognitif sain : alteration des fonctions frontales et preservation des fonctions posterieures ?",
+    answers:["Gradient antero-posterieur","Modele SOC","Reserve cognitive","Plasticite cerebrale"],
+    correct:0,
+    hint:"C'est LE concept cle du chapitre Vieillissement. Un gradient avec frontal touche, posterieur preserve."
+  },
+  {
+    ch:"Ch9", q:"Le modele SOC de Baltes propose 3 mecanismes d'ajustement du vieillissement. Lesquels ?",
+    answers:["Selection, Optimisation, Compensation","Stabilite, Ouverture, Compensation","Survie, Optimisation, Conformite","Selection, Organisation, Cognition"],
+    correct:0,
+    hint:"Bouisson 2007 reprend Baltes : Selectionner les objectifs, Optimiser les moyens, Compenser les pertes."
+  },
+  {
+    ch:"Ch9", q:"Le syndrome de Charles Bonnet associe quels deux elements ?",
+    answers:["Hallucinations visuelles complexes + deficit visuel (DMLA)","Hallucinations + syndrome parkinsonien","Délire d'infestation + déficit somatosensoriel","Délire de persecution + isolement"],
+    correct:0,
+    hint:"Charles Bonnet = vue affaiblie + visions complexes. Pas de parkinsonisme (ca c'est Lewy)."
+  },
+  {
+    ch:"Ch9", q:"Quelle est la 2e forme la plus frequente de TNM (Trouble NeuroCognitif Majeur) ?",
+    answers:["Demence a corps de Lewy","Demence vasculaire","Demence frontotemporale","Demence d'Alzheimer"],
+    correct:0,
+    hint:"Apres Alzheimer (1ere), c'est la demence a corps de Lewy. Hallucinations visuelles + parkinsonisme."
+  },
+  {
+    ch:"Ch9", q:"Quel est le critere diagnostique ESSENTIEL pour distinguer un etat confusionnel d'une demence ?",
+    answers:["L'installation BRUTALE","La presence d'hallucinations","Le syndrome parkinsonien","L'âge du patient"],
+    correct:0,
+    hint:"Demence = installation insidieuse, progressive. Delirium = BRUTALE, fluctuant, reversible."
+  },
+  {
+    ch:"Ch9", q:"Selon Alexopoulos (2005), le syndrome de depression dysexecutive du sujet age inclut :",
+    answers:["Inhibition de reponses, fluences, memoire de travail","Hallucinations visuelles + déficit cognitif","Désorientation + perplexité anxieuse","Perte d'autonomie progressive"],
+    correct:0,
+    hint:"Dysexecutive = atteinte des fonctions executives : inhibition, flexibilite, fluences, memoire de travail."
+  },
+  {
+    ch:"Ch9", q:"Quel echelle est specialement adaptee pour evaluer la depression chez la personne agee ?",
+    answers:["GDS (Geriatric Depression Scale)","BDI (Beck)","HADS","STAI"],
+    correct:0,
+    hint:"GDS = 30 affirmations, reponses oui/non (dichotomiques) → pratique pour la personne agee."
+  },
+  {
+    ch:"Ch9", q:"Dans les delires tardifs du sujet age, quelle est la frequence des hallucinations ?",
+    answers:["75 %","25 %","50 %","100 %"],
+    correct:0,
+    hint:"Trois quarts des delires tardifs s'accompagnent d'hallucinations, surtout vesperales et nocturnes."
+  },
+  // ============ Ch10 - TCA ============
+  {
+    ch:"Ch10", q:"Quel IMC definit l'anorexie mentale chez l'adulte (DSM-5) ?",
+    answers:["IMC < 17 kg/m²","IMC < 20","IMC < 25","IMC < 15"],
+    correct:0,
+    hint:"Le seuil est < 17. IMC ≤ 15 = severite EXTREME, mais le seuil diagnostique reste 17."
+  },
+  {
+    ch:"Ch10", q:"Les '3 A' classiques de l'anorexie mentale sont :",
+    answers:["Anorexie, Amaigrissement, Aménorrhée","Anxiete, Anhedonie, Asocialisation","Anorexie, Anxiete, Amenorrhee","Atrophie, Aménorrhée, Anémie"],
+    correct:0,
+    hint:"Triade historique : restriction (Anorexie) + poids bas (Amaigrissement) + arret regles (Amenorrhee)."
+  },
+  {
+    ch:"Ch10", q:"Dans la boulimie, quel est l'IMC habituel des patients ?",
+    answers:["Normal","< 17","> 30","Variable selon les crises"],
+    correct:0,
+    hint:"Surprise : la boulimique a un IMC NORMAL le plus souvent. C'est ce qui rend le trouble difficile a reperer."
+  },
+  {
+    ch:"Ch10", q:"Quelle est la difference essentielle entre boulimie et BED (hyperphagie) ?",
+    answers:["BED = pas de comportements compensatoires","BED = poids plus bas","BED = pas de craving","BED = duree plus courte"],
+    correct:0,
+    hint:"BED = crises SANS purge. C'est ce qui le distingue. Patients souvent en surpoids/obesite."
+  },
+  {
+    ch:"Ch10", q:"Dans quel groupe diagnostique le DSM-5 classe-t-il la dysmorphie corporelle ?",
+    answers:["Parmi les TOC (et non les TCA)","Parmi les TCA","Parmi les troubles dissociatifs","Parmi les troubles somatoformes"],
+    correct:0,
+    hint:"Piege ! La dysmorphie est dans les TOC, pas les TCA. La preoccupation porte sur un defaut SPECIFIQUE."
+  },
+  {
+    ch:"Ch10", q:"L'ARFID se distingue de l'anorexie par :",
+    answers:["Absence de peur de grossir","IMC plus bas","Crises alimentaires","Vomissements provoques"],
+    correct:0,
+    hint:"ARFID = restriction PAS motivée par la peur de grossir, mais par aversion sensorielle, peur d'etouffer, desinteret."
+  },
+  // ============ Ch11 - Sexualite ============
+  {
+    ch:"Ch11", q:"Quelle est la duree minimale pour diagnostiquer une dysfonction sexuelle (DSM-5) ?",
+    answers:["≥ 6 mois","≥ 1 mois","≥ 3 mois","≥ 12 mois"],
+    correct:0,
+    hint:"6 mois pour la majorite des troubles sexuels avec detresse cliniquement significative."
+  },
+  {
+    ch:"Ch11", q:"Quel modele a introduit la notion de DESIR sexuel comme phase distincte ?",
+    answers:["Helen Kaplan (3 phases)","Masters & Johnson (4 phases)","Beck","Freud"],
+    correct:0,
+    hint:"Masters & Johnson = excitation, plateau, orgasme, resolution (4). Kaplan a ajoute le DESIR avant : 3 phases."
+  },
+  {
+    ch:"Ch11", q:"L'éjaculation prematuree est definie par une éjaculation en moins de :",
+    answers:["1 minute après pénétration","30 secondes","2 minutes","5 minutes"],
+    correct:0,
+    hint:"DSM-5 : moins de 1 minute apres pénétration, avant que la personne le souhaite."
+  },
+  {
+    ch:"Ch11", q:"Quelle est la difference clé entre paraphilie et trouble paraphilique ?",
+    answers:["Le trouble paraphilique implique detresse OU non-consentement","Le trouble est plus chronique","Le trouble inclut des hallucinations","Le trouble necessite un traitement"],
+    correct:0,
+    hint:"Paraphilie = interet atypique. Trouble paraphilique = paraphilie + detresse OU passage a l'acte avec personne non consentante."
+  },
+  {
+    ch:"Ch11", q:"Le frotteurisme se caracterise par :",
+    answers:["Toucher/se frotter contre une personne non consentante","Observer une personne nue à son insu","Exhiber ses organes génitaux","Excitation par objets non animés"],
+    correct:0,
+    hint:"Frotter (frotteurisme) = toucher/frotter sans consentement. Souvent dans les transports en commun."
+  },
+  {
+    ch:"Ch11", q:"La pédophilie est définie par une attirance pour des enfants :",
+    answers:["Prepuberes (≤ 13 ans)","Adolescents (14-17 ans)","Tout enfant mineur","De moins de 18 ans"],
+    correct:0,
+    hint:"DSM-5 : enfants prepuberes (≤ 13 ans). Auteur ≥ 16 ans et au moins 5 ans plus age que l'enfant."
+  },
+  // ============ Ch12 - Addictions ============
+  {
+    ch:"Ch12", q:"Quel etymologie latine est a l'origine du mot 'addiction' ?",
+    answers:["Ad-dicere (dit a, esclave romain)","Addictum (esclavage)","Ad-dictio (lien)","Dicere (parler)"],
+    correct:0,
+    hint:"Ad-dicere = 'dit a'. Esclaves romains 'dits a' leur Pater familias = appartenance, perte de souveraineté."
+  },
+  {
+    ch:"Ch12", q:"En quelle annee l'OMS remplace-t-elle 'addiction' par 'dependance' dans le vocabulaire scientifique ?",
+    answers:["1964","1990","1980","1957"],
+    correct:0,
+    hint:"Le virage de l'OMS date de 1964. Volonté de dépathologiser et neutraliser le langage."
+  },
+  {
+    ch:"Ch12", q:"Quelle est la difference DSM-IV → DSM-5 la plus emblematique pour les addictions ?",
+    answers:["Apparition d'un continuum + ajout du craving","Suppression du critere tolerance","Ajout du critere problemes legaux","Categorisation par substance"],
+    correct:0,
+    hint:"Disparition de la distinction abus/dependance, continuum (leger/modere/severe), AJOUT du craving, SUPPRESSION du critere legal."
+  },
+  {
+    ch:"Ch12", q:"Selon le DSM-5, combien de criteres au minimum pour parler de dependance ?",
+    answers:["≥ 2 sur 11","≥ 5 sur 11","≥ 7 sur 11","≥ 3 sur 11"],
+    correct:0,
+    hint:"DSM-5 : 2/11 minimum. 2-3=leger, 4-5=modere, ≥6=severe."
+  },
+  {
+    ch:"Ch12", q:"Le modele Opponent Process est attribue a quel auteur, en quelle annee ?",
+    answers:["Solomon, 1977","Goodman, 1990","Bechara, 2005","Festinger, 1957"],
+    correct:0,
+    hint:"Solomon (1977) decrit l'evolution temporelle de l'addiction comme un passage du plaisir au manque."
+  },
+  {
+    ch:"Ch12", q:"Le modele Dual Process en addictologie est attribue a :",
+    answers:["Bechara (2005), repris par Wiers (2009)","Solomon (1977)","Koob & Volkow","West (2011)"],
+    correct:0,
+    hint:"Bechara 2005 + Wiers 2009 : 2 systemes (impulsion vs controle). Hyperactivite impulsion + diminution controle."
+  },
+  {
+    ch:"Ch12", q:"Quelle est la difference entre TOLERANCE et RESISTANCE ?",
+    answers:["Tolerance = intra-individuelle, Resistance = inter-individuelle","Tolerance = physique, Resistance = psychique","Tolerance = volontaire, Resistance = involontaire","Aucune, ce sont des synonymes"],
+    correct:0,
+    hint:"Piege QCM ! Tolerance = mes propres effets diminuent dans le temps. Resistance = comparer a une autre personne."
+  },
+  {
+    ch:"Ch12", q:"Dans le modele de Koob & Volkow, quelle zone est centrale en Phase 2 (Withdrawal/Negative affect) ?",
+    answers:["Amygdale etendue (système de stress)","Cortex préfrontal (controle)","Ganglions de la base (récompense)","Hippocampe (mémoire)"],
+    correct:0,
+    hint:"Phase 2 = bascule. AE activée (stress, dysphorie). On consomme pour soulager le manque, plus pour le plaisir."
+  },
+  {
+    ch:"Ch12", q:"Le sophisme du joueur consiste a croire que :",
+    answers:["Les events passes influencent les chances futures dans des jeux indépendants","On peut toujours gagner si on persévère","Le casino est rigge","La chance est cyclique"],
+    correct:0,
+    hint:"Apres 5 rouges, le noir DOIT sortir : c'est le sophisme du joueur (Gambler's fallacy)."
+  },
+  {
+    ch:"Ch12", q:"Le 'chasing' dans le jeu pathologique designe :",
+    answers:["Continuer a jouer pour récupérer ses pertes","Augmenter les mises pour le frisson","Cacher ses pertes a l'entourage","Rejouer la même mise"],
+    correct:0,
+    hint:"Chasing = courir apres les pertes. 'Je dois jouer encore pour me refaire'."
+  },
+  {
+    ch:"Ch12", q:"Quelle est la 1ère addiction comportementale officiellement reconnue ?",
+    answers:["Jeu pathologique (DSM-5, 2013)","Addiction aux jeux video","Addiction au sexe","Achat compulsif"],
+    correct:0,
+    hint:"Le gambling disorder est entré dans le DSM-5 en 2013. Le gaming disorder n'est que dans la CIM-11."
   }
 ];
+
+// Liste effective des questions pour la partie en cours (15 selectionnees aleatoirement)
+let questions = [];
+
+function selectQuestionsForGame() {
+  const pool = [...QUESTION_POOL];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  questions = pool.slice(0, 15);
+}
 
 // ===================== AUDIO =====================
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -840,6 +1043,7 @@ function showScreen(id) {
 
 // ===================== START =====================
 function startGame() {
+  selectQuestionsForGame();  // pick 15 random questions from the full Ch.1-12 pool
   currentLevel = 0;
   selectedAnswer = -1;
   lifelines = { fifty: true, friend: true, public: true };

@@ -130,7 +130,7 @@
 <div class="stats">
   <span id="timer">&#9201; 0:00</span>
   <span id="moves">&#9997; 0 coups</span>
-  <span id="roundLabel">&#127922; Manche 1/4</span>
+  <span id="roundLabel">&#127922; Manche 1</span>
 </div>
 <div class="round-info" id="roundTitle">Troubles de la personnalite</div>
 
@@ -159,7 +159,7 @@
 <script>
 const ROUNDS = [
   {
-    title:"Troubles de la personnalite (Cluster A-B)",
+    title:"Troubles de la personnalite (Cluster A-B)", ch:"Ch1-2",
     pairs:[
       ["TP paranoiaque","Mefiance et suspicion envahissantes"],
       ["TP schizoide","Detachement social et froideur emotionnelle"],
@@ -170,7 +170,7 @@ const ROUNDS = [
     ]
   },
   {
-    title:"Troubles de la personnalite (suite)",
+    title:"Troubles de la personnalite (suite)", ch:"Ch1-2",
     pairs:[
       ["TP histrionique","Recherche d'attention et theatralisme"],
       ["TP evitante","Inhibition sociale et peur du rejet"],
@@ -181,7 +181,7 @@ const ROUNDS = [
     ]
   },
   {
-    title:"Troubles anxieux et autres",
+    title:"Troubles anxieux et autres", ch:"Ch3-5",
     pairs:[
       ["Attaque de panique","Peur intense soudaine avec symptomes somatiques"],
       ["Agoraphobie","Peur des endroits d'ou on ne peut s'echapper"],
@@ -192,7 +192,7 @@ const ROUNDS = [
     ]
   },
   {
-    title:"Troubles de l'humeur et schizophrenie",
+    title:"Troubles de l'humeur et schizophrenie", ch:"Ch6-8",
     pairs:[
       ["Depression (EDM)","Humeur basse min 2 semaines + anhedonie"],
       ["Trouble bipolaire I","Alternance phases maniaques et depressives"],
@@ -200,6 +200,94 @@ const ROUNDS = [
       ["BDA (Bouffee delirante)","Episode psychotique bref < 1 mois"],
       ["Trouble schizo-affectif","Symptomes psychotiques persistant entre episodes thymiques"],
       ["Cyclothymie","Alternance depression moderee et hypomanie"],
+    ]
+  },
+  {
+    title:"Vieillissement - Concepts cles", ch:"Ch9",
+    pairs:[
+      ["Gradient antero-posterieur","Fonctions frontales alterees, post\u00e9rieures preservees"],
+      ["Modele SOC (Baltes)","Selection, Optimisation, Compensation"],
+      ["Syndrome de Charles Bonnet","Hallucinations visuelles + deficit visuel (DMLA)"],
+      ["Syndrome d'Ekbom","Delire d'infestation parasitaire sous la peau"],
+      ["Demence a corps de Lewy","Hallucinations visuelles + syndrome parkinsonien"],
+      ["Etat confusionnel (delirium)","Installation brutale, fluctuant, reversible"],
+    ]
+  },
+  {
+    title:"Vieillissement - Diagnostic differentiel", ch:"Ch9",
+    pairs:[
+      ["Maladie d'Alzheimer","Declin progressif insidieux + \u22652 domaines (NIA-AA 2018)"],
+      ["Depression dysexecutive (Alexopoulos)","Inhibition, fluences, memoire de travail alterees"],
+      ["Delire tardif","De novo chez sujet age, hallucinations vesp\u00e9rales"],
+      ["Paraphrenie","D\u00e9lire parano\u00efde sans troubles cognitifs, monde superpose"],
+      ["GDS (Geriatric Depression Scale)","30 items oui/non adaptee a la personne agee"],
+      ["Sandra Invernizzi","Titulaire du cours de psychopathologie du vieillissement"],
+    ]
+  },
+  {
+    title:"TCA - Troubles alimentaires", ch:"Ch10",
+    pairs:[
+      ["Anorexie restrictive","Restriction + IMC<17 + dysmorphophobie + peur de grossir"],
+      ["Boulimie","Crises + comportements compensatoires + poids normal"],
+      ["BED (hyperphagie)","Crises sans purge, souvent surpoids/obesite"],
+      ["Dysmorphie corporelle","Defaut d'apparence imagine, classee TOC (pas TCA)"],
+      ["ARFID","Evitement alimentaire sans peur de grossir"],
+      ["Pica","Ingestion persistante de substances non nutritives"],
+    ]
+  },
+  {
+    title:"TCA - Vulnerabilite et concepts", ch:"Ch10",
+    pairs:[
+      ["Dysmorphophobie","Alteration de la perception du corps (anorexie)"],
+      ["3 A de l'anorexie","Anorexie, Amaigrissement, Amenorrhee"],
+      ["M\u00e9rycisme","R\u00e9gurgitation r\u00e9p\u00e9t\u00e9e d'aliments"],
+      ["Dany Lallement","Doctorante - cours TCA et image du corps"],
+      ["Perfectionnisme","Facteur psychologique majeur des TCA"],
+      ["TCC + ISRS","Traitement de premiere ligne des TCA"],
+    ]
+  },
+  {
+    title:"Sexualite - Dysfonctions et identite", ch:"Ch11",
+    pairs:[
+      ["Trouble de l'erection","Difficulte d'erection \u22656 mois avec detresse"],
+      ["Ejaculation prematuree","Ejaculation < 1 minute apres p\u00e9n\u00e9tration"],
+      ["Dyspareunie/Vaginisme","Douleur g\u00e9nito-pelvienne, crispation du plancher pelvien"],
+      ["Dysphorie de genre","Non-congruence genre vecu/assigne avec detresse \u22656 mois"],
+      ["Masters & Johnson","Modele en 4 phases de la reponse sexuelle"],
+      ["Helen Kaplan","Modele en 3 phases (desir, excitation, orgasme)"],
+    ]
+  },
+  {
+    title:"Sexualite - Paraphilies", ch:"Ch11",
+    pairs:[
+      ["Voyeurisme","Observer une personne qui ne se doute de rien"],
+      ["Frotteurisme","Toucher/se frotter contre personne non consentante"],
+      ["Fetichisme","Excitation par objets non animes ou parties non genitales"],
+      ["Pedophilie","Activite sexuelle avec enfant prepubere (\u226413 ans)"],
+      ["Trouble paraphilique","Paraphilie + detresse OU non-consentement"],
+      ["Michel Sfeir","Titulaire du cours sur troubles sexuels"],
+    ]
+  },
+  {
+    title:"Addictions - Concepts fondamentaux", ch:"Ch12",
+    pairs:[
+      ["Craving","Envie irr\u00e9pressible de consommer (moteur cognitif de la rechute)"],
+      ["Tolerance","Augmenter les doses pour obtenir le meme effet"],
+      ["Sevrage","Troubles somatiques a l'arret de la consommation"],
+      ["Sophisme du joueur","Croire que les evenements passes influencent les chances futures"],
+      ["Chasing","Continuer a jouer pour r\u00e9cup\u00e9rer ses pertes"],
+      ["Goodman (1990)","Definition operatoire de l'addiction"],
+    ]
+  },
+  {
+    title:"Addictions - Modeles theoriques", ch:"Ch12",
+    pairs:[
+      ["Solomon (1977)","Modele Opponent Process : plaisir \u2192 manque"],
+      ["Bechara (2005)","Modele Dual Process (impulsion vs controle)"],
+      ["Koob & Volkow","3 phases : Binge / Withdrawal / Preoccupation"],
+      ["Dependance physique","Tremblements, sueurs, convulsions au sevrage"],
+      ["Dependance psychologique","Craving, recherche compulsive"],
+      ["Jeu pathologique","1ere addiction comportementale reconnue (DSM-5)"],
     ]
   }
 ];
@@ -230,7 +318,7 @@ function buildRound(idx){
   currentRound=idx;
   moves=0;matchedCount=0;firstCard=null;secondCard=null;lockBoard=false;
   movesEl.textContent='\u270D 0 coups';
-  roundLabel.textContent='\u{1F3B2} Manche '+(idx+1)+'/4';
+  roundLabel.textContent='\u{1F3B2} Manche '+(idx+1)+'/'+ROUNDS.length;
   roundTitle.textContent=ROUNDS[idx].title;
   board.innerHTML='';
 
@@ -299,7 +387,7 @@ function roundComplete(){
   document.getElementById('modalStars').innerHTML=starsHTML(stars);
   document.getElementById('modalStats').textContent=moves+' coups en '+formatTime(seconds);
 
-  if(currentRound<3){
+  if(currentRound<ROUNDS.length-1){
     document.getElementById('modalTitle').textContent='Manche '+(currentRound+1)+' terminee !';
     document.getElementById('modalBtn').textContent='Manche suivante';
     document.getElementById('modalBtn').onclick=()=>{ov.classList.remove('show');buildRound(currentRound+1)};
@@ -313,7 +401,7 @@ function roundComplete(){
 }
 
 function showEnd(){
-  const avg=Math.round(totalMoves/4);
+  const avg=Math.round(totalMoves/ROUNDS.length);
   const stars=getStars(avg);
   document.getElementById('endStars').innerHTML=starsHTML(stars);
   document.getElementById('endStats').textContent=

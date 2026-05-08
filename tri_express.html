@@ -122,7 +122,7 @@ body{background:#0a0a1a;color:#eee;font-family:'Segoe UI',Tahoma,Geneva,Verdana,
 <script>
 const LEVELS = [
   {
-    name: "Trier les Troubles de la Personnalite par Cluster",
+    ch:"Ch1-2", name: "Trier les Troubles de la Personnalite par Cluster",
     buckets: ["Cluster A (bizarre)","Cluster B (dramatique)","Cluster C (anxieux)"],
     items: [
       {text:"Paranoiaque",answer:0},{text:"Schizoide",answer:0},{text:"Schizotypique",answer:0},
@@ -170,6 +170,107 @@ const LEVELS = [
       {text:"Paraphrenie",answer:2}
     ],
     speed:0.65, spawnInterval:2400
+  },
+  // ============ Ch9 - Vieillissement ============
+  {
+    ch:"Ch9", name:"Vieillissement : altere vs preserve (gradient antero-posterieur)",
+    buckets:["Fonctions altérées (frontales)","Fonctions préservées (postérieures)"],
+    items:[
+      {text:"Vitesse de traitement",answer:0},{text:"Memoire de travail",answer:0},
+      {text:"Memoire epi sodique",answer:0},{text:"Memoire prospective",answer:0},
+      {text:"Raisonnement",answer:0},{text:"Fonctions executives",answer:0},
+      {text:"Habiletes verbales",answer:1},{text:"Memoire semantique",answer:1},
+      {text:"Memoire implicite (procedurale)",answer:1},{text:"Vocabulaire",answer:1}
+    ],
+    speed:0.6, spawnInterval:2700
+  },
+  {
+    ch:"Ch9", name:"Vieillissement : Demence (TNM) vs Delirium vs Delire tardif",
+    buckets:["Demence (Alzheimer)","Etat confusionnel (delirium)","Delire tardif"],
+    items:[
+      {text:"Installation insidieuse",answer:0},{text:"Declin progressif sur annees",answer:0},
+      {text:"Irréversible",answer:0},{text:"Atteinte ≥ 2 domaines cognitifs",answer:0},
+      {text:"Installation BRUTALE",answer:1},{text:"Fluctuant",answer:1},
+      {text:"Reversible en quelques semaines",answer:1},{text:"Cause organique",answer:1},
+      {text:"Apparition de novo, sujet age isolé",answer:2},{text:"Hallucinations vespérales",answer:2},
+      {text:"Délires de persecution/jalousie",answer:2},{text:"Pas de troubles cognitifs globaux",answer:2}
+    ],
+    speed:0.65, spawnInterval:2500
+  },
+  // ============ Ch10 - TCA ============
+  {
+    ch:"Ch10", name:"TCA : trier les troubles alimentaires",
+    buckets:["Anorexie mentale","Boulimie","BED (hyperphagie)","Dysmorphie/ARFID/Pica"],
+    items:[
+      {text:"IMC < 17",answer:0},{text:"Aménorrhée",answer:0},{text:"Restriction + peur de grossir",answer:0},
+      {text:"Hyperactivité physique",answer:0},
+      {text:"Crises + vomissements",answer:1},{text:"Poids souvent normal",answer:1},
+      {text:"Estime de soi liee au poids",answer:1},
+      {text:"Crises sans purge",answer:2},{text:"Manger seul par gene",answer:2},
+      {text:"Surpoids/obesite frequente",answer:2},
+      {text:"Defaut d'apparence imagine",answer:3},{text:"Aversion sensorielle aux aliments",answer:3},
+      {text:"Ingestion de substances non nutritives",answer:3}
+    ],
+    speed:0.6, spawnInterval:2600
+  },
+  // ============ Ch11 - Sexualite ============
+  {
+    ch:"Ch11", name:"Sexualite : trier les troubles",
+    buckets:["Dysfonction sexuelle","Dysphorie de genre","Trouble paraphilique"],
+    items:[
+      {text:"Trouble de l'erection",answer:0},{text:"Ejaculation prematuree",answer:0},
+      {text:"Ejaculation retardee",answer:0},{text:"Trouble de l'orgasme",answer:0},
+      {text:"Trouble douleur génito-pelvienne",answer:0},
+      {text:"Trouble du desir hypoactif",answer:0},
+      {text:"Non-congruence genre vecu/assigné",answer:1},{text:"Désir d'être de l'autre sexe",answer:1},
+      {text:"Voyeurisme",answer:2},{text:"Exhibitionnisme",answer:2},{text:"Frotteurisme",answer:2},
+      {text:"Fetichisme",answer:2},{text:"Pédophilie",answer:2},{text:"Sadisme/Masochisme sexuel",answer:2},
+      {text:"Transvestisme (excitation)",answer:2}
+    ],
+    speed:0.65, spawnInterval:2400
+  },
+  // ============ Ch12 - Addictions ============
+  {
+    ch:"Ch12", name:"Addictions : 4 niveaux d'usage (gradient pédagogique)",
+    buckets:["Usage simple (non patho)","Usage nocif (sans dépendance)","Dépendance"],
+    items:[
+      {text:"Consommation expérimentale",answer:0},{text:"Pas de dommages court terme",answer:0},
+      {text:"Verre social occasionnel",answer:0},
+      {text:"Consommation épisodique",answer:1},{text:"Dommages physiques/psychiques",answer:1},
+      {text:"Pas de craving",answer:1},{text:"Sans symptômes de manque",answer:1},
+      {text:"Tolérance",answer:2},{text:"Sevrage à l'arrêt",answer:2},
+      {text:"Craving",answer:2},{text:"Perte de contrôle",answer:2},
+      {text:"Maintien malgré conséquences",answer:2}
+    ],
+    speed:0.6, spawnInterval:2500
+  },
+  {
+    ch:"Ch12", name:"Addictions : 3 phases de Koob & Volkow",
+    buckets:["Phase 1 (Binge/Intox)","Phase 2 (Withdrawal)","Phase 3 (Preoccupation)"],
+    items:[
+      {text:"Plaisir, euphorie",answer:0},{text:"Activation des GB",answer:0},
+      {text:"CPF garde le contrôle",answer:0},{text:"AE silencieuse",answer:0},
+      {text:"Apprentissage substance = plaisir",answer:0},
+      {text:"Dysphorie, manque",answer:1},{text:"AE activée",answer:1},
+      {text:"Renforcement négatif",answer:1},{text:"Plus de plaisir, soulagement",answer:1},
+      {text:"Obsession, craving",answer:2},{text:"Perte de contrôle CPF",answer:2},
+      {text:"Anhédonie (perte de récompense)",answer:2},{text:"Rechute facile",answer:2}
+    ],
+    speed:0.65, spawnInterval:2400
+  },
+  {
+    ch:"Ch12", name:"Addictions : trier les concepts cles",
+    buckets:["Concept psychologique","Concept biomédical","Concept social/environnemental"],
+    items:[
+      {text:"Craving",answer:0},{text:"Sophisme du joueur",answer:0},
+      {text:"Dissonance cognitive (Festinger)",answer:0},{text:"Renforcement positif/negatif",answer:0},
+      {text:"Modèle Dual Process (Bechara)",answer:0},
+      {text:"Polymorphisme 5-HTTLPR",answer:1},{text:"Récepteurs DRD2/DRD4",answer:1},
+      {text:"Neuroadaptation d'opposition",answer:1},{text:"Axe NA-ATV (récompense)",answer:1},
+      {text:"Pression normative",answer:2},{text:"Modèles familiaux",answer:2},
+      {text:"Statut légal du produit",answer:2},{text:"Pression des pairs",answer:2}
+    ],
+    speed:0.7, spawnInterval:2300
   }
 ];
 

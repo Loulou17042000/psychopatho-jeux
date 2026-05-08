@@ -197,6 +197,7 @@ body{
 
 <script>
 // ==================== DATA ====================
+// Note: items existants conserves; nouveaux items Ch9-12 ajoutes a la fin avec tag ch:"ChX"
 const DATA = [
   {
     disorder: "TP Borderline",
@@ -272,6 +273,105 @@ const DATA = [
     disorder: "Anorexie mentale",
     yes: ["Restriction alimentaire","Peur de grossir","Distorsion image corporelle","IMC bas","Amenorrhee","Hyperactivite physique","Deni de maigreur","Preoccupation alimentaire"],
     no: ["Hallucinations","Idees delirantes","Flashbacks","Grandiosite","Euphorie","Absence de remords","Logorrhee","Compulsions ritualisees"]
+  },
+  // ============ Ch9 - Vieillissement ============
+  {
+    ch:"Ch9", disorder:"Syndrome de Charles Bonnet",
+    yes:["Hallucinations visuelles complexes","Hallucinations vespérales","Deficit visuel (DMLA, cataracte)","Le patient croit a ses hallucinations","Sujet age","Conscience des troubles visuels","Personnages humains halluciné","Pas de troubles cognitifs majeurs"],
+    no:["Syndrome parkinsonien","Installation brutale","Pensee magique","Anhedonie","Compulsions ritualisees","Tolerance et sevrage","Restriction alimentaire","Ejaculation prematuree"]
+  },
+  {
+    ch:"Ch9", disorder:"Demence a corps de Lewy",
+    yes:["Hallucinations visuelles detaillees","Syndrome parkinsonien (extrapyramidal)","Troubles du sommeil paradoxal","Intolerance aux neuroleptiques","Deficit en acetylcholine et dopamine","Debut vers 60 ans","2e forme la plus frequente de TNM","Reves agites et cris nocturnes"],
+    no:["Installation en quelques heures","Peur intense de grossir","Craving","Compulsions de lavage","Phase maniaque","Hallucinations auditives","Restriction alimentaire","Logorrhee"]
+  },
+  {
+    ch:"Ch9", disorder:"Etat confusionnel (delirium)",
+    yes:["Installation brutale","Obnubilation intellectuelle","Desorientation spatiotemporelle","Fluctuation de l'humeur","Perplexité anxieuse","Etat transitoire et reversible","Cause organique","Amnesie lacunaire de l'episode"],
+    no:["Declin progressif sur des annees","Sevrage de cocaine","Hallucinations visuelles complexes vespérales","Tolerance","Craving","Restriction alimentaire","Pensee magique","Idees delirantes systématisées"]
+  },
+  {
+    ch:"Ch9", disorder:"Maladie d'Alzheimer",
+    yes:["Declin cognitif progressif","Insidieux","Atteinte ≥ 2 domaines cognitifs","Manque du mot","Difficultes spatiales","Anhedonie / perte d'interet","Perte d'autonomie au stade modere","Comportements de retrait"],
+    no:["Installation brutale","Hallucinations dans 75% des cas","Reversible spontanement","Phase maniaque","Compulsions","Craving","Restriction alimentaire","Pensee magique"]
+  },
+  {
+    ch:"Ch9", disorder:"Delire tardif du sujet age",
+    yes:["Apparition de novo chez sujet age","Délires de persecution","Délires de jalousie","Hallucinations vespérales/nocturnes (75% des cas)","Isolement et solitude","Compagnon tardif imaginaire","Délires d'intrusion/spoliation","Pas de troubles cognitifs globaux"],
+    no:["Syndrome parkinsonien","Installation brutale","Restriction alimentaire","Tolerance et sevrage","Phase maniaque","Compulsions","Craving","Anorexie"]
+  },
+  // ============ Ch10 - TCA ============
+  {
+    ch:"Ch10", disorder:"Boulimie",
+    yes:["Crises hyperphagiques","Comportements compensatoires (vomissements, laxatifs)","Sentiment de perte de controle","Estime de soi liee au poids","Poids souvent normal","Frequence ≥ 1 fois/semaine pendant 3 mois","Jeunes femmes","Sport excessif"],
+    no:["IMC < 17","Hallucinations","Délires","Pensee magique","Phase maniaque","Pas de comportement compensatoire","Compulsions de lavage","Tolerance"]
+  },
+  {
+    ch:"Ch10", disorder:"BED (hyperphagie boulimique)",
+    yes:["Crises hyperphagiques","Manger jusqu'a inconfortablement rassasie","Manger seul par gene","Sentiment de degout/coupabilite","Detresse marquée","PAS de comportement compensatoire","Souvent surpoids/obesite","Manger sans faim physique"],
+    no:["Vomissements provoqués","IMC < 17","Restriction alimentaire stricte","Hallucinations","Phase maniaque","Délires","Hypervigilance","Aménorrhée"]
+  },
+  {
+    ch:"Ch10", disorder:"Dysmorphie corporelle",
+    yes:["Inquietude pour un defaut d'apparence","Defaut non observable ou minime","Verifications repetees au miroir","Toilettage excessif","Camouflage","Detresse importante","Debut a l'adolescence","Classee parmi les TOC"],
+    no:["IMC < 17","Restriction alimentaire","Crises hyperphagiques","Sevrage","Tolerance","Hallucinations","Phase maniaque","Désir d'avoir les caractères de l'autre sexe"]
+  },
+  {
+    ch:"Ch10", disorder:"ARFID",
+    yes:["Evitement des aliments","Aversion sensorielle (texture, odeur)","Peur de fausse route ou d'etouffer","Desinteret pour la nourriture","Restriction des apports","Pas de peur de grossir","Apparition souvent dans l'enfance","Carences nutritionnelles possibles"],
+    no:["Peur intense de grossir","Distorsion image corporelle","Aménorrhée","Hyperactivité physique","Crises hyperphagiques","Vomissements provoqués","Compulsions ritualisees","Hallucinations"]
+  },
+  // ============ Ch11 - Sexualite ============
+  {
+    ch:"Ch11", disorder:"Trouble de l'erection",
+    yes:["Difficulte a obtenir l'erection","Difficulte a maintenir l'erection","Diminution de la rigidite","Detresse cliniquement significative","Duree ≥ 6 mois","Composante psychologique frequente","Angoisse de performance","Repondu au traitement par Viagra"],
+    no:["Ejaculation < 1 minute","Absence d'orgasme","Restriction alimentaire","Hallucinations","Compulsions","Sevrage","Pensee magique","Crises hyperphagiques"]
+  },
+  {
+    ch:"Ch11", disorder:"Dysphorie de genre",
+    yes:["Non-congruence genre vecu/assigné","Detresse cliniquement significative","Désir d'avoir les caractères de l'autre sexe","Désir d'etre traité comme l'autre genre","Duree ≥ 6 mois","Conviction d'avoir les sentiments de l'autre genre","Comorbidités anxio-dépressives frequentes","Demande de transition"],
+    no:["Excitation sexuelle a se travestir","Excitation pour objets non animes","Pensee magique","Hallucinations","Compulsions","Tolerance","Sevrage","Restriction alimentaire"]
+  },
+  {
+    ch:"Ch11", disorder:"Voyeurisme",
+    yes:["Excitation a observer une personne","La personne ne se doute de rien","Personne nue ou en activite sexuelle","Persiste ≥ 6 mois","Fantasmes ou comportements","Détresse OU non-consentement","Sous forme de pulsions intenses","Comportement repete"],
+    no:["Toucher la personne sans son consentement","Exhiber ses organes","Excitation par etre attache","Ejaculation prematuree","Restriction alimentaire","Crises hyperphagiques","Hallucinations","Compulsions"]
+  },
+  {
+    ch:"Ch11", disorder:"Frotteurisme",
+    yes:["Toucher/se frotter contre une personne","Personne non consentante","Souvent dans la foule (transports)","Excitation sexuelle ≥ 6 mois","Passage a l'acte","Conduite repetee","Pulsions sexuelles intenses","Comportement clandestin"],
+    no:["Observer une personne nue a son insu","Excitation par enfant prepubere","Anhedonie","Restriction alimentaire","Hallucinations","Compulsions ritualisees","Phase maniaque","Sevrage"]
+  },
+  {
+    ch:"Ch11", disorder:"Fetichisme",
+    yes:["Excitation par des objets non animes","Excitation par parties non genitales","Persiste ≥ 6 mois","Detresse ou alteration du fonctionnement","Recurrence des fantasmes","Pulsions intenses","Comportement specifique","Objets typiques (chaussures, sous-vetements)"],
+    no:["Excitation par enfant","Excitation a se travestir (identite)","Toucher sans consentement","Restriction alimentaire","Crises hyperphagiques","Hallucinations","Phase maniaque","Compulsions"]
+  },
+  // ============ Ch12 - Addictions ============
+  {
+    ch:"Ch12", disorder:"Trouble de l'usage de l'alcool (sévère)",
+    yes:["Consommation quotidienne","Tolerance (augmentation des doses)","Sevrage (tremblements, sueurs)","Craving","Perte de controle","Abandon d'activites","Maintien malgre conséquences","Plus de 6 critères DSM-5"],
+    no:["Restriction alimentaire","Hallucinations vespérales chez sujet age","Délires de jalousie sans alcool","Compulsions de verification","Pensee magique","Phase maniaque pure","Idees suicidaires sans craving","Crises hyperphagiques"]
+  },
+  {
+    ch:"Ch12", disorder:"Jeu pathologique (Martin)",
+    yes:["Joue plus longtemps que prevu","Augmente les mises pour le frisson (tolerance)","Irritabilite a l'arret (sevrage)","Craving","Decline les sorties","Problemes pro et conjugaux","Pattern persistant sur des annees","Pensees intrusives liees au jeu"],
+    no:["Budget strict respecté","Pas de retentissement social","Vie pro intacte","Restriction alimentaire","Hallucinations","Délires","Compulsions de lavage","Phase maniaque"]
+  },
+  {
+    ch:"Ch12", disorder:"Joueur recreatif (Thomas) - PAS de jeu pathologique",
+    yes:["Budget strict habituel","Pas de craving","Pas de manque a l'arret","Vie pro/sociale OK","Joue lors d'evenements ponctuels","Dérapage isolé tolérable","Controle preserve","Pas de pattern persistant"],
+    no:["Pattern quotidien","Tolerance progressive","Sevrage psychologique","Pensees intrusives","Abandon d'activites","Avertissements employeur","Conflits couple","Echec des tentatives d'arret"]
+  },
+  {
+    ch:"Ch12", disorder:"Sevrage alcoolique",
+    yes:["Tremblements","Sueurs froides","Anxiete","Convulsions possibles","Apparition apres arret","Manifestations physiques","Lié a la dépendance physique","Reversibilité avec substitution"],
+    no:["Hallucinations visuelles complexes vespérales","Restriction alimentaire","Délires de persecution chez sujet age","Pensee magique","Compulsions ritualisees","Phase maniaque","Anhédonie isolée","Crises hyperphagiques"]
+  },
+  {
+    ch:"Ch12", disorder:"Phase 3 (Preoccupation/Anticipation) - Koob & Volkow",
+    yes:["Obsession de la prochaine consommation","Craving permanent","Anhedonie (rien d'autre ne fait plaisir)","Perte de controle totale du CPF","Hyperactivité de l'amygdale étendue","Diminution du système de récompense","Rechute facile","Stress chronique"],
+    no:["Plaisir intense","CPF intact","Phase d'apprentissage","Système de récompense au pic","Restriction alimentaire","Hallucinations","Délires","Compulsions de lavage"]
   }
 ];
 
