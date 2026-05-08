@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tri Express TCA — Chapitre 10</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{background:#0f0f1a;color:#e2e8f0;min-height:100vh;padding:18px;overflow-x:hidden}
+.wrap{max-width:980px;margin:0 auto}
+h1{font-size:1.8rem;font-weight:800;text-align:center;background:linear-gradient(135deg,#DB2777,#F472B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2px}
+.subtitle{text-align:center;color:#94a3b8;font-size:.95rem;margin-bottom:14px}
+
+/* HUD */
+.hud{display:flex;justify-content:space-between;align-items:center;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:12px;padding:10px 16px;margin-bottom:12px;font-size:.9rem;flex-wrap:wrap;gap:10px}
+.hud .item{display:flex;align-items:center;gap:6px}
+.hud .label{color:#94a3b8}
+.hud .value{color:#F472B6;font-weight:700}
+
+/* Card to classify */
+.card-zone{background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:24px;margin-bottom:14px;text-align:center;min-height:130px;display:flex;flex-direction:column;justify-content:center}
+.card-zone .clue-label{font-size:.7rem;letter-spacing:1.5px;color:#DB2777;font-weight:700;margin-bottom:8px;text-transform:uppercase}
+.card-zone .clue{font-size:1.05rem;font-weight:600;line-height:1.5;color:#fbcfe8}
+
+/* Bucket grid (7 buckets) */
+.buckets{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+@media (min-width:560px){.buckets{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:820px){.buckets{grid-template-columns:repeat(4,1fr)}}
+.bucket{background:#16162a;border:2px solid #2a2a3e;border-radius:14px;padding:14px 10px;cursor:pointer;text-align:center;font-weight:600;font-size:.88rem;color:#e2e8f0;transition:all .18s;line-height:1.3;min-height:60px;display:flex;align-items:center;justify-content:center}
+.bucket:hover:not(.locked){border-color:#DB2777;background:#1f1f35;transform:translateY(-2px)}
+.bucket.correct{border-color:#22c55e;background:rgba(34,197,94,.15);color:#4ade80}
+.bucket.wrong{border-color:#ef4444;background:rgba(239,68,68,.13);color:#f87171}
+.bucket.reveal{border-color:#22c55e;background:rgba(34,197,94,.08)}
+
+/* Explanation */
+.expl{margin-top:12px;padding:14px;background:#12121f;border-left:3px solid #DB2777;border-radius:0 8px 8px 0;font-size:.88rem;color:#cbd5e1;line-height:1.5;display:none}
+.expl.show{display:block}
+.next-btn{display:none;margin:12px auto 0;padding:11px 28px;background:linear-gradient(135deg,#DB2777,#9D174D);color:#fff;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer}
+.next-btn:hover{transform:scale(1.04)}
+
+/* Progress */
+.bar{height:6px;background:#1e1e2e;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.fill{height:100%;background:linear-gradient(90deg,#DB2777,#F472B6);transition:width .4s}
+
+/* Result */
+.result{text-align:center;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:34px 24px}
+.result h2{font-size:1.7rem;margin-bottom:10px}
+.result .big{font-size:3.4rem;font-weight:800;background:linear-gradient(135deg,#DB2777,#F472B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.result .replay{margin-top:18px;padding:13px 38px;background:linear-gradient(135deg,#DB2777,#9D174D);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:1rem}
+
+/* Start */
+.start{text-align:center;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:38px 24px}
+.start h2{font-size:1.5rem;margin-bottom:10px;color:#F472B6}
+.start p{color:#94a3b8;line-height:1.6;margin-bottom:18px;max-width:540px;margin-left:auto;margin-right:auto}
+.start .play{padding:14px 42px;background:linear-gradient(135deg,#DB2777,#9D174D);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:1rem}
+.legend{display:grid;gap:6px;margin:14px 0;text-align:left;background:#12121f;padding:14px;border-radius:10px;font-size:.84rem;color:#cbd5e1}
+.legend strong{color:#F472B6}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+// 7 catégories
+const CATEGORIES = [
+  "Anorexie restrictive",
+  "Anorexie purgative",
+  "Boulimie",
+  "BED",
+  "ARFID",
+  "Pica",
+  "Dysmorphie"
+];
+
+const ALL_CARDS = [
+  {t:"Adolescente IMC 15, restriction drastique + sport excessif, pas de purges, se trouve grosse", a:0, e:"Anorexie restrictive : IMC bas + restriction/sport + dysmorphophobie + pas de purges sur 3 mois."},
+  {t:"Patiente IMC 14, restriction sévère + vomissements provoqués hebdomadaires", a:1, e:"Anorexie purgative : IMC très bas (extrême) + restriction + comportements purgatifs."},
+  {t:"Femme IMC 19, crises hyperphagiques + vomissements + estime de soi liée au poids", a:2, e:"Boulimie : crises + comportements compensatoires + IMC normal + estime liée au corps."},
+  {t:"Personne en obésité, crises de gloutonnerie, mange seule par gêne, dégoût après — pas de purge", a:3, e:"BED : crises + ≥3 critères + obésité + ABSENCE de purge."},
+  {t:"Adolescent qui refuse certaines textures alimentaires par dégoût, sans peur de grossir", a:4, e:"ARFID : aversion sensorielle, pas de peur de grossir."},
+  {t:"Enfant qui mange régulièrement de la terre et du plâtre", a:5, e:"Pica : ingestion persistante de substances non nutritives."},
+  {t:"Femme qui passe 4h/jour devant le miroir, persuadée que son nez est anormal", a:6, e:"Dysmorphie corporelle (TOC du DSM-5) : préoccupation pour un défaut spécifique + comportement répétitif."},
+  {t:"Aménorrhée + IMC < 17 + peur intense de grossir + perception déformée du corps", a:0, e:"Anorexie restrictive : les 3 'A' + dysmorphophobie."},
+  {t:"Crises ≥ 1 fois/semaine pendant 3 mois + comportements compensatoires + poids normal", a:2, e:"Boulimie : critères de fréquence + compensations + poids normal."},
+  {t:"Peur de l'étouffement → évitement progressif des aliments solides", a:4, e:"ARFID : peur des conséquences (étouffement, fausse route)."},
+  {t:"Crises sans purge + ≥3 critères (rapidité, satiété inconfortable, seul, dégoût)", a:3, e:"BED : crises + ≥3 éléments parmi 5, sans compensation."},
+  {t:"Vérifications répétées au miroir + camouflage du visage, défaut imaginaire", a:6, e:"Dysmorphie : comportements répétitifs (vérifications, camouflage) face à un défaut perçu."},
+  {t:"Restriction par jeûne + exercice excessif, pas de crises ni purges sur 3 mois", a:0, e:"Anorexie type restrictif pur : restriction par jeûne/exercice, pas de crises/purges."},
+  {t:"Crises hyperphagiques + laxatifs + IMC à 21", a:2, e:"Boulimie : crises + purge (laxatifs) + IMC normal."},
+  {t:"Patient anorexique avec en plus vomissements provoqués", a:1, e:"Anorexie purgative : anorexie + comportements purgatifs."},
+  {t:"Préoccupation pour un défaut sur la peau, toilettage excessif, classé TOC dans le DSM-5", a:6, e:"Dysmorphie : préoccupation pour défaut spécifique de la peau, classée TOC."},
+  {t:"15,5 à 40 % des patients obèses présenteraient ce trouble", a:3, e:"BED très associé à l'obésité (15,5-40 %)."},
+  {t:"Patient mange uniquement 5 aliments différents par sélectivité sensorielle, pas de peur du poids", a:4, e:"ARFID : sélectivité par aversion sensorielle, sans peur du poids."},
+  {t:"Crises + détresse marquée + sentiment de dégoût après, pas de comportement compensatoire", a:3, e:"BED : crises + détresse + dégoût + ABSENCE de compensation."},
+  {t:"Personne qui ingère cheveux, papier, peinture", a:5, e:"Pica : substances non nutritives diverses (terre, cheveux, papier, plâtre)."},
+  {t:"Anorexique avec crises de gloutonnerie ET prise de laxatifs", a:1, e:"Sous-type anorexie 'accès hyperphagiques/purgatif' : crises ET/OU purges."},
+  {t:"Femme IMC 16,5, restriction par régimes drastiques, aucune purge", a:0, e:"Anorexie restrictive : IMC modéré + restriction sans purge."},
+  {t:"Crises de boulimie sans aucune compensation, en surpoids", a:3, e:"BED : crises sans purge + surpoids/obésité."},
+  {t:"Préoccupation pour les cheveux qu'elle juge trop fins, retouches photos compulsives", a:6, e:"Dysmorphie : focus sur défaut spécifique (cheveux) + comportements répétitifs."},
+  {t:"Mange exclusivement par texture (mou, fade) — peur de la mastication", a:4, e:"ARFID : aversion sensorielle (texture) + peur de la mastication."},
+  {t:"Sentiment de perte de contrôle pendant la crise + vomissements pour éviter prise de poids", a:2, e:"Boulimie : crises avec perte de contrôle + comportements compensatoires."},
+  {t:"Crises 12 fois/semaine + vomissements répétés + IMC à 22", a:2, e:"Boulimie sévère (8-13 épisodes/semaine), poids normal."},
+  {t:"IMC ≤ 15 + restriction sévère + sport extrême", a:0, e:"Anorexie EXTRÊME (IMC ≤ 15) + restriction (type restrictif si pas de purges)."},
+  {t:"Évitement alimentaire après épisode de fausse route traumatisante", a:4, e:"ARFID : peur des conséquences (étouffement, fausse route)."},
+  {t:"Persuadé d'avoir un visage déformé alors que tout le monde le trouve normal", a:6, e:"Dysmorphie : défaut non observable ou minime pour les autres."},
+  {t:"Ingestion répétée de substances non nutritives chez un adulte avec déficience intellectuelle", a:5, e:"Pica : peut survenir aussi chez l'adulte, surtout en cas de déficience intellectuelle."},
+  {t:"Crises hyperphagiques + diurétiques + jeûnes prolongés + poids normal", a:2, e:"Boulimie : crises + comportements compensatoires variés + poids normal."},
+  {t:"Restriction motivée non par la peur de grossir, mais par désintérêt pour la nourriture", a:4, e:"ARFID : motivation NON liée à la peur de grossir = critère discriminant."},
+  {t:"Femme IMC 14 + vomissements quotidiens + se trouve grosse + aménorrhée", a:1, e:"Anorexie purgative : IMC très bas + dysmorphophobie + comportements purgatifs."}
+];
+
+let queue, current, score, total, answered;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startGame(){
+  queue = shuffle([...ALL_CARDS]).slice(0, 25);
+  current=0; score=0; total=queue.length;
+  render();
+}
+
+function render(){
+  if(current>=total){showResult();return}
+  const card = queue[current];
+  const pct = Math.round((current/total)*100);
+  document.getElementById('app').innerHTML = `
+    <h1>Tri Express TCA</h1>
+    <p class="subtitle">Chapitre 10 — Classez chaque cas dans le bon trouble</p>
+    <div class="hud">
+      <div class="item"><span class="label">Carte</span> <span class="value">${current+1}/${total}</span></div>
+      <div class="item"><span class="label">Score</span> <span class="value">${score}/${total}</span></div>
+      <div class="item"><span class="label">Catégories</span> <span class="value">${CATEGORIES.length}</span></div>
+    </div>
+    <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+    <div class="card-zone">
+      <div class="clue-label">Cas clinique</div>
+      <div class="clue">${card.t}</div>
+    </div>
+    <div class="buckets" id="buckets">
+      ${CATEGORIES.map((c,i)=>`<button class="bucket" data-i="${i}">${c}</button>`).join('')}
+    </div>
+    <div class="expl" id="expl">💡 ${card.e}</div>
+    <button class="next-btn" id="nextBtn">${current<total-1?'Carte suivante ➜':'Voir le résultat ➜'}</button>
+  `;
+  answered=false;
+  document.querySelectorAll('.bucket').forEach(b=>{
+    b.addEventListener('click',()=>handle(parseInt(b.dataset.i),card.a,b));
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{current++;render()});
+}
+
+function handle(picked,correct,el){
+  if(answered)return;answered=true;
+  const buckets=document.querySelectorAll('.bucket');
+  buckets.forEach(b=>{b.classList.add('locked');b.disabled=true});
+  if(picked===correct){score++;el.classList.add('correct');}
+  else{el.classList.add('wrong');buckets.forEach(b=>{if(parseInt(b.dataset.i)===correct)b.classList.add('reveal')});}
+  document.getElementById('expl').classList.add('show');
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function showResult(){
+  const pct=Math.round((score/total)*100);
+  let msg='';
+  if(pct>=90) msg='Diagnostic différentiel parfait ! Les TCA n\'ont aucun secret pour vous.';
+  else if(pct>=70) msg='Très bonne classification — quelques nuances restantes.';
+  else if(pct>=50) msg='Pas mal, mais le chapitre 10 mérite une révision.';
+  else msg='Reprenez le chapitre 10 : les TCA se confondent encore.';
+  document.getElementById('app').innerHTML=`
+    <h1>Tri Express TCA</h1>
+    <p class="subtitle">Chapitre 10 — Résultat final</p>
+    <div class="bar"><div class="fill" style="width:100%"></div></div>
+    <div class="result">
+      <h2>Bilan du tri</h2>
+      <div class="big">${score} / ${total}</div>
+      <p style="color:#94a3b8;margin:8px 0">${pct}% de classements corrects</p>
+      <p style="color:#94a3b8">${msg}</p>
+      <button class="replay" onclick="startGame()">🔄 Rejouer</button>
+    </div>`;
+}
+
+function startScreen(){
+  document.getElementById('app').innerHTML=`
+    <h1>Tri Express TCA</h1>
+    <p class="subtitle">Chapitre 10 — Image du corps & TCA</p>
+    <div class="start">
+      <h2>Saurez-vous distinguer les TCA ?</h2>
+      <p>Pour chaque cas clinique, choisissez le bon trouble parmi les 7 proposés. 25 cartes par partie, tirées aléatoirement parmi une banque de plus de 30.</p>
+      <div class="legend">
+        <div><strong>Anorexie restrictive</strong> : IMC bas + restriction/jeûne/sport, pas de purges</div>
+        <div><strong>Anorexie purgative</strong> : IMC bas + crises et/ou purges</div>
+        <div><strong>Boulimie</strong> : crises + compensations + poids NORMAL</div>
+        <div><strong>BED</strong> : crises SANS purge + souvent obésité</div>
+        <div><strong>ARFID</strong> : évitement non lié à la peur de grossir</div>
+        <div><strong>Pica</strong> : ingestion de substances non nutritives</div>
+        <div><strong>Dysmorphie</strong> : défaut spécifique + comportements répétitifs (TOC du DSM-5)</div>
+      </div>
+      <button class="play" onclick="startGame()">▶ Commencer</button>
+    </div>`;
+}
+
+startScreen();
+</script>
+</body>
+</html>

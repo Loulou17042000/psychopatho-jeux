@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Atelier de la Sexualité — Quiz Chapitre 11</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:#0f0f1a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .container{max-width:780px;width:100%;margin:auto}
+  h1{font-size:2.2rem;font-weight:800;text-align:center;background:linear-gradient(135deg,#9333EA,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+  .subtitle{text-align:center;font-size:1rem;color:#94a3b8;margin-bottom:30px}
+  .score-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:.9rem;color:#cbd5e1}
+  .progress-track{width:100%;height:8px;background:#1e1e2e;border-radius:99px;overflow:hidden;margin-bottom:24px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#9333EA,#c084fc);border-radius:99px;transition:width .4s ease}
+  .card{background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:28px 24px;margin-bottom:18px;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+  .q-number{font-size:.75rem;color:#9333EA;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  .question{font-size:1.1rem;font-weight:600;line-height:1.5;margin-bottom:20px}
+  .options{display:flex;flex-direction:column;gap:10px}
+  .opt-btn{background:#16162a;border:2px solid #2a2a3e;border-radius:12px;padding:14px 18px;font-size:1rem;color:#e2e8f0;cursor:pointer;text-align:left;transition:all .2s;font-family:inherit}
+  .opt-btn:hover:not(.locked){border-color:#9333EA;background:#231635}
+  .opt-btn.correct{border-color:#22c55e;background:rgba(34,197,94,.12);color:#4ade80}
+  .opt-btn.wrong{border-color:#ef4444;background:rgba(239,68,68,.1);color:#f87171}
+  .opt-btn.reveal{border-color:#22c55e;background:rgba(34,197,94,.08)}
+  .explanation{margin-top:14px;padding:14px 16px;background:#12121f;border-left:3px solid #9333EA;border-radius:0 8px 8px 0;font-size:.9rem;color:#94a3b8;line-height:1.5;display:none}
+  .explanation.show{display:block}
+  .next-btn{display:none;margin:18px auto 0;padding:12px 32px;background:linear-gradient(135deg,#9333EA,#6b21a8);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .next-btn:hover{transform:scale(1.04)}
+  .result{text-align:center;padding:40px 20px}
+  .result h2{font-size:2rem;margin-bottom:8px}
+  .result .big-score{font-size:3.5rem;font-weight:800;background:linear-gradient(135deg,#9333EA,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .result p{color:#94a3b8;margin:8px 0}
+  .replay-btn{margin-top:24px;padding:14px 40px;background:linear-gradient(135deg,#9333EA,#6b21a8);color:#fff;border:none;border-radius:12px;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .replay-btn:hover{transform:scale(1.05)}
+  .tag{display:inline-block;background:rgba(147,51,234,.15);color:#c084fc;font-size:.75rem;padding:3px 10px;border-radius:99px;font-weight:600;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<script>
+const ALL_QUESTIONS=[
+// === SANTE SEXUELLE OMS ===
+{q:"Selon l'OMS (2002), la sante sexuelle est :",o:["Un etat de bien-etre physique, emotionnel, mental et social en relation avec la sexualite","L'absence de toute maladie sexuellement transmissible","La capacite d'avoir des rapports sexuels reguliers","Un etat exclusivement biologique"],a:0,e:"L'OMS definit la sante sexuelle comme un etat global de bien-etre, qui ne se reduit pas a l'absence de maladies."},
+{q:"La sante sexuelle se reduit a l'absence de dysfonctionnements.",o:["Faux","Vrai"],a:0,e:"Faux : la sante sexuelle implique aussi une approche positive et respectueuse, pas seulement l'absence de problemes."},
+{q:"La sante sexuelle implique :",o:["Une approche positive et respectueuse de la sexualite","Une frequence elevee de rapports","L'absence de fantasmes atypiques","Une orientation heterosexuelle"],a:0,e:"L'approche positive et respectueuse, sans contraintes ni violence, est au coeur de la definition OMS."},
+// === MODELES M&J et KAPLAN ===
+{q:"Le modele de Masters & Johnson comporte :",o:["4 phases (excitation, plateau, orgasme, resolution)","3 phases (desir, excitation, orgasme)","2 phases (excitation, orgasme)","5 phases"],a:0,e:"Masters & Johnson decrivent 4 phases : excitation, plateau, orgasme et resolution."},
+{q:"L'apport principal du modele de Helen Kaplan est :",o:["L'introduction de la phase de desir","La description de la phase d'orgasme","La phase de resolution","La phase de plateau"],a:0,e:"Kaplan ajoute la phase de desir (modele en 3 phases : desir, excitation, orgasme), absente de M&J."},
+{q:"Quelle phase n'est PAS dans le modele de Kaplan ?",o:["Plateau","Desir","Excitation","Orgasme"],a:0,e:"Kaplan : desir, excitation, orgasme. La phase de plateau appartient au modele de Masters & Johnson."},
+{q:"Le modele de Masters & Johnson est anterieur a celui de Kaplan.",o:["Vrai","Faux"],a:0,e:"M&J ont propose leur modele dans les annees 1960 ; Kaplan a ajoute la phase de desir dans les annees 1970."},
+// === DYSFONCTIONS - CRITERES COMMUNS ===
+{q:"La duree minimale habituellement requise pour diagnostiquer une dysfonction sexuelle est :",o:["6 mois","2 semaines","1 mois","1 an"],a:0,e:"Le DSM-5 exige generalement une duree d'au moins 6 mois pour les dysfonctions sexuelles."},
+{q:"Une dysfonction sexuelle necessite obligatoirement :",o:["Une detresse cliniquement significative","Une cause organique","Un partenaire sexuel","Une absence totale de rapports"],a:0,e:"La detresse clinique est un critere central. Sans souffrance, on ne parle pas de trouble."},
+{q:"Le specificateur 'situationnel' designe :",o:["Une dysfonction limitee a certaines situations / partenaires","Une dysfonction qui dure depuis le debut de la vie sexuelle","Une dysfonction generalisee","Une dysfonction induite par un medicament"],a:0,e:"Situationnel = dans certaines situations seulement (ex : avec un partenaire mais pas avec un autre)."},
+{q:"Le specificateur 'de tout le temps' (lifelong) signifie :",o:["Depuis le debut de la vie sexuelle","Apparu recemment","Survenant uniquement la nuit","Dans toutes les situations"],a:0,e:"'De tout le temps' (ou 'primaire') = la dysfonction existe depuis le debut de la vie sexuelle, par opposition a 'acquis'."},
+{q:"Une dysfonction sexuelle peut etre diagnostiquee si elle est mieux expliquee par un conflit relationnel.",o:["Faux","Vrai"],a:0,e:"Le conflit relationnel pur est un critere d'EXCLUSION : on ne diagnostique pas une dysfonction si elle s'explique uniquement par les difficultes du couple."},
+// === DYSFONCTIONS - DESIR / EXCITATION ===
+{q:"Le trouble du desir hypoactif chez l'homme se caracterise par :",o:["Une deficience ou absence de pensees sexuelles, fantasmes, desir d'activite","Une difficulte a obtenir l'erection","Une ejaculation trop rapide","Une douleur lors de la penetration"],a:0,e:"Le trouble du desir hypoactif chez l'homme touche les pensees, fantasmes et le desir lui-meme."},
+{q:"Le trouble de l'interet/excitation chez la femme inclut une reduction de :",o:["L'interet, des fantasmes, de la receptivite, des sensations genitales","L'erection","L'ejaculation","Le seuil de douleur"],a:0,e:"Chez la femme, le DSM-5 fusionne desir et excitation : interet, initiative, receptivite, fantasmes, sensations genitales."},
+{q:"Le trouble de l'erection se definit par :",o:["Une difficulte a obtenir/maintenir l'erection ou une diminution de la rigidite","Une absence totale d'erection a vie","Une erection trop frequente","Une douleur erectile"],a:0,e:"Le trouble de l'erection inclut difficulte a obtenir, a maintenir, et la diminution de rigidite."},
+// === DYSFONCTIONS - ORGASME ===
+{q:"L'ejaculation prematuree est definie par une ejaculation survenant :",o:["≤ 1 minute apres penetration, avant que la personne le souhaite","Avant 5 minutes","Avant l'erection","Apres 30 minutes"],a:0,e:"Le DSM-5 retient le seuil d'environ 1 minute apres penetration (avec souffrance subjective)."},
+{q:"L'ejaculation retardee se caracterise par :",o:["Un retard marque ou une absence d'ejaculation","Une ejaculation precoce","Une absence d'erection","Une douleur ejaculatoire"],a:0,e:"L'ejaculation retardee est l'oppose de l'ejaculation precoce : retard ou absence d'ejaculation malgre desir."},
+{q:"Le trouble de l'orgasme chez la femme peut inclure :",o:["Un retard, une diminution de frequence, une absence ou une diminution d'intensite","Une douleur lors de l'orgasme","Une hyper-orgasmie","Une ejaculation feminine excessive"],a:0,e:"Le trouble de l'orgasme chez la femme regroupe retard, diminution de frequence, absence ou diminution d'intensite."},
+// === DYSFONCTIONS - DOULEUR ===
+{q:"Le trouble lie a des douleurs genito-pelviennes ou a la penetration concerne :",o:["La femme","L'homme","Les deux egalement","Aucun"],a:0,e:"Ce diagnostic specifique du DSM-5 concerne la femme."},
+{q:"Le trouble lie a des douleurs genito-pelviennes inclut :",o:["Une crispation du plancher pelvien et la peur de la douleur","Uniquement une douleur post-coitale","Une absence d'humidification","Une dyspareunie masculine"],a:0,e:"Outre la douleur, on retrouve la peur de la penetration et la crispation du plancher pelvien."},
+// === DYSFONCTIONS - INDUITES ===
+{q:"Si une dysfonction apparait juste apres l'introduction d'un antidepresseur, le diagnostic le plus pertinent est :",o:["Dysfonction sexuelle induite par une substance/medicament","Trouble du desir hypoactif","Dysphorie de genre","Trouble paraphilique"],a:0,e:"Quand une dysfonction est temporellement liee a la prise d'un medicament, on retient le diagnostic 'induite par substance/medicament'."},
+// === ETIOLOGIE ===
+{q:"L'angoisse de performance fait partie des facteurs :",o:["Psychologiques","Biologiques","Genetiques","Hormonaux"],a:0,e:"L'angoisse de performance est un facteur psychologique majeur des dysfonctions sexuelles."},
+{q:"Les stereotypes de genre ('les hommes ne pleurent pas') sont des facteurs :",o:["Socio-culturels","Hormonaux","Genetiques","Psychiatriques"],a:0,e:"Les stereotypes appartiennent au niveau socio-culturel des facteurs etiologiques."},
+{q:"Quel facteur n'est PAS classiquement medico-biologique ?",o:["L'angoisse de performance","La menopause","Les antidepresseurs","Une atteinte neurologique"],a:0,e:"L'angoisse de performance est psychologique. Menopause, medicaments et atteintes neuro sont medico-biologiques."},
+{q:"Les dysfonctions sexuelles ont generalement une etiologie :",o:["Multifactorielle (bio-psycho-sociale)","Purement biologique","Purement psychologique","Inconnue"],a:0,e:"L'etiologie est multifactorielle : psychologique, relationnel, socio-culturel et medico-biologique."},
+// === TRAITEMENT DYSFONCTIONS ===
+{q:"La premiere ligne de traitement des dysfonctions sexuelles inclut :",o:["Psychoeducation et TCC","Chirurgie","Hormonotherapie systematique","Hospitalisation"],a:0,e:"La psychoeducation et la TCC (anxiete de performance, restructuration) sont la premiere ligne."},
+{q:"Le Viagra (vasodilatateur) est utilise pour :",o:["Le trouble de l'erection","L'ejaculation prematuree","Le trouble du desir feminin","Les douleurs pelviennes"],a:0,e:"Les vasodilatateurs comme le Viagra ciblent le trouble de l'erection."},
+{q:"Les ISRS sont utiles pour les paraphilies parce qu'ils :",o:["Diminuent le cote obsessionnel-compulsif","Augmentent la testosterone","Diminuent la dopamine cerebrale","Provoquent une erection"],a:0,e:"Les ISRS agissent sur l'obsessionnalite des fantasmes paraphiliques."},
+{q:"L'exposition et la desensibilisation systematique sont des techniques :",o:["Cognitivo-comportementales","Psychanalytiques","Pharmacologiques","Chirurgicales"],a:0,e:"Exposition et desensibilisation systematique sont des outils classiques de la TCC."},
+// === DYSPHORIE DE GENRE - DEFINITION ===
+{q:"La dysphorie de genre se definit par :",o:["Une non-congruence marquee entre genre vecu et genre assigne, avec detresse, ≥ 6 mois","Une simple non-conformite aux roles de genre","Une excitation par le travestissement","Une orientation homosexuelle"],a:0,e:"Le diagnostic exige non-congruence + detresse cliniquement significative + duree ≥ 6 mois."},
+{q:"Une identite trans est en soi pathologique selon le DSM-5.",o:["Faux","Vrai"],a:0,e:"Faux : la dysphorie est diagnostiquee UNIQUEMENT s'il y a detresse clinique. Une identite trans sans souffrance n'est pas un trouble."},
+{q:"L'objectif du diagnostic de dysphorie de genre est principalement :",o:["D'autoriser l'acces aux soins de transition","De pathologiser les identites trans","De prescrire des neuroleptiques","De justifier un internement"],a:0,e:"Le diagnostic permet l'acces aux soins (hormonotherapie, chirurgie). Il n'est pas une etiquette pejorative."},
+// === DYSPHORIE - MANIFESTATIONS ===
+{q:"Une manifestation typique de dysphorie de genre est :",o:["Le desir d'etre debarrasse de ses caracteristiques sexuelles primaires/secondaires","Une excitation par le travestissement","Une recherche de plaisir homosexuel","Un fetichisme"],a:0,e:"Le desir d'etre debarrasse de ses caracteristiques sexuelles est l'une des manifestations centrales."},
+{q:"Le desir d'avoir les caracteristiques de l'autre sexe est :",o:["Un signe possible de dysphorie de genre","Toujours pathologique","Un critere de transvestisme","Un critere de fetichisme"],a:0,e:"Le desir d'avoir les caracteristiques de l'autre sexe fait partie des manifestations de la dysphorie de genre."},
+// === DYSPHORIE - DIAGNOSTIC DIFFERENTIEL ===
+{q:"La non-conformite aux roles de genre, sans detresse, est :",o:["NON pathologique","Une dysphorie de genre legere","Un transvestisme","Une dysmorphie corporelle"],a:0,e:"La non-conformite aux roles, sans detresse, n'est PAS un trouble."},
+{q:"La principale difference entre dysphorie de genre et transvestisme est :",o:["Dysphorie = identite ; transvestisme = excitation sexuelle","Aucune","La duree","Le sexe biologique"],a:0,e:"La dysphorie concerne l'identite ; le transvestisme est une excitation sexuelle liee au fait de se travestir."},
+{q:"La dysmorphie corporelle est un diagnostic differentiel de la dysphorie de genre.",o:["Vrai","Faux"],a:0,e:"Vrai : la dysmorphie corporelle (preoccupation pour un defaut percu) doit etre distinguee de la dysphorie de genre."},
+// === DYSPHORIE - ETIOLOGIE ===
+{q:"L'hyperplasie surrenale congenitale (production exageree d'androgenes) est un facteur :",o:["Biologique de la dysphorie de genre","De pedophilie","De fetichisme","De trouble erectile"],a:0,e:"L'hyperplasie surrenale congenitale est un facteur biologique etudie dans la dysphorie de genre."},
+{q:"Les comorbidites frequentes de la dysphorie de genre incluent :",o:["Troubles anxieux et depressifs (souvent secondaires a la stigmatisation)","Schizophrenie systematique","Troubles psychotiques uniquement","Aucune"],a:0,e:"Les troubles anxieux et depressifs sont frequents, souvent lies a la stigmatisation et au stress minoritaire."},
+// === DYSPHORIE - TRAITEMENT ===
+{q:"Le traitement de la dysphorie de genre peut inclure :",o:["Psychotherapie, hormonotherapie et chirurgie de reassignation","Uniquement des neuroleptiques","Uniquement de la TCC","Une therapie de conversion"],a:0,e:"Le traitement integre l'accompagnement psychologique, l'hormonotherapie et eventuellement la chirurgie."},
+{q:"Le specificateur 'post-transition' designe :",o:["Une personne ayant fait la transition vers une vie a plein-temps dans le genre desire","Une personne en cours de chirurgie","Une personne ayant arrete la transition","Une personne sans diagnostic"],a:0,e:"'Post-transition' signifie que la personne vit a plein-temps dans le genre desire (avec ou sans procedures medicales)."},
+// === PARAPHILIE vs TROUBLE PARAPHILIQUE ===
+{q:"Une paraphilie devient un trouble paraphilique quand :",o:["Elle cause detresse OU implique une personne non consentante","Elle dure plus d'un mois","Elle survient chez un homme","Elle implique du materiel pornographique"],a:0,e:"Le trouble paraphilique = paraphilie + detresse clinique OU passage a l'acte avec personne non consentante."},
+{q:"Toute paraphilie est un trouble.",o:["Faux","Vrai"],a:0,e:"Faux : une paraphilie sans detresse ni passage a l'acte non consenti n'est PAS un trouble."},
+{q:"La duree minimale exigee pour un trouble paraphilique est :",o:["6 mois","1 mois","2 ans","2 semaines"],a:0,e:"Comme pour les dysfonctions, la duree de reference est de 6 mois."},
+{q:"Les troubles paraphiliques exigent des fantasmes/pulsions/comportements lies a un objet/situation atypique.",o:["Vrai","Faux"],a:0,e:"Vrai : critere A des troubles paraphiliques."},
+// === PARAPHILIES - VOYEURISME / EXHIBITIONNISME / FROTTEURISME ===
+{q:"Le voyeurisme est l'excitation par :",o:["L'observation d'une personne qui ne se doute de rien","L'exhibition de soi","Le contact non consenti","La douleur infligee"],a:0,e:"Voyeurisme = observer une personne nue ou en activite sexuelle, qui ne sait pas qu'elle est observee."},
+{q:"L'exhibitionnisme est l'excitation par :",o:["L'exhibition de ses organes genitaux a une personne prise au depourvu","L'observation","Le contact dans la foule","Les chaussures"],a:0,e:"Exhibitionnisme = exhiber ses organes genitaux a une personne prise au depourvu (non consentante)."},
+{q:"Le frotteurisme est l'excitation par :",o:["Le contact ou frottement contre une personne non consentante (foule)","L'observation","Le travestissement","La douleur"],a:0,e:"Frotteurisme = se frotter contre une personne non consentante, classiquement dans une foule (transports)."},
+// === PARAPHILIES - SADISME / MASOCHISME ===
+{q:"Le masochisme sexuel est l'excitation par le fait :",o:["D'etre humilie, battu, attache","D'humilier autrui","D'observer","De se travestir"],a:0,e:"Masochisme : excitation par le fait de subir (etre humilie, battu, attache)."},
+{q:"Le sadisme sexuel est l'excitation par :",o:["L'infliction de souffrance physique ou psychologique","Le fait de subir","Les enfants","Les pieds"],a:0,e:"Sadisme : excitation par le fait d'infliger une souffrance a autrui."},
+{q:"Le specificateur 'avec asphyxiophilie' s'applique :",o:["Au masochisme sexuel","Au sadisme sexuel","Au voyeurisme","Au fetichisme"],a:0,e:"L'asphyxiophilie (privation de respiration) est un specificateur du masochisme sexuel."},
+// === PEDOPHILIE ===
+{q:"La pedophilie selon le DSM-5 implique :",o:["Une excitation par enfant prepubere (≤ 13 ans), auteur ≥ 16 ans et ≥ 5 ans plus age","Tout interet pour des adolescents","Toute relation entre majeur et mineur","Une violence physique uniquement"],a:0,e:"Critere DSM-5 : enfant prepubere, auteur de 16 ans ou plus, ecart d'age d'au moins 5 ans avec l'enfant."},
+{q:"La pedophilie peut etre specifiee :",o:["Type exclusif / non exclusif","Avec asphyxiophilie","Avec autogynephilie","Au pluriel uniquement"],a:0,e:"Specificateur : exclusif (uniquement attire par des enfants) ou non exclusif (aussi par des adultes)."},
+// === FETICHISME / TRANSVESTISME ===
+{q:"Le fetichisme est l'excitation par :",o:["Un objet non anime ou une partie non genitale du corps","La foule","La douleur","Le travestissement"],a:0,e:"Fetichisme : objets non animes (chaussures, vetements) ou parties non genitales (pieds...)."},
+{q:"Le transvestisme paraphilique est l'excitation par :",o:["Le fait de se travestir","La domination","La penetration","Les enfants"],a:0,e:"Le transvestisme PARAPHILIQUE = excitation sexuelle par le fait de se travestir, distinct de la dysphorie de genre."},
+{q:"Le specificateur 'avec autogynephilie' (excitation par l'image de soi en femme) s'applique :",o:["Au transvestisme","Au sadisme","Au voyeurisme","Au fetichisme"],a:0,e:"L'autogynephilie est un specificateur du transvestisme."},
+// === DISTINCTIONS PIEGES ===
+{q:"Une personne s'excite a montrer ses organes genitaux a des inconnus dans la rue. Diagnostic :",o:["Exhibitionnisme","Voyeurisme","Frotteurisme","Transvestisme"],a:0,e:"Exhiber ses organes a une personne prise au depourvu = exhibitionnisme."},
+{q:"Une personne s'excite a observer ses voisins par la fenetre sans qu'ils le sachent. Diagnostic :",o:["Voyeurisme","Exhibitionnisme","Frotteurisme","Pedophilie"],a:0,e:"Observer une personne qui ne se doute de rien = voyeurisme."},
+{q:"Une personne se frotte contre des inconnus dans le metro. Diagnostic :",o:["Frotteurisme","Sadisme","Exhibitionnisme","Voyeurisme"],a:0,e:"Contact non consenti dans la foule = frotteurisme."},
+{q:"Une personne ressent un plaisir sexuel a etre attachee et battue par son partenaire consentant. Diagnostic :",o:["Masochisme sexuel (devient un trouble si detresse)","Sadisme","Trouble paraphilique automatiquement","Aucun trouble si pas de detresse ni non-consentement"],a:0,e:"Masochisme. Cela ne devient un trouble que s'il y a detresse clinique."},
+{q:"Une personne s'excite uniquement en presence de chaussures. Diagnostic :",o:["Fetichisme","Transvestisme","Voyeurisme","Pedophilie"],a:0,e:"Excitation par un objet non anime = fetichisme."},
+{q:"Un homme s'excite en portant des vetements feminins (mais s'identifie comme homme). Diagnostic :",o:["Transvestisme paraphilique","Dysphorie de genre","Fetichisme","Aucun"],a:0,e:"Excitation sexuelle par le fait de se travestir, sans question d'identite = transvestisme paraphilique."},
+{q:"Une personne nee femme se vit comme un homme depuis l'enfance, avec une grande detresse depuis 8 mois. Diagnostic :",o:["Dysphorie de genre","Transvestisme","Trouble dissociatif","Aucun"],a:0,e:"Non-congruence + detresse clinique + duree > 6 mois = dysphorie de genre."},
+// === COMORBIDITES ===
+{q:"Les comorbidites frequentes des troubles paraphiliques incluent :",o:["Hypersexualite, autres paraphilies, TP antisociale","Schizophrenie systematique","TDAH systematique","Aucune"],a:0,e:"Hypersexualite, autres paraphilies, TP antisociale, troubles de l'humeur et addictions sont frequents."},
+// === TRAITEMENT PARAPHILIES ===
+{q:"Les agonistes de la GnRH ('castration chimique') sont utilises :",o:["Dans les cas graves de troubles paraphiliques","Pour le trouble erectile","Pour la dysphorie de genre","Pour la dyspareunie"],a:0,e:"Les agonistes GnRH suppriment la production de testosterone et sont utilises dans certains cas graves de paraphilies."},
+{q:"Les approches therapeutiques des troubles paraphiliques incluent :",o:["TCC, hypnotherapie, ISRS, agonistes GnRH","Uniquement la chirurgie","Uniquement la psychanalyse","Aucun traitement disponible"],a:0,e:"L'approche est multimodale : TCC, hypnotherapie, ISRS et eventuellement antiandrogenes."},
+// === ETIOLOGIE PARAPHILIES ===
+{q:"Un facteur psychodynamique evoque pour les paraphilies est :",o:["L'abus sexuel dans l'enfance","L'hyperplasie surrenale","L'absence de pere","Un traumatisme craniocerebral"],a:0,e:"L'abus sexuel dans l'enfance est evoque comme facteur psychodynamique. La defense contre l'angoisse de castration aussi."},
+{q:"L'alteration biologique evoquee dans les paraphilies concerne :",o:["Le systeme dopaminergique (et serotonine, noradrenaline)","Le systeme cholinergique uniquement","La thyroide","Les hormones de croissance"],a:0,e:"Alteration du systeme dopaminergique avec modifications serotonine/noradrenaline."},
+// === REGLE GENERALE ===
+{q:"La cle du diagnostic en sexologie est generalement :",o:["Detresse clinique + duree (≥ 6 mois) + absence d'autre cause","La frequence des rapports","L'age du patient","Le sexe du patient"],a:0,e:"Detresse + duree + absence d'autre cause (medicale, medicamenteuse, conflit pur) sont les piliers."},
+{q:"Pour les paraphilies, le non-consentement suffit a poser un diagnostic de trouble.",o:["Vrai","Faux"],a:0,e:"Vrai : si la personne est passee a l'acte avec quelqu'un de non consentant, le diagnostic est pose meme sans detresse."},
+{q:"L'approche processuelle en sexologie souligne :",o:["L'existence d'un spectre plutot qu'un tout-ou-rien","La superiorite du DSM categoriel","L'inutilite de la detresse subjective","L'origine purement biologique"],a:0,e:"L'approche processuelle propose un spectre, integrant la detresse subjective, le contexte hormonal et le vecu."},
+];
+
+const TOTAL=20;
+let selected,current,score,answered;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startGame(){
+  selected=shuffle([...ALL_QUESTIONS]).slice(0,TOTAL);
+  current=0;score=0;answered=false;
+  render();
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(current>=TOTAL){showResult();return}
+  const q=selected[current];
+  const isVF=q.o.length===2&&(q.o[0]==="Vrai"||q.o[0]==="Faux")&&(q.o[1]==="Vrai"||q.o[1]==="Faux");
+  let indices=[...Array(q.o.length).keys()];
+  if(!isVF) indices=shuffle(indices);
+  const pct=Math.round((current/TOTAL)*100);
+  app.innerHTML=`
+    <h1>L'Atelier de la Sexualite</h1>
+    <p class="subtitle">Chapitre 11 : Troubles lies a la sexualite</p>
+    <div class="score-bar"><span>Question ${current+1}/${TOTAL}</span><span>Score : ${score}/${TOTAL}</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="card">
+      <span class="tag">${isVF?'Vrai / Faux':'QCM'}</span>
+      <div class="question">${q.q}</div>
+      <div class="options">${indices.map(i=>`<button class="opt-btn" data-idx="${i}">${q.o[i]}</button>`).join('')}</div>
+      <div class="explanation" id="expl">&#128161; ${q.e}</div>
+    </div>
+    <button class="next-btn" id="nextBtn">${current<TOTAL-1?'Question suivante &#10140;':'Voir le resultat &#10140;'}</button>`;
+  answered=false;
+  document.querySelectorAll('.opt-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>handleAnswer(parseInt(btn.dataset.idx),q.a,btn));
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{current++;render()});
+}
+
+function handleAnswer(chosen,correct,btn){
+  if(answered)return;answered=true;
+  document.querySelectorAll('.opt-btn').forEach(b=>{b.classList.add('locked');b.disabled=true});
+  if(chosen===correct){score++;btn.classList.add('correct')}
+  else{btn.classList.add('wrong');document.querySelectorAll('.opt-btn').forEach(b=>{if(parseInt(b.dataset.idx)===correct)b.classList.add('reveal')})}
+  document.getElementById('expl').classList.add('show');
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function showResult(){
+  const pct=Math.round((score/TOTAL)*100);
+  let msg='';
+  if(pct>=90)msg='Excellent ! Vous maitrisez la sexologie clinique.';
+  else if(pct>=70)msg='Tres bien ! Quelques distinctions a affiner.';
+  else if(pct>=50)msg='Correct, mais le chapitre 11 merite une relecture.';
+  else msg='Il faut reprendre le chapitre 11 serieusement !';
+  document.getElementById('app').innerHTML=`
+    <h1>L'Atelier de la Sexualite</h1>
+    <p class="subtitle">Chapitre 11 : Troubles lies a la sexualite</p>
+    <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="card result">
+      <h2>Resultat</h2>
+      <div class="big-score">${score} / ${TOTAL}</div>
+      <p>${pct}% de bonnes reponses</p>
+      <p>${msg}</p>
+      <button class="replay-btn" onclick="startGame()">&#128260; Rejouer</button>
+    </div>`;
+}
+
+startGame();
+</script>
+</body>
+</html>

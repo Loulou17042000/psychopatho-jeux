@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tri Express Vieillissement — Chapitre 9</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{background:#0f0f1a;color:#e2e8f0;min-height:100vh;padding:18px;overflow-x:hidden}
+.wrap{max-width:980px;margin:0 auto}
+h1{font-size:1.8rem;font-weight:800;text-align:center;background:linear-gradient(135deg,#D97706,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2px}
+.subtitle{text-align:center;color:#94a3b8;font-size:.95rem;margin-bottom:14px}
+
+/* HUD */
+.hud{display:flex;justify-content:space-between;align-items:center;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:12px;padding:10px 16px;margin-bottom:12px;font-size:.9rem;flex-wrap:wrap;gap:10px}
+.hud .item{display:flex;align-items:center;gap:6px}
+.hud .label{color:#94a3b8}
+.hud .value{color:#F59E0B;font-weight:700}
+
+/* Card to classify */
+.card-zone{background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:24px;margin-bottom:14px;text-align:center;min-height:130px;display:flex;flex-direction:column;justify-content:center}
+.card-zone .clue-label{font-size:.7rem;letter-spacing:1.5px;color:#D97706;font-weight:700;margin-bottom:8px;text-transform:uppercase}
+.card-zone .clue{font-size:1.1rem;font-weight:600;line-height:1.5;color:#fde68a}
+
+/* Bucket grid */
+.buckets{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media (min-width:680px){.buckets{grid-template-columns:repeat(3,1fr)}}
+.bucket{background:#16162a;border:2px solid #2a2a3e;border-radius:14px;padding:16px 12px;cursor:pointer;text-align:center;font-weight:600;font-size:.95rem;color:#e2e8f0;transition:all .18s;line-height:1.3}
+.bucket:hover:not(.locked){border-color:#D97706;background:#1f1f35;transform:translateY(-2px)}
+.bucket.correct{border-color:#22c55e;background:rgba(34,197,94,.15);color:#4ade80}
+.bucket.wrong{border-color:#ef4444;background:rgba(239,68,68,.13);color:#f87171}
+.bucket.reveal{border-color:#22c55e;background:rgba(34,197,94,.08)}
+
+/* Explanation */
+.expl{margin-top:12px;padding:14px;background:#12121f;border-left:3px solid #D97706;border-radius:0 8px 8px 0;font-size:.88rem;color:#cbd5e1;line-height:1.5;display:none}
+.expl.show{display:block}
+.next-btn{display:none;margin:12px auto 0;padding:11px 28px;background:linear-gradient(135deg,#D97706,#92400E);color:#fff;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer}
+.next-btn:hover{transform:scale(1.04)}
+
+/* Progress */
+.bar{height:6px;background:#1e1e2e;border-radius:99px;overflow:hidden;margin-bottom:14px}
+.fill{height:100%;background:linear-gradient(90deg,#D97706,#F59E0B);transition:width .4s}
+
+/* Result */
+.result{text-align:center;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:34px 24px}
+.result h2{font-size:1.7rem;margin-bottom:10px}
+.result .big{font-size:3.4rem;font-weight:800;background:linear-gradient(135deg,#D97706,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.result .replay{margin-top:18px;padding:13px 38px;background:linear-gradient(135deg,#D97706,#92400E);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:1rem}
+
+/* Start */
+.start{text-align:center;background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:38px 24px}
+.start h2{font-size:1.5rem;margin-bottom:10px;color:#F59E0B}
+.start p{color:#94a3b8;line-height:1.6;margin-bottom:18px;max-width:540px;margin-left:auto;margin-right:auto}
+.start .play{padding:14px 42px;background:linear-gradient(135deg,#D97706,#92400E);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:1rem}
+.legend{display:grid;gap:6px;margin:14px 0;text-align:left;background:#12121f;padding:14px;border-radius:10px;font-size:.85rem;color:#cbd5e1}
+.legend strong{color:#F59E0B}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+// 6 catégories
+const CATEGORIES = [
+  "Charles Bonnet",
+  "Ekbom",
+  "Démence à corps de Lewy",
+  "Délire tardif",
+  "État confusionnel",
+  "Maladie d'Alzheimer"
+];
+
+// Cards: text + correct category index + explanation
+const ALL_CARDS = [
+  {t:"Hallucinations visuelles complexes + DMLA évoluée", a:0, e:"Charles Bonnet : déficit visuel (DMLA, cataracte) + hallucinations visuelles complexes auxquelles le patient croit."},
+  {t:"Patient se gratte au sang, persuadé d'avoir des parasites sous la peau", a:1, e:"Syndrome d'Ekbom (= délire dermatozoïque) : conviction d'infestation parasitaire, lié à un déficit somatosensoriel."},
+  {t:"Hallucinations visuelles très détaillées + rigidité parkinsonienne", a:2, e:"Démence à corps de Lewy : hallucinations + syndrome extrapyramidal."},
+  {t:"Intolérance aux neuroleptiques", a:2, e:"Caractéristique majeure de la démence à corps de Lewy à cause du syndrome extrapyramidal."},
+  {t:"Installation BRUTALE en 24h après une infection urinaire", a:4, e:"État confusionnel (delirium) : caractère essentiel = installation brutale après affection organique."},
+  {t:"Déclin progressif et insidieux sur 2 ans, déficits dans 2 domaines cognitifs", a:5, e:"Critères NIA-AA d'Alzheimer : déclin progressif/insidieux + déficits dans ≥ 2 domaines cognitifs."},
+  {t:"Sujet âgé isolé, conviction de novo que les voisins lui volent ses affaires", a:3, e:"Délire tardif : apparition de novo chez sujet âgé isolé, thématique persécutoire pauvre."},
+  {t:"Hallucinations dans 75 % des cas, surtout vespérales", a:3, e:"Délire tardif : 75 % d'hallucinations, surtout vespérales et nocturnes."},
+  {t:"Troubles du comportement en sommeil paradoxal (rêves agités, cris)", a:2, e:"Critère associé de la démence à corps de Lewy : troubles du comportement en sommeil paradoxal."},
+  {t:"Voit des personnages détaillés sur son canapé, croit qu'ils sont réels, cataracte bilatérale", a:0, e:"Charles Bonnet : hallucinations visuelles complexes + déficit visuel + croyance dans les hallucinations."},
+  {t:"Désorientation spatiotemporelle + obnubilation + perplexité anxieuse", a:4, e:"État confusionnel : sémiologie classique (obnubilation, désorientation, perplexité)."},
+  {t:"Réversible en quelques semaines après traitement de la cause organique", a:4, e:"L'état confusionnel est transitoire et RÉVERSIBLE (≠ démence)."},
+  {t:"Plainte mnésique progressive, désintérêt, retrait, peu de tristesse marquée", a:5, e:"Profil thymique d'Alzheimer (Shdo et al., 2020) : préoccupations cognitives, retrait, désespoir."},
+  {t:"2e forme la plus fréquente de TNM, débute vers 60 ans", a:2, e:"Démence à corps de Lewy : 2e TNM le plus fréquent, début ~60 ans."},
+  {t:"Délire d'infestation, déficit somatosensoriel", a:1, e:"Ekbom : conviction parasitaire liée à un déficit somatosensoriel."},
+  {t:"Apparition sur quelques heures de comportements bizarres après pneumonie", a:4, e:"État confusionnel : installation BRUTALE après affection organique (pneumonie)."},
+  {t:"Présence imaginaire d'un 'compagnon' à la maison", a:3, e:"'Compagnon tardif' : thématique particulière des délires tardifs."},
+  {t:"Déficit en acétylcholine ET dopamine", a:2, e:"Démence à corps de Lewy : double déficit acétylcholine + dopamine."},
+  {t:"Perte progressive d'autonomie sur plusieurs années, mémoire à long terme atteinte", a:5, e:"Alzheimer : perte d'autonomie dès le stade modéré, mémoire à long terme atteinte."},
+  {t:"Hallucinations visuelles + DMLA, sans déclin cognitif majeur", a:0, e:"Charles Bonnet : pas de déclin cognitif majeur, juste hallucinations + déficit visuel."},
+  {t:"Délire pauvre, peu systématisé, contre voisins/famille", a:3, e:"Délire tardif : délires pauvres, peu systématisés, persécutoires."},
+  {t:"Sentiment d'étrangeté + troubles du sommeil + agitation, cause organique récente", a:4, e:"État confusionnel : symptômes dominants (étrangeté, sommeil, perplexité anxieuse)."},
+  {t:"Évolution irréversible, déclin cognitif global", a:5, e:"Alzheimer : irréversible, déclin progressif global."},
+  {t:"Femme âgée isolée après deuil, méfiance puis idées délirantes de jalousie", a:3, e:"Délire tardif : facteurs de risque (deuil, isolement) + thématique de jalousie."},
+  {t:"Hallucinations mobiles très détaillées + chute après dose de neuroleptique", a:2, e:"Lewy : hallucinations détaillées + intolérance aux neuroleptiques (chutes, syndrome extrapyramidal aggravé)."},
+  {t:"Patient persuadé d'avoir des insectes qui rampent sous sa peau", a:1, e:"Ekbom = délire dermatozoïque : conviction parasitaire."},
+  {t:"Amnésie lacunaire de la période trouble, pas de séquelle", a:4, e:"État confusionnel : se résout sans séquelles sauf amnésie lacunaire de l'épisode."},
+  {t:"Voit des enfants jouer dans son salon (mais sait que ses yeux 'flanchent')", a:0, e:"Charles Bonnet : hallucinations visuelles complexes — parfois critique préservée selon le cas."},
+  {t:"Difficultés à reconnaître les visages, désorientation chez soi", a:5, e:"Alzheimer : déficits visuospatiaux et de reconnaissance, désorientation."},
+  {t:"Souvent en rémission après prise en charge pluridisciplinaire (somatique + psy + sociale)", a:3, e:"Délire tardif : évolution favorable avec PEC pluridisciplinaire."},
+  {t:"Critères NIA-AA 2018 + déclin dans ≥ 2 domaines", a:5, e:"Alzheimer : critères NIA-AA 2018."},
+  {t:"Hallucinations visuelles complexes uniquement la nuit, vision dégradée", a:0, e:"Charles Bonnet : hallucinations visuelles complexes (souvent vespérales) + déficit visuel."},
+  {t:"Conviction parasitaire + grattage répété de la peau", a:1, e:"Ekbom : associations classiques."},
+  {t:"État cognitif fluctuant dans la journée, vigilance altérée", a:4, e:"État confusionnel : fluctuant + altération de la vigilance."},
+  {t:"Trouble paranoïde rare où le délire se superpose au monde réel (paraphrénie)", a:3, e:"Paraphrénie : délire paranoïde rare, sans troubles cognitifs, où le monde délirant se superpose au réel."}
+];
+
+// State
+let queue, current, score, total, locked, answered;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startGame(){
+  queue = shuffle([...ALL_CARDS]).slice(0, 25); // 25 cartes par partie
+  current = 0; score = 0; total = queue.length;
+  render();
+}
+
+function render(){
+  if(current>=total){showResult();return}
+  const card = queue[current];
+  const pct = Math.round((current/total)*100);
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <h1>Tri Express Vieillissement</h1>
+    <p class="subtitle">Chapitre 9 — Classez chaque indice clinique dans la bonne catégorie</p>
+    <div class="hud">
+      <div class="item"><span class="label">Carte</span> <span class="value">${current+1}/${total}</span></div>
+      <div class="item"><span class="label">Score</span> <span class="value">${score}/${total}</span></div>
+      <div class="item"><span class="label">Catégories</span> <span class="value">${CATEGORIES.length}</span></div>
+    </div>
+    <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+    <div class="card-zone">
+      <div class="clue-label">Indice clinique</div>
+      <div class="clue">${card.t}</div>
+    </div>
+    <div class="buckets" id="buckets">
+      ${CATEGORIES.map((c,i)=>`<button class="bucket" data-i="${i}">${c}</button>`).join('')}
+    </div>
+    <div class="expl" id="expl">💡 ${card.e}</div>
+    <button class="next-btn" id="nextBtn">${current<total-1?'Carte suivante ➜':'Voir le résultat ➜'}</button>
+  `;
+  answered=false;
+  document.querySelectorAll('.bucket').forEach(b=>{
+    b.addEventListener('click',()=>handle(parseInt(b.dataset.i),card.a,b));
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{current++;render()});
+}
+
+function handle(picked,correct,el){
+  if(answered)return;answered=true;
+  const buckets=document.querySelectorAll('.bucket');
+  buckets.forEach(b=>{b.classList.add('locked');b.disabled=true});
+  if(picked===correct){
+    score++;
+    el.classList.add('correct');
+  } else {
+    el.classList.add('wrong');
+    buckets.forEach(b=>{if(parseInt(b.dataset.i)===correct)b.classList.add('reveal')});
+  }
+  document.getElementById('expl').classList.add('show');
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function showResult(){
+  const pct=Math.round((score/total)*100);
+  let msg='';
+  if(pct>=90) msg='Maître du diagnostic ! Vieillissement parfaitement maîtrisé.';
+  else if(pct>=70) msg='Très bonne classification — quelques nuances à affiner.';
+  else if(pct>=50) msg='Pas mal, mais le chapitre 9 mérite une révision ciblée.';
+  else msg='Reprenez le chapitre 9 : les diagnostics se confondent encore.';
+  document.getElementById('app').innerHTML=`
+    <h1>Tri Express Vieillissement</h1>
+    <p class="subtitle">Chapitre 9 — Résultat final</p>
+    <div class="bar"><div class="fill" style="width:100%"></div></div>
+    <div class="result">
+      <h2>Bilan du tri</h2>
+      <div class="big">${score} / ${total}</div>
+      <p style="color:#94a3b8;margin:8px 0">${pct}% de classements corrects</p>
+      <p style="color:#94a3b8">${msg}</p>
+      <button class="replay" onclick="startGame()">🔄 Rejouer</button>
+    </div>`;
+}
+
+function startScreen(){
+  document.getElementById('app').innerHTML=`
+    <h1>Tri Express Vieillissement</h1>
+    <p class="subtitle">Chapitre 9 — Psychopathologie du vieillissement</p>
+    <div class="start">
+      <h2>Saurez-vous démêler les diagnostics ?</h2>
+      <p>Pour chaque indice clinique, choisissez la bonne catégorie diagnostique parmi les 6 proposées. 25 cartes par partie, tirées aléatoirement parmi une banque de plus de 30.</p>
+      <div class="legend">
+        <div><strong>Charles Bonnet</strong> : hallucinations visuelles + déficit visuel</div>
+        <div><strong>Ekbom</strong> : délire dermatozoïque (parasites)</div>
+        <div><strong>Démence à corps de Lewy</strong> : halluc. visuelles + parkinsonisme + intolérance neuroleptiques</div>
+        <div><strong>Délire tardif</strong> : délire de novo chez sujet âgé isolé</div>
+        <div><strong>État confusionnel</strong> : installation brutale, cause organique, réversible</div>
+        <div><strong>Maladie d'Alzheimer</strong> : déclin progressif, NIA-AA, ≥ 2 domaines</div>
+      </div>
+      <button class="play" onclick="startGame()">▶ Commencer</button>
+    </div>`;
+}
+
+startScreen();
+</script>
+</body>
+</html>

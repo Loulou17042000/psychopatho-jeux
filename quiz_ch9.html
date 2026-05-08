@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Détective du Vieillissement — Quiz Chapitre 9</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:#0f0f1a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .container{max-width:780px;width:100%;margin:auto}
+  h1{font-size:2.2rem;font-weight:800;text-align:center;background:linear-gradient(135deg,#D97706,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+  .subtitle{text-align:center;font-size:1rem;color:#94a3b8;margin-bottom:30px}
+  .score-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:.9rem;color:#cbd5e1}
+  .progress-track{width:100%;height:8px;background:#1e1e2e;border-radius:99px;overflow:hidden;margin-bottom:24px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#D97706,#F59E0B);border-radius:99px;transition:width .4s ease}
+  .card{background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:28px 24px;margin-bottom:18px;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+  .q-number{font-size:.75rem;color:#D97706;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  .question{font-size:1.1rem;font-weight:600;line-height:1.5;margin-bottom:20px}
+  .options{display:flex;flex-direction:column;gap:10px}
+  .opt-btn{background:#16162a;border:2px solid #2a2a3e;border-radius:12px;padding:14px 18px;font-size:1rem;color:#e2e8f0;cursor:pointer;text-align:left;transition:all .2s;font-family:inherit}
+  .opt-btn:hover:not(.locked){border-color:#D97706;background:#1f1f35}
+  .opt-btn.correct{border-color:#22c55e;background:rgba(34,197,94,.12);color:#4ade80}
+  .opt-btn.wrong{border-color:#ef4444;background:rgba(239,68,68,.1);color:#f87171}
+  .opt-btn.reveal{border-color:#22c55e;background:rgba(34,197,94,.08)}
+  .explanation{margin-top:14px;padding:14px 16px;background:#12121f;border-left:3px solid #D97706;border-radius:0 8px 8px 0;font-size:.9rem;color:#94a3b8;line-height:1.5;display:none}
+  .explanation.show{display:block}
+  .next-btn{display:none;margin:18px auto 0;padding:12px 32px;background:linear-gradient(135deg,#D97706,#92400E);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .next-btn:hover{transform:scale(1.04)}
+  .result{text-align:center;padding:40px 20px}
+  .result h2{font-size:2rem;margin-bottom:8px}
+  .result .big-score{font-size:3.5rem;font-weight:800;background:linear-gradient(135deg,#D97706,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .result p{color:#94a3b8;margin:8px 0}
+  .replay-btn{margin-top:24px;padding:14px 40px;background:linear-gradient(135deg,#D97706,#92400E);color:#fff;border:none;border-radius:12px;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .replay-btn:hover{transform:scale(1.05)}
+  .tag{display:inline-block;background:rgba(217,119,6,.15);color:#F59E0B;font-size:.75rem;padding:3px 10px;border-radius:99px;font-weight:600;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<script>
+const ALL_QUESTIONS=[
+// === VIEILLISSEMENT SAIN ===
+{q:"Le vieillissement sain s'accompagne de tous ces changements SAUF :",o:["Une amélioration de la capacité à gérer l'effort","Un ralentissement cognitif","Une augmentation de la fatigue","Une augmentation des ressentis douloureux"],a:0,e:"Le vieillissement sain s'accompagne d'une DIMINUTION (et non d'une amélioration) de la capacité à gérer l'effort."},
+{q:"Le modèle SOC de Baltes pour l'ajustement au vieillissement signifie :",o:["Sélection, Optimisation, Compensation","Stabilité, Observation, Continuité","Sécurité, Ouverture, Confiance","Soin, Organisation, Cohérence"],a:0,e:"Le modèle SOC de Baltes décrit 3 mécanismes d'ajustement : Sélectionner de nouveaux objectifs, Optimiser les moyens, Compenser la diminution des ressources."},
+{q:"Les 3 profils de vieillissement selon Bouisson (2007) sont :",o:["Résilient, routinier, routinisé","Actif, passif, dépressif","Optimiste, neutre, pessimiste","Indépendant, dépendant, mixte"],a:0,e:"Bouisson distingue le profil résilient (adaptation préservée), routinier (maintien de routines), et routinisé (rigidité, faible ajustement)."},
+{q:"Avec l'âge, la régulation émotionnelle :",o:["S'améliore","Se dégrade","Reste stable","Devient chaotique"],a:0,e:"Contrairement aux idées reçues, la régulation émotionnelle s'AMÉLIORE avec l'âge — c'est un point clé du vieillissement réussi."},
+{q:"Avec l'âge, les traits de personnalité (Big Five) :",o:["Restent stables","Se modifient radicalement","Disparaissent","S'inversent"],a:0,e:"Les traits de personnalité du Big Five montrent une stabilité remarquable avec l'âge."},
+{q:"Le gradient antéro-postérieur du vieillissement cognitif signifie que :",o:["Les fonctions frontales sont les premières altérées, les postérieures préservées","Les fonctions postérieures déclinent en premier","Tout le cerveau vieillit uniformément","Seul l'hippocampe est touché"],a:0,e:"C'est LE concept clé du chapitre : le vieillissement sain altère prioritairement les fonctions frontales (vitesse, mémoire de travail, exécutif) et préserve les fonctions postérieures (vocabulaire, mémoire sémantique, procédurale)."},
+{q:"Laquelle de ces fonctions est PRÉSERVÉE dans le vieillissement sain ?",o:["Mémoire sémantique","Mémoire de travail","Mémoire prospective","Vitesse de traitement"],a:0,e:"La mémoire sémantique (vocabulaire, connaissances) est préservée. Les mémoires de travail, prospective et la vitesse de traitement sont altérées (gradient antéro-postérieur)."},
+{q:"Laquelle de ces fonctions est ALTÉRÉE dans le vieillissement sain ?",o:["Fonctions exécutives","Mémoire procédurale","Habiletés verbales","Mémoire implicite"],a:0,e:"Les fonctions exécutives sont les premières altérées (gradient antéro-postérieur)."},
+{q:"L'élargissement des ventricules cérébraux est un signe normal du vieillissement.",o:["Vrai","Faux"],a:0,e:"L'élargissement ventriculaire fait partie des changements physiologiques cérébraux normaux du vieillissement."},
+{q:"L'affaiblissement des circuits dopaminergiques chez la personne âgée entraîne :",o:["Une diminution de la prise de risque et du circuit de la récompense","Une augmentation de l'agitation","Une amélioration de la mémoire","Aucun effet"],a:0,e:"L'affaiblissement dopaminergique réduit l'excitation, la prise de décision rapide, la prise de risque et le circuit de la récompense."},
+{q:"Les plaques β-amyloïdes peuvent être visualisées par :",o:["PET-scan PiB","IRM standard","Scanner cérébral","EEG"],a:0,e:"Le PET-scan PiB (Pittsburgh Compound B) permet de visualiser les plaques β-amyloïdes."},
+{q:"Vieillir avec succès, c'est avant tout :",o:["Faire face et s'adapter","Refuser le changement","Compter sur les autres","Rester immobile"],a:0,e:"Le vieillissement réussi repose sur la capacité à faire face et s'adapter (maintien du bien-être subjectif, du sentiment positif de soi, ajustement à la nouvelle réalité)."},
+{q:"Les capacités sensorielles dans le vieillissement sain :",o:["S'altèrent (vue, ouïe...)","Restent intactes","S'améliorent","Disparaissent"],a:0,e:"Les capacités sensorielles (vue, ouïe) s'altèrent avec l'âge, contrairement aux capacités affectives qui restent stables."},
+
+// === ÉVOLUTION DES TROUBLES DE LA PERSONNALITÉ ===
+{q:"La prévalence des troubles de la personnalité dans la population est d'environ :",o:["10 %","1 %","30 %","50 %"],a:0,e:"Les troubles de la personnalité touchent environ 10 % de la population générale."},
+{q:"Les troubles de la personnalité du Cluster B en vieillissant montrent surtout :",o:["Une diminution de l'impulsivité","Une augmentation de l'impulsivité","Aucun changement","Une rémission complète"],a:0,e:"Le Cluster B (antisociale, borderline, histrionique, narcissique) connaît une atténuation/diminution de l'impulsivité avec l'âge."},
+{q:"Le point commun à TOUS les clusters de TP en vieillissant est :",o:["Le syndrome dépressif et l'isolement social","La rémission spontanée","L'agressivité","L'hyperactivité"],a:0,e:"Tous les clusters convergent vers un syndrome dépressif et un isolement social en vieillissant."},
+{q:"Le Cluster A (paranoïaque, schizoïde, schizotypique) en vieillissant se caractérise par :",o:["Une stabilité relative et un risque de décompensation délirante","Une rémission systématique","Une transformation en Cluster B","Une disparition des symptômes"],a:0,e:"Le Cluster A reste relativement stable mais avec un risque de décompensation délirante, isolement et syndrome dépressif."},
+
+// === ÉVOLUTION DES PROCESSUS PSYCHOTIQUES ===
+{q:"Combien de patients schizophrènes sur 7 dépassent les 65 ans ?",o:["1 sur 7","2 sur 7","4 sur 7","Tous"],a:0,e:"Environ 1 patient schizophrène sur 7 dépasse les 65 ans."},
+{q:"Dans la schizophrénie après 65 ans, quelle proportion connaît une atténuation des symptômes ?",o:["62 %","27 %","10 %","85 %"],a:0,e:"62 % des schizophrènes âgés connaissent une atténuation des symptômes ; 27 % restent inchangés ou s'aggravent."},
+{q:"Dans la schizophrénie tardive, on observe :",o:["Une réduction des symptômes positifs au profit des négatifs","Une explosion des hallucinations","Une rémission complète","Une transformation en trouble bipolaire"],a:0,e:"L'activité délirante et les hallucinations se tarissent ; le retrait social, le négativisme et l'apathie persistent (symptômes négatifs)."},
+{q:"Chez les patients psychotiques âgés suivis de longue date, la majorité (44 %) sont :",o:["Hospitalisés à temps plein","Vivent seuls","En famille","En EHPAD"],a:0,e:"44 % des patients psychotiques âgés sont hospitalisés à temps plein, 26 % en famille, 17 % en EHPAD, 13 % seuls."},
+
+// === DÉPRESSION DU SUJET ÂGÉ ===
+{q:"Après 60 ans, l'épisode dépressif majeur est :",o:["Moins prévalent mais avec des conséquences plus graves","Plus prévalent et plus bénin","Identique à l'adulte jeune","Inexistant"],a:0,e:"Selon Kessler et al. (2005), l'EDM est moins prévalent après 60 ans MAIS porteur de conséquences plus graves (pronostic général, situation sociale, comorbidités)."},
+{q:"Le syndrome de dépression dysexécutive a été décrit par :",o:["Alexopoulos (2005)","Beck (1967)","Seligman (1975)","Klein (1935)"],a:0,e:"Alexopoulos a décrit en 2005 le syndrome de dépression dysexécutive : inhibition de réponses dominantes, résolution de problèmes, flexibilité, fluences, mémoire de travail, planification idéomotrice."},
+{q:"Le syndrome dépressif vasculaire est caractérisé par :",o:["Une altération des fonctions exécutives et de la concentration","Une humeur exaltée","Des hallucinations","Des idées délirantes"],a:0,e:"Le syndrome dépressif vasculaire (Alexopoulos, 2019) altère les fonctions exécutives et la concentration."},
+{q:"La dépression avec état démentiel réversible (Morimoto, 2015) se caractérise par :",o:["Un état cognitif au seuil diagnostique d'un TNM","Une rémission rapide","Une absence de cognition altérée","Des hallucinations visuelles"],a:0,e:"La dépression avec état démentiel réversible se présente avec un état cognitif détérioré au seuil diagnostique d'un Trouble Neurocognitif Majeur (TNM)."},
+{q:"Devant un sujet âgé déprimé, il faut TOUJOURS :",o:["Suspecter une cause neurodégénérative sous-jacente","Prescrire immédiatement un antidépresseur","Conclure à un deuil normal","Ignorer les symptômes"],a:0,e:"Chez le sujet âgé, la dépression peut être un facteur de risque, un accélérateur ou un prodrome d'Alzheimer — toujours suspecter une cause neurodégénérative."},
+{q:"La dépression peut être un prodrome de la maladie d'Alzheimer.",o:["Vrai","Faux"],a:0,e:"La dépression peut être un facteur de risque, un élément accélérateur ou un prodrome (symptôme précoce) d'Alzheimer."},
+
+// === DÉPRESSION vs ALZHEIMER ===
+{q:"Quel est le ratio de mauvais diagnostics dépression vs Alzheimer ?",o:["1 sur 6","1 sur 100","1 sur 2","1 sur 1000"],a:0,e:"C'est un piège diagnostique majeur : 1 patient sur 6 est mal diagnostiqué entre dépression et Alzheimer."},
+{q:"Les critères NIA-AA (2018) de la maladie d'Alzheimer exigent un déficit dans :",o:["≥ 2 domaines cognitifs","1 seul domaine","Tous les domaines","≥ 5 domaines"],a:0,e:"Les critères NIA-AA (2018) exigent des déficits dans ≥ 2 domaines parmi : mémoire à long terme, fonctions exécutives, langage, capacités visuospatiales, comportement."},
+{q:"Selon NIA-AA, le déclin cognitif dans la MA est :",o:["Progressif et insidieux","Brutal et fluctuant","Transitoire","Réversible"],a:0,e:"Le déclin de la MA est progressif et insidieux, à différencier de l'installation brutale de l'état confusionnel."},
+{q:"Selon Shdo et al. (2020), quelle proportion des patients Alzheimer ont des préoccupations sur leur cognition ?",o:["76 %","30 %","100 %","10 %"],a:0,e:"Shdo et al. (2020) rapportent que 76 % des patients Alzheimer ont des préoccupations à propos de leur cognition."},
+{q:"Lequel de ces symptômes est PLUS fréquent dans la dépression que dans la maladie d'Alzheimer ?",o:["Pensées suicidaires","Sentiment d'avoir une mauvaise mémoire","Indécision","Manque de clarté d'esprit"],a:0,e:"Les pensées suicidaires (avec tristesse, culpabilité, irritabilité, modifications du sommeil) sont plus fréquentes dans la dépression. Les difficultés cognitives subjectives sont plutôt évocatrices d'Alzheimer."},
+{q:"Lequel de ces symptômes est PLUS fréquent dans la maladie d'Alzheimer que dans la dépression ?",o:["Anhédonie / perte d'intérêt","Tristesse marquée","Pensées suicidaires","Pleurs"],a:0,e:"L'anhédonie (et le sentiment d'inutilité, sentiments négatifs envers soi, sentiment d'avoir une mauvaise mémoire) est plus fréquente dans la MA selon Shdo et al."},
+{q:"Le BDI évalue :",o:["La sévérité de la dépression (21 affirmations, 4 niveaux)","La démence","L'anxiété généralisée","La manie"],a:0,e:"Le BDI (Beck Depression Inventory) comporte 21 affirmations cotées sur 4 niveaux de sévérité."},
+{q:"L'échelle GDS est spécifiquement adaptée :",o:["À la personne âgée (réponses oui/non)","Aux enfants","Aux adolescents","Aux patients schizophrènes"],a:0,e:"La GDS (Geriatric Depression Scale) est adaptée à la personne âgée : 30 affirmations à réponses dichotomiques (oui/non), plus simples cognitivement."},
+{q:"Le STAI évalue :",o:["L'anxiété (état + trait)","La dépression","La démence","Les hallucinations"],a:0,e:"Le STAI (Spielberger State-Trait Anxiety Inventory) comporte une version 'état' (anxiété actuelle) et une version 'trait' (anxiété stable)."},
+{q:"Le délire d'indignité est typique :",o:["De la mélancolie (formes graves)","D'Alzheimer","Du Charles Bonnet","De l'état confusionnel"],a:0,e:"Le délire d'indignité, de ruine ou de Cotard est caractéristique des formes graves de dépression mélancolique."},
+
+// === SYNDROME DE CHARLES BONNET ===
+{q:"Le syndrome de Charles Bonnet se caractérise par :",o:["Hallucinations visuelles complexes liées à un déficit visuel","Délire d'infestation parasitaire","Hallucinations auditives","Confusion brutale"],a:0,e:"Le Charles Bonnet associe hallucinations visuelles complexes (souvent vespérales) à un déficit visuel (DMLA, cataracte). Le patient croit à ses hallucinations."},
+{q:"Dans le syndrome de Charles Bonnet, le patient :",o:["Croit à ses hallucinations","Sait toujours qu'elles sont fausses","N'a aucune hallucination","A des hallucinations auditives uniquement"],a:0,e:"Une particularité importante : dans le Charles Bonnet, le patient CROIT à ses hallucinations visuelles."},
+{q:"La DMLA est un facteur favorisant de :",o:["Charles Bonnet","Ekbom","Lewy","État confusionnel"],a:0,e:"La DMLA (et la cataracte) — déficit visuel — favorise le syndrome de Charles Bonnet."},
+
+// === SYNDROME D'EKBOM ===
+{q:"Le syndrome d'Ekbom est aussi appelé :",o:["Délire dermatozoïque","Délire de persécution","Délire de jalousie","Paraphrénie"],a:0,e:"Le syndrome d'Ekbom = délire dermatozoïque : conviction d'être infesté de parasites sous la peau."},
+{q:"Le syndrome d'Ekbom est lié à :",o:["Un déficit somatosensoriel","Un déficit visuel","Un déficit auditif","Un déficit moteur"],a:0,e:"Le syndrome d'Ekbom est lié à un déficit somatosensoriel."},
+
+// === DÉMENCE À CORPS DE LEWY ===
+{q:"La démence à corps de Lewy est :",o:["La 2e forme la plus fréquente de TNM","La forme la plus fréquente","Une forme rare","Liée à un AVC"],a:0,e:"La démence à corps de Lewy est la 2e forme la plus fréquente de TNM, après Alzheimer."},
+{q:"La démence à corps de Lewy débute typiquement vers :",o:["60 ans","20 ans","85 ans","40 ans"],a:0,e:"La démence à corps de Lewy débute vers 60 ans."},
+{q:"La démence à corps de Lewy est liée à un déficit en :",o:["Acétylcholine et dopamine","Sérotonine seule","GABA","Glutamate"],a:0,e:"La démence à corps de Lewy est liée à un déficit en acétylcholine ET dopamine."},
+{q:"Le critère central de la démence à corps de Lewy est :",o:["Hallucinations visuelles très détaillées et mobiles","Hallucinations auditives","Tremblement des mains","Perte de mémoire pure"],a:0,e:"Le critère central est la présence d'hallucinations visuelles très détaillées et mobiles, liée au déficit dopaminergique."},
+{q:"Dans la démence à corps de Lewy, on observe des troubles du comportement :",o:["En sommeil paradoxal (rêves agités, cris)","Uniquement diurnes","Anxieux uniquement","Aucun trouble du sommeil"],a:0,e:"Critère associé : troubles du comportement en sommeil paradoxal — rêves agités, cris, mouvements violents."},
+{q:"Une particularité majeure de la démence à corps de Lewy est :",o:["L'intolérance aux neuroleptiques","La sensibilité aux antidépresseurs","La résistance au traitement","L'amélioration spontanée"],a:0,e:"À cause du syndrome extrapyramidal (parkinsonien), la personne avec Lewy est INTOLÉRANTE aux neuroleptiques — c'est un critère à connaître absolument."},
+{q:"Le syndrome extrapyramidal accompagnant la démence à corps de Lewy ressemble à :",o:["La maladie de Parkinson","La schizophrénie","Une dépression","Un état confusionnel"],a:0,e:"Le syndrome extrapyramidal de la Lewy est de type parkinsonien (rigidité, tremblement)."},
+
+// === DÉLIRES TARDIFS ===
+{q:"Les délires tardifs surviennent :",o:["De novo chez le sujet âgé, sans antécédent psychiatrique","Toujours après une schizophrénie","Uniquement chez les Alzheimer","Après un traumatisme crânien"],a:0,e:"Les délires tardifs surviennent de novo (apparition nouvelle) chez le sujet âgé, sans antécédent psychiatrique préalable."},
+{q:"Quel pourcentage des délires tardifs s'accompagne d'hallucinations ?",o:["75 %","20 %","100 %","10 %"],a:0,e:"75 % des délires tardifs s'accompagnent d'hallucinations, surtout vespérales et nocturnes."},
+{q:"Les facteurs de risque des délires tardifs incluent TOUS sauf :",o:["L'environnement social riche","L'isolement et la solitude","Le deuil ou la séparation","L'institutionnalisation"],a:0,e:"L'environnement social riche est PROTECTEUR. Les facteurs de risque sont l'isolement, la solitude, le deuil, la séparation, l'institutionnalisation, une famille non soutenante."},
+{q:"Les thématiques récurrentes des délires tardifs incluent :",o:["Persécution, intrusions, hypocondrie, jalousie","Grandeur et toute-puissance","Mégalomanie","Mission divine"],a:0,e:"Les délires tardifs portent sur la persécution/injustice, intrusions/spoliation/ruine, hypocondrie, jalousie, et parfois 'le compagnon tardif' (présence imaginaire)."},
+{q:"Le 'compagnon tardif' désigne :",o:["La présence imaginaire d'une personne","Un véritable accompagnant","Un thérapeute","Un voisin"],a:0,e:"Le 'compagnon tardif' est la conviction délirante de la présence imaginaire d'une personne aux côtés du patient."},
+{q:"La paraphrénie se caractérise par :",o:["Un délire paranoïde rare, sans troubles cognitifs, où le délirant se superpose au réel","Une démence rapide","Un trouble bipolaire","Une dépression"],a:0,e:"La paraphrénie est un délire paranoïde rare, sans troubles cognitifs, où le monde délirant se superpose au monde réel sans le remplacer."},
+{q:"Les délires tardifs sont en général :",o:["Pauvres et peu systématisés (contre les voisins, la famille proche)","Hautement systématisés","Mégalomaniaques","Mystiques"],a:0,e:"Les délires tardifs sont pauvres, peu systématisés, et portent souvent contre les voisins ou la famille proche."},
+{q:"L'évolution des délires tardifs est :",o:["Souvent en rémission après prise en charge pluridisciplinaire","Toujours irréversible","Spontanément résolutive","Mortelle"],a:0,e:"L'évolution des délires tardifs est souvent vers la rémission après une prise en charge pluridisciplinaire (somatique, psychiatrique, sociale)."},
+
+// === ÉTAT CONFUSIONNEL ===
+{q:"L'état confusionnel (delirium) est lié à :",o:["Une affection organique ayant touché le système nerveux","Un trouble de la personnalité","Une pure cause psychogène","Une schizophrénie"],a:0,e:"L'état confusionnel résulte d'une affection organique (infection, déshydratation, médicaments...) ayant touché le système nerveux."},
+{q:"LE caractère diagnostique essentiel de l'état confusionnel est :",o:["L'installation brutale","L'installation progressive","L'évolution chronique","L'absence de symptômes"],a:0,e:"L'installation BRUTALE est le caractère diagnostique essentiel de l'état confusionnel — c'est ce qui le distingue de la démence (insidieuse)."},
+{q:"L'état confusionnel se caractérise par une altération de :",o:["La conscience (état intermédiaire entre lucidité et absence)","La motricité","Le langage uniquement","La mémoire seule"],a:0,e:"L'état confusionnel est une altération particulière de la conscience : un état intermédiaire entre lucidité et absence."},
+{q:"L'obnubilation intellectuelle désigne :",o:["Un trouble de la vigilance","Une hallucination","Un délire","Une amnésie pure"],a:0,e:"L'obnubilation intellectuelle est un trouble de la vigilance, signe cardinal de l'état confusionnel."},
+{q:"Les symptômes dominants de l'état confusionnel incluent :",o:["Troubles du sommeil, étrangeté, perplexité anxieuse","Hallucinations gustatives","Délires systématisés","Apathie pure"],a:0,e:"Les symptômes dominants : troubles du sommeil, sentiment d'étrangeté, perplexité anxieuse."},
+{q:"L'état confusionnel dure typiquement :",o:["Pas plus d'un mois","Plusieurs années","À vie","Quelques minutes"],a:0,e:"L'état confusionnel est transitoire (ne dure pas plus d'un mois) et se soigne en quelques semaines voire jours."},
+{q:"L'état confusionnel laisse comme séquelle :",o:["Des amnésies lacunaires de la période confusionnelle","Une démence définitive","Une schizophrénie","Aucune trace cognitive"],a:0,e:"L'état confusionnel se résout sans séquelles, sauf des amnésies lacunaires de la période confusionnelle elle-même."},
+{q:"L'état confusionnel est :",o:["Réversible","Irréversible","Chronique","Toujours mortel"],a:0,e:"L'état confusionnel est RÉVERSIBLE (à la différence de la démence)."},
+
+// === DIAGNOSTIC DIFFÉRENTIEL CLEF ===
+{q:"Quelle est la distinction MAJEURE entre démence et état confusionnel ?",o:["Démence = installation insidieuse irréversible ; confusion = brutale réversible","Démence = jeune ; confusion = vieux","Démence = courte ; confusion = longue","Aucune différence"],a:0,e:"Distinction majeure pour l'examen : Démence (TNM) = installation insidieuse, déclin progressif, irréversible ; État confusionnel = installation brutale, fluctuant, réversible."},
+{q:"Le délire tardif diffère du delirium par :",o:["L'absence d'atteinte cognitive globale","Sa brutalité d'installation","Sa cause organique","Son irréversibilité"],a:0,e:"Le délire tardif est un délire pur, sans atteinte cognitive globale, souvent réversible avec PEC pluridisciplinaire — alors que le delirium implique une obnubilation de la conscience."},
+
+// === VIGNETTES CLINIQUES ===
+{q:"Mme X, 78 ans, DMLA évoluée, voit régulièrement 'des personnes' sur son canapé qu'elle décrit en détail. Diagnostic ?",o:["Charles Bonnet","Ekbom","Lewy","État confusionnel"],a:0,e:"Hallucinations visuelles complexes + déficit visuel (DMLA) = syndrome de Charles Bonnet typique."},
+{q:"M. Y, 82 ans, est convaincu d'avoir des parasites sous la peau, se gratte au sang. Diagnostic ?",o:["Syndrome d'Ekbom","Charles Bonnet","Schizophrénie tardive","Lewy"],a:0,e:"Conviction délirante d'infestation parasitaire sous la peau = syndrome d'Ekbom (= délire dermatozoïque)."},
+{q:"M. Z, 67 ans, hallucinations visuelles très détaillées et mobiles + rigidité parkinsonienne + a fait une chute après prise de neuroleptiques. Diagnostic ?",o:["Démence à corps de Lewy","Charles Bonnet","Schizophrénie","Alzheimer"],a:0,e:"Triade Lewy : hallucinations visuelles détaillées + parkinsonisme + intolérance aux neuroleptiques."},
+{q:"Mme W, 80 ans, isolée depuis 6 mois, développe une conviction que ses voisins lui volent des objets et entend des voix la nuit. Diagnostic ?",o:["Délire tardif","Charles Bonnet","Confusion","Démence"],a:0,e:"Délire de novo chez sujet âgé isolé + thématique persécutoire pauvre + hallucinations vespérales = délire tardif."},
+{q:"M. V, 75 ans, hospitalisé pour pneumonie, devient brutalement désorienté en 24h, perplexe, agité, parle de façon décousue. Diagnostic ?",o:["État confusionnel","Démence","Délire tardif","Dépression"],a:0,e:"Installation BRUTALE + désorientation + perplexité anxieuse + cause organique (pneumonie) = état confusionnel typique."},
+{q:"Mme T, 70 ans, plainte mnésique progressive depuis 2 ans, désintérêt, retrait, peu de tristesse marquée. Diagnostic le plus probable ?",o:["Maladie d'Alzheimer","Dépression majeure","Charles Bonnet","Confusion"],a:0,e:"Plainte mnésique progressive + désintérêt + retrait sans tristesse marquée évoque davantage Alzheimer (cf. Shdo et al.)."},
+{q:"M. S, 68 ans, plainte de mémoire récente + tristesse marquée + culpabilité + idées suicidaires. Diagnostic ?",o:["Suspecter une dépression (mais éliminer Alzheimer)","Alzheimer certain","Confusion","Délire tardif"],a:0,e:"Idées suicidaires + tristesse + culpabilité orientent vers la dépression — mais chez le sujet âgé il faut TOUJOURS éliminer une cause neurodégénérative."},
+{q:"Une dépression du sujet âgé avec FE altérées au seuil d'un TNM s'appelle :",o:["Dépression avec état démentiel réversible","Dépression dysexécutive","Dépression vasculaire","Dépression mélancolique"],a:0,e:"La dépression avec état démentiel réversible (Morimoto, 2015) atteint le seuil diagnostique d'un TNM mais reste réversible avec traitement antidépresseur."},
+];
+
+const TOTAL=20;
+let selected,current,score,answered;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startGame(){
+  selected=shuffle([...ALL_QUESTIONS]).slice(0,TOTAL);
+  current=0;score=0;answered=false;
+  render();
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(current>=TOTAL){showResult();return}
+  const q=selected[current];
+  const isVF=q.o.length===2&&(q.o[0]==="Vrai"||q.o[0]==="Faux")&&(q.o[1]==="Vrai"||q.o[1]==="Faux");
+  let indices=[...Array(q.o.length).keys()];
+  if(!isVF) indices=shuffle(indices);
+  const pct=Math.round((current/TOTAL)*100);
+  app.innerHTML=`
+    <h1>Le Détective du Vieillissement</h1>
+    <p class="subtitle">Chapitre 9 : Psychopathologie du vieillissement</p>
+    <div class="score-bar"><span>Question ${current+1}/${TOTAL}</span><span>Score : ${score}/${TOTAL}</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="card">
+      <span class="tag">${isVF?'Vrai / Faux':'QCM'}</span>
+      <div class="question">${q.q}</div>
+      <div class="options">${indices.map(i=>`<button class="opt-btn" data-idx="${i}">${q.o[i]}</button>`).join('')}</div>
+      <div class="explanation" id="expl">💡 ${q.e}</div>
+    </div>
+    <button class="next-btn" id="nextBtn">${current<TOTAL-1?'Question suivante ➜':'Voir le résultat ➜'}</button>`;
+  answered=false;
+  document.querySelectorAll('.opt-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>handleAnswer(parseInt(btn.dataset.idx),q.a,btn));
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{current++;render()});
+}
+
+function handleAnswer(chosen,correct,btn){
+  if(answered)return;answered=true;
+  document.querySelectorAll('.opt-btn').forEach(b=>{b.classList.add('locked');b.disabled=true});
+  if(chosen===correct){score++;btn.classList.add('correct')}
+  else{btn.classList.add('wrong');document.querySelectorAll('.opt-btn').forEach(b=>{if(parseInt(b.dataset.idx)===correct)b.classList.add('reveal')})}
+  document.getElementById('expl').classList.add('show');
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function showResult(){
+  const pct=Math.round((score/TOTAL)*100);
+  let msg='';
+  if(pct>=90)msg='Détective hors pair ! Le vieillissement n\'a aucun secret pour vous.';
+  else if(pct>=70)msg='Très bonne enquête ! Encore quelques indices à maîtriser.';
+  else if(pct>=50)msg='Pas mal — mais le chapitre 9 mérite une relecture.';
+  else msg='Reprenez l\'enquête depuis le début : le chapitre 9 vous attend.';
+  document.getElementById('app').innerHTML=`
+    <h1>Le Détective du Vieillissement</h1>
+    <p class="subtitle">Chapitre 9 : Psychopathologie du vieillissement</p>
+    <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="card result">
+      <h2>Résultat de l'enquête</h2>
+      <div class="big-score">${score} / ${TOTAL}</div>
+      <p>${pct}% de bonnes réponses</p>
+      <p>${msg}</p>
+      <button class="replay-btn" onclick="startGame()">🔄 Rejouer</button>
+    </div>`;
+}
+
+startGame();
+</script>
+</body>
+</html>

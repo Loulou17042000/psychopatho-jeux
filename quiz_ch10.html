@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Miroir Déformant — Quiz Chapitre 10</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:#0f0f1a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .container{max-width:780px;width:100%;margin:auto}
+  h1{font-size:2.2rem;font-weight:800;text-align:center;background:linear-gradient(135deg,#DB2777,#F472B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+  .subtitle{text-align:center;font-size:1rem;color:#94a3b8;margin-bottom:30px}
+  .score-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:.9rem;color:#cbd5e1}
+  .progress-track{width:100%;height:8px;background:#1e1e2e;border-radius:99px;overflow:hidden;margin-bottom:24px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#DB2777,#F472B6);border-radius:99px;transition:width .4s ease}
+  .card{background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:28px 24px;margin-bottom:18px;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+  .q-number{font-size:.75rem;color:#DB2777;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  .question{font-size:1.1rem;font-weight:600;line-height:1.5;margin-bottom:20px}
+  .options{display:flex;flex-direction:column;gap:10px}
+  .opt-btn{background:#16162a;border:2px solid #2a2a3e;border-radius:12px;padding:14px 18px;font-size:1rem;color:#e2e8f0;cursor:pointer;text-align:left;transition:all .2s;font-family:inherit}
+  .opt-btn:hover:not(.locked){border-color:#DB2777;background:#1f1f35}
+  .opt-btn.correct{border-color:#22c55e;background:rgba(34,197,94,.12);color:#4ade80}
+  .opt-btn.wrong{border-color:#ef4444;background:rgba(239,68,68,.1);color:#f87171}
+  .opt-btn.reveal{border-color:#22c55e;background:rgba(34,197,94,.08)}
+  .explanation{margin-top:14px;padding:14px 16px;background:#12121f;border-left:3px solid #DB2777;border-radius:0 8px 8px 0;font-size:.9rem;color:#94a3b8;line-height:1.5;display:none}
+  .explanation.show{display:block}
+  .next-btn{display:none;margin:18px auto 0;padding:12px 32px;background:linear-gradient(135deg,#DB2777,#9D174D);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .next-btn:hover{transform:scale(1.04)}
+  .result{text-align:center;padding:40px 20px}
+  .result h2{font-size:2rem;margin-bottom:8px}
+  .result .big-score{font-size:3.5rem;font-weight:800;background:linear-gradient(135deg,#DB2777,#F472B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .result p{color:#94a3b8;margin:8px 0}
+  .replay-btn{margin-top:24px;padding:14px 40px;background:linear-gradient(135deg,#DB2777,#9D174D);color:#fff;border:none;border-radius:12px;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .replay-btn:hover{transform:scale(1.05)}
+  .tag{display:inline-block;background:rgba(219,39,119,.15);color:#F472B6;font-size:.75rem;padding:3px 10px;border-radius:99px;font-weight:600;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<script>
+const ALL_QUESTIONS=[
+// === DYSMORPHIE CORPORELLE ===
+{q:"La dysmorphie corporelle est classée dans le DSM-5 parmi :",o:["Les TOC","Les TCA","Les troubles dissociatifs","Les troubles psychotiques"],a:0,e:"Piège classique : la dysmorphie est classée parmi les TOC dans le DSM-5, PAS parmi les TCA — car ses comportements répétitifs sont au cœur du tableau."},
+{q:"Dans la dysmorphie, la préoccupation porte sur :",o:["Un défaut spécifique d'apparence (nez, peau...)","Le poids corporel global","La nourriture","Les caractéristiques sexuelles"],a:0,e:"La dysmorphie cible un défaut spécifique non observable ou minime (nez, peau, cheveux). Le poids global oriente plutôt vers un TCA."},
+{q:"Les comportements répétitifs typiques de la dysmorphie incluent :",o:["Vérification au miroir, toilettage excessif, camouflage","Vomissements provoqués","Restriction alimentaire","Crises de gloutonnerie"],a:0,e:"La dysmorphie associe la préoccupation à des comportements répétitifs : vérification miroir, toilettage excessif, camouflage, retouches."},
+{q:"La dysmorphie débute typiquement :",o:["À l'adolescence","Dans la petite enfance","Après 50 ans","Pendant la vieillesse"],a:0,e:"Le début de la dysmorphie est typiquement adolescent."},
+{q:"La dysmorphie est plus fréquente chez :",o:["Les femmes","Les hommes","Sans prédominance","Les personnes âgées"],a:0,e:"La dysmorphie corporelle est plus fréquente chez les femmes."},
+{q:"Comment distinguer dysmorphie et TCA ?",o:["TCA = poids/forme global ; dysmorphie = défaut spécifique","Dysmorphie = poids ; TCA = défaut","Identiques","Aucun rapport"],a:0,e:"La distinction clé : dans le TCA la préoccupation porte sur la forme et le poids du corps ; dans la dysmorphie, sur un défaut SPÉCIFIQUE."},
+{q:"Comment distinguer dysmorphie et dysphorie de genre ?",o:["Dysphorie de genre = caractéristiques sexuelles ; dysmorphie = défaut esthétique","Dysphorie = poids ; dysmorphie = sexe","Identiques","Aucune différence"],a:0,e:"La dysphorie de genre cible les caractéristiques sexuelles (lié au sexe assigné), tandis que la dysmorphie cible un défaut esthétique."},
+
+// === ANOREXIE — CRITÈRES CENTRAUX ===
+{q:"Les 3 'A' de l'anorexie mentale sont :",o:["Anorexie, Amaigrissement, Aménorrhée","Anxiété, Agitation, Anhédonie","Apathie, Aboulie, Asthénie","Anorexie, Achalasie, Aérophagie"],a:0,e:"Les 3 'A' classiques de l'anorexie : Anorexie (restriction), Amaigrissement (poids bas), Aménorrhée (arrêt des règles — bien que ce critère ait été retiré du DSM-5)."},
+{q:"L'aménorrhée a été retirée des critères du DSM-5.",o:["Vrai","Faux"],a:0,e:"Le DSM-5 a retiré l'aménorrhée comme critère obligatoire (pour inclure les hommes, les femmes sous contraception, les pré-pubères). Mais elle reste très fréquente cliniquement."},
+{q:"Le seuil d'IMC chez l'adulte définissant l'anorexie est :",o:["< 17 kg/m²","< 25 kg/m²","< 20 kg/m²","< 30 kg/m²"],a:0,e:"Chez l'adulte, l'anorexie se définit par un IMC < 17 kg/m² (sous le poids minimal attendu chez l'enfant/ado)."},
+{q:"Dans l'anorexie, la peur de prendre du poids :",o:["Persiste même quand le poids est très bas","Disparaît quand le poids baisse","N'est jamais présente","Ne touche que les femmes"],a:0,e:"Critère majeur : la peur intense persiste MÊME QUAND LE POIDS EST DÉJÀ TRÈS BAS — c'est ce qui caractérise l'anorexie mentale."},
+{q:"L'altération de la perception du corps dans l'anorexie s'appelle :",o:["Dysmorphophobie","Dyspareunie","Dyslexie","Dysarthrie"],a:0,e:"La dysmorphophobie : la personne se voit grosse alors qu'elle est très maigre — altération centrale de la perception du corps."},
+{q:"Selon les seuils DSM-5, un IMC à 15,5 kg/m² correspond à une anorexie :",o:["Sévère","Légère","Modérée","Extrême"],a:0,e:"Sévérité : ≥17 légère ; 16–16,99 modérée ; 15–15,99 sévère ; ≤15 extrême. 15,5 = sévère."},
+{q:"Selon les seuils DSM-5, un IMC à 14 kg/m² correspond à une anorexie :",o:["Extrême","Sévère","Modérée","Légère"],a:0,e:"Un IMC ≤ 15 kg/m² définit l'anorexie EXTRÊME."},
+{q:"Les 2 sous-types d'anorexie mentale sont :",o:["Restrictif pur ; accès hyperphagiques/purgatif","Type I ; type II","Précoce ; tardif","Léger ; sévère"],a:0,e:"DSM-5 distingue 2 sous-types : restrictif pur (régime/jeûne/sport) et accès hyperphagiques/purgatif (crises et/ou vomissements/laxatifs)."},
+{q:"Le sous-type purgatif de l'anorexie inclut :",o:["Vomissements provoqués, laxatifs, diurétiques, lavements","Uniquement le sport excessif","Uniquement le jeûne","Uniquement la pesée"],a:0,e:"Le type purgatif inclut crises de gloutonnerie ET/OU comportements purgatifs : vomissements, laxatifs, diurétiques, lavements."},
+{q:"Le sous-type restrictif pur d'anorexie exclut :",o:["Tout accès hyperphagique ou purge sur les 3 derniers mois","Le jeûne","Le sport excessif","La restriction alimentaire"],a:0,e:"Le restrictif pur = perte de poids par régime, jeûne, exercice excessif, SANS accès hyperphagique ni purge sur les 3 derniers mois."},
+
+// === BOULIMIE ===
+{q:"La fréquence requise pour le diagnostic de boulimie est :",o:["≥ 1 fois/semaine pendant 3 mois","≥ 1 fois/jour pendant 1 mois","≥ 3 fois/semaine pendant 1 an","≥ 1 fois/mois pendant 6 mois"],a:0,e:"Critère DSM-5 : crises et compensations ≥ 1 fois par semaine pendant au moins 3 mois."},
+{q:"Une crise hyperphagique se définit notamment par :",o:["Absorption en < 2h d'une quantité largement supérieure à la norme + perte de contrôle","Manger lentement","Manger des aliments diététiques","Sauter un repas"],a:0,e:"Une crise (binge) = absorption en un temps limité (< 2h) d'une quantité largement supérieure à la normale + sentiment de perte de contrôle."},
+{q:"La particularité du poids dans la boulimie est :",o:["Souvent normal","Très bas","Toujours obèse","Variable rapidement"],a:0,e:"Contrairement à l'anorexie, la boulimique a souvent un IMC dans la norme — d'où la difficulté à repérer cliniquement."},
+{q:"Les comportements compensatoires dans la boulimie incluent TOUS sauf :",o:["Augmentation des apports alimentaires","Vomissements provoqués","Laxatifs/diurétiques","Sport excessif"],a:0,e:"Les comportements compensatoires sont vomissements, laxatifs, diurétiques, jeûnes, sport excessif. PAS l'augmentation des apports."},
+{q:"Dans la boulimie, l'estime de soi est :",o:["Influencée par le poids et la forme corporelle","Indépendante du corps","Fondée sur la performance scolaire","Stable et positive"],a:0,e:"Critère DSM-5 : l'estime de soi de la boulimique est influencée de manière excessive par le poids et la forme corporelle."},
+{q:"Selon les seuils de sévérité de la boulimie, 5 épisodes compensatoires/semaine correspondent à :",o:["Modéré","Léger","Sévère","Extrême"],a:0,e:"Sévérité boulimie : 1-3 léger ; 4-7 modéré ; 8-13 sévère ; ≥14 extrême. 5 épisodes = modéré."},
+{q:"La boulimie peut-elle être diagnostiquée pendant un épisode anorexique ?",o:["Non, pas exclusivement","Oui, toujours","Uniquement chez l'homme","Cela n'a aucune importance"],a:0,e:"Critère d'exclusion : la boulimie n'est PAS diagnostiquée si elle survient exclusivement durant un épisode d'anorexie."},
+
+// === BED ===
+{q:"Le BED (hyperphagie boulimique) se distingue de la boulimie par :",o:["L'absence de comportements compensatoires","La présence de purges","L'IMC bas","La peur intense de grossir"],a:0,e:"Distinction clé : le BED a des CRISES SANS PURGE — c'est ce qui le distingue de la boulimie."},
+{q:"Le diagnostic de BED requiert au moins :",o:["3 éléments parmi 5 (rapidité, satiété, sans faim, seul, dégoût)","1 élément","Tous les 5 éléments","Aucun critère secondaire"],a:0,e:"Le BED requiert ≥ 3 éléments parmi : manger plus rapidement, jusqu'à inconfort, sans faim, seul par gêne, sentiment de dégoût/déprime/culpabilité."},
+{q:"La fréquence requise pour le BED est :",o:["≥ 1 fois/semaine pendant 3 mois","≥ 3 fois/semaine pendant 6 mois","Quotidienne","≥ 1 fois/mois pendant 1 an"],a:0,e:"Comme la boulimie : ≥ 1 fois par semaine pendant 3 mois."},
+{q:"Quelle proportion des patients obèses présenterait un BED ?",o:["15,5 à 40 %","2 %","80 %","60 %"],a:0,e:"Environ 15,5 à 40 % des patients obèses présenteraient un BED."},
+{q:"Le BED est typiquement associé à :",o:["Une obésité ou un surpoids","Un IMC très bas","Un IMC normal toujours","Une aménorrhée"],a:0,e:"Le BED est très associé à l'obésité (15,5-40 % des obèses), à différencier du poids normal de la boulimie et du poids bas de l'anorexie."},
+{q:"Lequel n'est PAS un critère du BED ?",o:["Vomissements provoqués","Manger seul par gêne","Manger sans faim physique","Sentiment de dégoût après"],a:0,e:"Les vomissements provoqués sont des comportements PURGATIFS exclus du BED. Le BED se définit par l'absence de compensations."},
+
+// === AUTRES TCA ===
+{q:"Le pica se définit par :",o:["Ingestion persistante de substances non nutritives","Régurgitation d'aliments","Évitement par aversion sensorielle","Crises hyperphagiques"],a:0,e:"Pica = ingestion persistante de substances non nutritives (terre, plâtre, cheveux, papier...) durant ≥ 1 mois, inappropriée au stade développemental."},
+{q:"Le mérycisme désigne :",o:["La régurgitation d'aliments (remâchés, ravalés ou recrachés)","La restriction alimentaire","Le pica","La dysmorphie"],a:0,e:"Mérycisme (rumination) = régurgitation répétée d'aliments, qui peuvent être remâchés, ravalés ou recrachés."},
+{q:"L'ARFID se distingue de l'anorexie par :",o:["L'évitement n'est PAS motivé par la peur de grossir","La peur intense de grossir","La présence d'IMC bas","La dysmorphophobie"],a:0,e:"Critère ARFID : l'évitement/restriction est motivé par désintérêt, aversion sensorielle, ou peur des conséquences (étouffement, vomir) — PAS par la peur de grossir."},
+{q:"Quel TCA peut être motivé par une aversion sensorielle (texture, odeur) ?",o:["ARFID","Anorexie restrictive","Boulimie","BED"],a:0,e:"L'ARFID est notamment motivé par l'aversion sensorielle, le désintérêt pour la nourriture, ou la peur de l'étouffement/des fausses routes."},
+{q:"Une personne ingère régulièrement de la terre et du plâtre. Diagnostic ?",o:["Pica","Mérycisme","ARFID","BED"],a:0,e:"Ingestion répétée de substances non nutritives = pica."},
+
+// === FACTEURS DE VULNÉRABILITÉ ===
+{q:"L'étiologie des TCA est :",o:["Multifactorielle (psycho + émotionnel + socioculturel)","Strictement génétique","Strictement éducative","Aléatoire"],a:0,e:"L'étiologie est multifactorielle : facteurs psychologiques, émotionnels, socioculturels (et biologiques)."},
+{q:"Lequel n'est PAS un facteur psychologique de vulnérabilité aux TCA ?",o:["Estime de soi élevée","Attachement insécure","Image de soi négative","Perfectionnisme"],a:0,e:"L'estime de soi FAIBLE est un facteur de risque (pas l'estime élevée). Les autres : attachement insécure, image de soi négative, perfectionnisme."},
+{q:"Lequel est un facteur émotionnel de vulnérabilité aux TCA ?",o:["Sensibilité émotionnelle élevée","Bonne régulation émotionnelle","Extraversion","Stabilité émotionnelle"],a:0,e:"Facteurs émotionnels : sensibilité émotionnelle élevée, difficultés de régulation émotionnelle, introversion, anxiété."},
+{q:"Lequel est un facteur socioculturel de vulnérabilité aux TCA ?",o:["Réseaux sociaux et exposition aux corps idéaux","Pratique sportive modérée","Repas en famille","Activité associative"],a:0,e:"Facteurs socioculturels : normes esthétiques, réseaux sociaux, pression du 'mieux manger', commentaires sur le poids, traumatismes, transitions de vie, régimes répétés."},
+{q:"L'adolescence est une période :",o:["De transition particulièrement à risque pour les TCA","Sans aucun risque","Protectrice","Stable émotionnellement"],a:0,e:"L'adolescence est une transition de vie particulièrement à risque (++) pour les TCA, avec hypersensibilité au jugement et aux normes esthétiques."},
+{q:"Les régimes à répétition dans l'enfance sont :",o:["Un facteur de risque de TCA","Un facteur protecteur","Sans effet","Préventifs"],a:0,e:"Les régimes à répétition dans l'enfance et la restriction cognitive sont des facteurs de risque sociétaux/familiaux des TCA."},
+
+// === COMORBIDITÉS ===
+{q:"Quelle est la comorbidité la plus fréquente avec TOUS les TCA ?",o:["Troubles de l'humeur (dépression++)","Schizophrénie","TDAH","Démence"],a:0,e:"Les troubles de l'humeur (et particulièrement la dépression) sont la comorbidité majeure de tous les TCA, suivis par les troubles de la personnalité."},
+{q:"Le TOC est particulièrement comorbide de :",o:["Dysmorphie et anorexie restrictive","BED","ARFID","Pica"],a:0,e:"Le TOC est fréquemment comorbide de la dysmorphie et de l'anorexie restrictive (rituels, perfectionnisme)."},
+{q:"L'anxiété sociale est particulièrement comorbide de :",o:["Dysmorphie, boulimie, BED","Anorexie restrictive seulement","Pica","Mérycisme"],a:0,e:"L'anxiété sociale est très comorbide de la dysmorphie, boulimie, et BED — souvent en lien avec la honte du corps."},
+
+// === PRISE EN CHARGE ===
+{q:"La thérapie de référence dans les TCA est :",o:["TCC (avec restructuration cognitive)","Psychanalyse classique","Hypnose","Thérapie par exposition"],a:0,e:"La TCC (Thérapie Cognitivo-Comportementale) est la thérapie de référence dans les TCA, ciblant les distorsions cognitives sur le corps et l'alimentation."},
+{q:"Pourquoi les approches motivationnelles sont-elles essentielles dans l'anorexie ?",o:["Le déni est massif","Le patient est trop coopérant","La maladie est rapide","Il n'y a pas de symptôme"],a:0,e:"Dans l'anorexie, le déni est massif : le patient ne reconnaît pas la maladie, d'où l'importance des approches motivationnelles."},
+{q:"Les ISRS sont prescrits dans les TCA pour :",o:["Cibler la sérotonine et les comorbidités anxio-dépressives","Couper la faim","Provoquer des vomissements","Diminuer l'IMC"],a:0,e:"Les ISRS (et la clomipramine) sont la pharmacologie principale dans les TCA, surtout pour traiter les composantes anxio-dépressives et obsessionnelles."},
+{q:"Les thérapies systémiques (familiales) sont surtout indiquées :",o:["Chez les adolescents","Chez les personnes âgées","Chez les hommes uniquement","Jamais"],a:0,e:"Les thérapies systémiques (familiale, multi-familles) sont particulièrement indiquées chez les ADOLESCENTS, où la dynamique familiale est cruciale."},
+
+// === TCA OU CONDUITE ADDICTIVE ? ===
+{q:"La question 'TCA = conduite addictive ?' est :",o:["Encore débattue, certains l'inscrivent dans le spectre des addictions","Tranchée définitivement comme non","Tranchée définitivement comme oui","Sans intérêt clinique"],a:0,e:"C'est une question conceptuelle ouverte, débattue : craving, perte de contrôle, tolérance, sevrage rappellent les addictions, ce qui justifie l'efficacité partielle des approches addictologiques."},
+
+// === VIGNETTES CLINIQUES ===
+{q:"Adolescente, restrictions alimentaires drastiques, hyperactivité, IMC à 15, se trouve grosse, aménorrhée. Diagnostic ?",o:["Anorexie mentale, type restrictif","Boulimie","BED","ARFID"],a:0,e:"Restriction + IMC bas (15 = sévère) + dysmorphophobie + aménorrhée + pas de purges = anorexie mentale type restrictif."},
+{q:"Jeune femme, IMC à 19, mange 5000 kcal en 1h plusieurs fois/semaine puis se fait vomir, estime de soi liée au poids. Diagnostic ?",o:["Boulimie","Anorexie purgative","BED","Dysmorphie"],a:0,e:"Crises hyperphagiques + vomissements provoqués + poids normal + estime de soi liée au corps = boulimie."},
+{q:"Patiente IMC à 14, restriction sévère ET vomissements provoqués hebdomadaires. Diagnostic ?",o:["Anorexie mentale, type accès hyperphagiques/purgatif","Boulimie","BED","ARFID"],a:0,e:"Si l'IMC est très bas (14 = extrême), c'est une anorexie ; les purges la classent en sous-type accès hyperphagiques/purgatif."},
+{q:"Personne en obésité, mange seule par gêne, jusqu'à inconfort, dégoût après — pas de purge. Diagnostic ?",o:["BED","Boulimie","Anorexie","Pica"],a:0,e:"Crises + ≥3 critères secondaires (seule, inconfort, dégoût) + obésité + PAS de purge = BED."},
+{q:"Adolescent qui refuse certains aliments par dégoût des textures, sans peur de grossir. Diagnostic ?",o:["ARFID","Anorexie","Pica","Mérycisme"],a:0,e:"Évitement par aversion sensorielle, sans peur de grossir = ARFID."},
+{q:"Femme qui passe 4h par jour à se vérifier dans le miroir, persuadée d'avoir un nez disgracieux (alors qu'objectivement il ne l'est pas). Diagnostic ?",o:["Dysmorphie corporelle","Anorexie","Boulimie","TOC sans dysmorphie"],a:0,e:"Préoccupation pour un défaut spécifique (nez) non observable + comportements répétitifs (vérification miroir) = dysmorphie corporelle (TOC du DSM-5)."},
+{q:"Enfant qui régurgite et remâche ses aliments depuis plusieurs mois. Diagnostic ?",o:["Mérycisme","Pica","ARFID","Anorexie"],a:0,e:"Régurgitation répétée + remâchage = mérycisme (rumination)."},
+
+// === SYNTHÈSE / EXAMEN ===
+{q:"Distinction principale entre boulimie et BED :",o:["Comportements compensatoires (oui dans boulimie, non dans BED)","Présence de crises (uniquement boulimie)","Sexe du patient","Âge"],a:0,e:"Les CRISES sont dans les 2 ; ce qui les distingue, ce sont les comportements compensatoires : oui dans la boulimie, NON dans le BED."},
+{q:"Distinction principale entre anorexie restrictive et boulimie :",o:["Restrictive : IMC bas + dysmorphophobie ; boulimie : IMC normal + crises/purges","Aucune","Uniquement le sexe","La durée"],a:0,e:"Anorexie restrictive : IMC bas + dysmorphophobie + restriction. Boulimie : IMC normal + crises + comportements compensatoires."},
+{q:"Distinction principale entre anorexie purgative et boulimie :",o:["IMC : très bas dans l'anorexie purgative, normal dans la boulimie","Présence de crises","Présence de purges","Sexe"],a:0,e:"Le critère discriminant : l'IMC. Dans l'anorexie purgative l'IMC est BAS ; dans la boulimie l'IMC est NORMAL malgré les mêmes comportements (crises + purges)."},
+{q:"Quelle affirmation est CORRECTE ?",o:["La dysmorphie est un TOC dans le DSM-5","La dysmorphie est un TCA","Le BED nécessite des purges","L'ARFID est lié à la peur de grossir"],a:0,e:"Réponse correcte : la dysmorphie est classée dans les TOC (et non les TCA) dans le DSM-5. Le BED EXCLUT les purges, l'ARFID EXCLUT la peur de grossir."},
+];
+
+const TOTAL=20;
+let selected,current,score,answered;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startGame(){
+  selected=shuffle([...ALL_QUESTIONS]).slice(0,TOTAL);
+  current=0;score=0;answered=false;
+  render();
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(current>=TOTAL){showResult();return}
+  const q=selected[current];
+  const isVF=q.o.length===2&&(q.o[0]==="Vrai"||q.o[0]==="Faux")&&(q.o[1]==="Vrai"||q.o[1]==="Faux");
+  let indices=[...Array(q.o.length).keys()];
+  if(!isVF) indices=shuffle(indices);
+  const pct=Math.round((current/TOTAL)*100);
+  app.innerHTML=`
+    <h1>Le Miroir Déformant</h1>
+    <p class="subtitle">Chapitre 10 : Image du corps & TCA</p>
+    <div class="score-bar"><span>Question ${current+1}/${TOTAL}</span><span>Score : ${score}/${TOTAL}</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="card">
+      <span class="tag">${isVF?'Vrai / Faux':'QCM'}</span>
+      <div class="question">${q.q}</div>
+      <div class="options">${indices.map(i=>`<button class="opt-btn" data-idx="${i}">${q.o[i]}</button>`).join('')}</div>
+      <div class="explanation" id="expl">💡 ${q.e}</div>
+    </div>
+    <button class="next-btn" id="nextBtn">${current<TOTAL-1?'Question suivante ➜':'Voir le résultat ➜'}</button>`;
+  answered=false;
+  document.querySelectorAll('.opt-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>handleAnswer(parseInt(btn.dataset.idx),q.a,btn));
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{current++;render()});
+}
+
+function handleAnswer(chosen,correct,btn){
+  if(answered)return;answered=true;
+  document.querySelectorAll('.opt-btn').forEach(b=>{b.classList.add('locked');b.disabled=true});
+  if(chosen===correct){score++;btn.classList.add('correct')}
+  else{btn.classList.add('wrong');document.querySelectorAll('.opt-btn').forEach(b=>{if(parseInt(b.dataset.idx)===correct)b.classList.add('reveal')})}
+  document.getElementById('expl').classList.add('show');
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function showResult(){
+  const pct=Math.round((score/TOTAL)*100);
+  let msg='';
+  if(pct>=90)msg='Le miroir vous renvoie une image parfaite — vous maîtrisez les TCA !';
+  else if(pct>=70)msg='Très bonne image clinique — quelques retouches restent possibles.';
+  else if(pct>=50)msg='Le reflet se précise, mais le chapitre 10 mérite une relecture.';
+  else msg='Le miroir reste flou — reprenez le chapitre 10 sérieusement !';
+  document.getElementById('app').innerHTML=`
+    <h1>Le Miroir Déformant</h1>
+    <p class="subtitle">Chapitre 10 : Image du corps & TCA</p>
+    <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="card result">
+      <h2>Résultat</h2>
+      <div class="big-score">${score} / ${TOTAL}</div>
+      <p>${pct}% de bonnes réponses</p>
+      <p>${msg}</p>
+      <button class="replay-btn" onclick="startGame()">🔄 Rejouer</button>
+    </div>`;
+}
+
+startGame();
+</script>
+</body>
+</html>

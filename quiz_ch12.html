@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Cycle de l'Addiction — Quiz Chapitre 12</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:#0f0f1a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .container{max-width:780px;width:100%;margin:auto}
+  h1{font-size:2.2rem;font-weight:800;text-align:center;background:linear-gradient(135deg,#7C2D12,#c2410c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+  .subtitle{text-align:center;font-size:1rem;color:#94a3b8;margin-bottom:30px}
+  .score-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:.9rem;color:#cbd5e1}
+  .progress-track{width:100%;height:8px;background:#1e1e2e;border-radius:99px;overflow:hidden;margin-bottom:24px}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#7C2D12,#ea580c);border-radius:99px;transition:width .4s ease}
+  .card{background:#1a1a2e;border:1px solid #2a2a3e;border-radius:16px;padding:28px 24px;margin-bottom:18px;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+  .q-number{font-size:.75rem;color:#c2410c;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  .question{font-size:1.1rem;font-weight:600;line-height:1.5;margin-bottom:20px}
+  .options{display:flex;flex-direction:column;gap:10px}
+  .opt-btn{background:#16162a;border:2px solid #2a2a3e;border-radius:12px;padding:14px 18px;font-size:1rem;color:#e2e8f0;cursor:pointer;text-align:left;transition:all .2s;font-family:inherit}
+  .opt-btn:hover:not(.locked){border-color:#c2410c;background:#2a1f1c}
+  .opt-btn.correct{border-color:#22c55e;background:rgba(34,197,94,.12);color:#4ade80}
+  .opt-btn.wrong{border-color:#ef4444;background:rgba(239,68,68,.1);color:#f87171}
+  .opt-btn.reveal{border-color:#22c55e;background:rgba(34,197,94,.08)}
+  .explanation{margin-top:14px;padding:14px 16px;background:#12121f;border-left:3px solid #c2410c;border-radius:0 8px 8px 0;font-size:.9rem;color:#94a3b8;line-height:1.5;display:none}
+  .explanation.show{display:block}
+  .next-btn{display:none;margin:18px auto 0;padding:12px 32px;background:linear-gradient(135deg,#7C2D12,#9a3412);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .next-btn:hover{transform:scale(1.04)}
+  .result{text-align:center;padding:40px 20px}
+  .result h2{font-size:2rem;margin-bottom:8px}
+  .result .big-score{font-size:3.5rem;font-weight:800;background:linear-gradient(135deg,#7C2D12,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .result p{color:#94a3b8;margin:8px 0}
+  .replay-btn{margin-top:24px;padding:14px 40px;background:linear-gradient(135deg,#7C2D12,#9a3412);color:#fff;border:none;border-radius:12px;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .15s}
+  .replay-btn:hover{transform:scale(1.05)}
+  .tag{display:inline-block;background:rgba(124,45,18,.25);color:#fb923c;font-size:.75rem;padding:3px 10px;border-radius:99px;font-weight:600;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<script>
+const ALL_QUESTIONS=[
+// === ETYMOLOGIE / HISTORIQUE ===
+{q:"Le mot 'addiction' vient du latin :",o:["Ad-dicere ('dit a')","Ad-dicare ('consacrer')","Addictio ('contrainte')","Adductus ('amene')"],a:0,e:"Ad-dicere = 'dit a'. Dans la Rome antique, l'esclave etait 'dit a' son Pater familias : il lui appartenait."},
+{q:"Dans la Rome antique, etre 'addict' signifiait :",o:["Etre 'dit a' / appartenir au Pater familias (esclave)","Etre malade","Etre soldat","Etre libere"],a:0,e:"L'image de l'esclavage est centrale : etre addict, c'est etre l'esclave d'une substance/d'un comportement."},
+{q:"L'idee centrale derriere l'etymologie de l'addiction est :",o:["La perte de souverainete sur soi-meme","La maladie organique","La predisposition genetique","Le manque de volonte"],a:0,e:"L'addict n'est plus son propre maitre. C'est l'idee de perte de souverainete."},
+{q:"En 1964, l'OMS a remplace le terme 'addiction' par :",o:["Dependance","Toxicomanie","Trouble de l'usage","Habitude"],a:0,e:"En 1964, l'OMS introduit 'dependance' pour neutraliser le langage."},
+{q:"Au Moyen Age, le mot 'dependance' designait :",o:["Le lien entre deux fiefs","Une maladie","Une drogue","Un crime"],a:0,e:"Au Moyen Age, dependance designe le lien entre deux fiefs (subordination, attachement contraint)."},
+// === DSM-IV vs DSM-5 ===
+{q:"Le DSM-IV-TR distinguait :",o:["Abuse et dependence (deux categories distinctes)","Usage et dependance","Trouble leger et severe","Aucune distinction"],a:0,e:"Le DSM-IV-TR (2002) separait l'abus et la dependance en deux diagnostics distincts."},
+{q:"Le DSM-5 (2013) a fusionne abuse/dependence en :",o:["Un seul diagnostic continu de trouble de l'usage de la substance","Deux diagnostics","Trois diagnostics","Aucun diagnostic"],a:0,e:"Le DSM-5 propose un continuum unique avec gradation leger/modere/severe."},
+{q:"Quel critere a ete AJOUTE dans le DSM-5 ?",o:["Le craving","Le sevrage","La tolerance","Les problemes legaux"],a:0,e:"Le craving (envie irrepressible) est le grand ajout du DSM-5."},
+{q:"Quel critere a ete SUPPRIME dans le DSM-5 ?",o:["Les problemes legaux","Le craving","La tolerance","Le sevrage"],a:0,e:"Le critere 'problemes legaux' du DSM-IV a ete supprime dans le DSM-5."},
+{q:"Le DSM-5 a integre le jeu pathologique comme premiere addiction comportementale.",o:["Vrai","Faux"],a:0,e:"Vrai : le gambling disorder est la premiere addiction comportementale officiellement reconnue (DSM-5, 2013)."},
+// === DEFINITIONS Pedinielli / Goodman ===
+{q:"Pedinielli (2000) definit l'addiction comme :",o:["Repetition d'actes provoquant du plaisir, marques par la dependance a un objet/situation","Une maladie purement biologique","Un trouble du caractere","Un signe de faiblesse"],a:0,e:"Definition CLINIQUE de Pedinielli (2000) : actes repetes recherches avec 'avidite'."},
+{q:"Goodman (1990) definit l'addiction comme :",o:["Un comportement procurant plaisir/soulagement, avec echec du controle malgre les consequences negatives","Une dependance physique uniquement","Un trouble exclusivement psychologique","Une recherche de sensation"],a:0,e:"Definition OPERATOIRE de Goodman (1990) : plaisir + perte de controle + maintien malgre consequences."},
+{q:"Goodman a aussi propose en 2008 une definition de :",o:["L'addiction comportementale","La dependance physique","Le craving","La tolerance"],a:0,e:"En 2008, Goodman definit l'addiction comportementale (occurrence repetitive et incontrolee de comportements dysfonctionnels)."},
+// === TYPES D'USAGE ===
+{q:"L'usage simple est :",o:["Non pathologique (consommation experimentale, sans dommages a court terme)","Pathologique sans dependance","Une dependance legere","Un sevrage"],a:0,e:"L'usage simple est experimental, n'entraine pas de dommages : c'est non pathologique."},
+{q:"L'intoxication designe :",o:["Une consommation produisant des changements comportementaux/psychologiques significatifs","Une dependance physique","Un sevrage","Un usage simple"],a:0,e:"L'intoxication = consommation aigue avec effets significatifs (ex : ivresse aigue)."},
+{q:"L'usage nocif se distingue de la dependance par :",o:["Dommages presents MAIS sans criteres de dependance (pas de craving/sevrage)","Une duree plus longue","La presence de craving","Le sevrage physique"],a:0,e:"Usage nocif : dommages physiques/psychologiques + impacts vie quotidienne, MAIS PAS de craving ni dependance."},
+{q:"Une personne s'enivre tous les week-ends avec degats professionnels mais sans tremblements ni envie irrepressible. Diagnostic le plus probable :",o:["Usage nocif","Usage simple","Dependance physique","Pas de trouble"],a:0,e:"Degats sans symptomes de manque ni craving = usage nocif (et non pas dependance)."},
+{q:"La dependance se distingue de l'usage nocif par :",o:["L'incapacite de controler la consommation + neuroadaptation","La duree","La frequence","Les degats sociaux"],a:0,e:"La dependance ajoute la perte de controle ET la neuroadaptation (tolerance/sevrage)."},
+// === CONCEPTS CLES ===
+{q:"L'appetence designe :",o:["Le gout pour un produit","Le besoin physique","La rechute","La tolerance"],a:0,e:"Appetence = simple gout pour un produit ('j'aime le vin'). Pas pathologique en soi."},
+{q:"La tolerance est :",o:["Le rapport entre quantites absorbees et effets ressentis (intra-individuel)","La comparaison entre individus","L'intensite du sevrage","Le craving"],a:0,e:"Tolerance = besoin d'augmenter la dose pour avoir le meme effet. C'est intra-individuel."},
+{q:"La resistance se distingue de la tolerance car :",o:["La resistance compare entre individus, la tolerance est intra-individuelle","Aucune difference","La resistance est pathologique","La tolerance est psychologique"],a:0,e:"Piege classique : tolerance = INTRA-individuelle ; resistance = INTER-individuelle."},
+{q:"L'accoutumance est :",o:["L'augmentation de la tolerance, donc des quantites absorbees","Le sevrage","Le craving","La rechute"],a:0,e:"Accoutumance = augmentation progressive des quantites absorbees liee a la tolerance."},
+{q:"Le sevrage designe :",o:["Les troubles somatiques apparaissant a l'arret de la consommation","L'envie de consommer","Le plaisir initial","La tolerance"],a:0,e:"Sevrage = manifestation PHYSIQUE/psychique a l'arret (tremblements, sueurs, anxiete...)."},
+{q:"Le craving est :",o:["Une envie irrepressible de consommer / d'executer un comportement","Une dependance physique","Une tolerance","Un sevrage"],a:0,e:"Craving = pensee intrusive, envie irrepressible. Moteur cognitif de la rechute."},
+{q:"Tolerance et resistance designent la meme chose.",o:["Faux","Vrai"],a:0,e:"Faux. Tolerance = intra-individuel (chez la meme personne dans le temps) ; resistance = inter-individuel."},
+{q:"Le craving est plutot une dependance :",o:["Psychologique","Physique","Genetique","Hormonale"],a:0,e:"Le craving est la marque de la dependance psychologique. Le sevrage est la marque de la dependance physique."},
+{q:"Le sevrage est plutot une dependance :",o:["Physique","Psychologique","Sociale","Genetique"],a:0,e:"Le sevrage (tremblements, sueurs, convulsions...) est la marque de la dependance physique."},
+// === TRIADE PIE ===
+{q:"La triade epidemiologique de l'addiction est :",o:["Produit - Individu - Environnement","Genetique - Education - Stress","Substance - Dose - Frequence","Cerveau - Corps - Esprit"],a:0,e:"Triade PIE = Produit / Individu / Environnement. L'addiction nait a leur intersection."},
+{q:"Le pole 'Produit' inclut :",o:["Pouvoir de dependance, effets, statut social","Genetique, vulnerabilite","Pression sociale","Modeles parentaux"],a:0,e:"Le produit a son propre pouvoir addictogene + effets psychotropes + valorisation/legalite."},
+{q:"Le pole 'Individu' inclut :",o:["Genetique, vulnerabilite psychique, evenements de vie","Pression normative","Statut social du produit","Effets psychotropes"],a:0,e:"L'individu : genetique + vulnerabilite + traumas/evenements de vie."},
+{q:"Le pole 'Environnement' inclut :",o:["Societal, relationnel, familial","Effets psychotropes","Tolerance","Sevrage"],a:0,e:"L'environnement : pression normative, pairs, famille, ambiance."},
+{q:"Le profil tempéramental le plus addictogene combine :",o:["Recherche de sensation + impulsivite + transgression","Anxiete + obsessions","Depression + retrait","Conformisme + rigidite"],a:0,e:"Recherche de sensation + impulsivite + transgression = profil le plus a risque (commun avec TP antisociale)."},
+// === DSM-5 - 11 CRITERES ===
+{q:"Le diagnostic DSM-5 du trouble de l'usage exige :",o:["Au moins 2 criteres sur 11","Les 11 criteres","5 criteres","1 critere"],a:0,e:"Seuil DSM-5 : ≥ 2/11 pour parler de trouble (gradation leger/modere/severe)."},
+{q:"Selon le DSM-5, un trouble est dit 'severe' avec :",o:["≥ 6 criteres","2-3 criteres","4-5 criteres","≥ 11 criteres"],a:0,e:"DSM-5 : 2-3 = leger ; 4-5 = modere ; ≥ 6 = severe."},
+{q:"Selon le DSM-5, un trouble est dit 'modere' avec :",o:["4-5 criteres","2-3 criteres","≥ 6 criteres","≥ 10 criteres"],a:0,e:"4-5 criteres = modere ; 2-3 = leger ; ≥ 6 = severe."},
+{q:"Le DSM-5 regroupe les 11 criteres en categories. Laquelle N'EST PAS une categorie ?",o:["Criteres legaux","Perte de controle","Alteration sociale","Criteres pharmacologiques"],a:0,e:"Les criteres legaux ont ete SUPPRIMES dans le DSM-5. Les categories sont : perte de controle, alteration sociale, usage a risque, criteres pharmacologiques."},
+{q:"Tolerance et sevrage appartiennent a la categorie :",o:["Criteres pharmacologiques","Perte de controle","Alteration sociale","Usage a risque"],a:0,e:"Tolerance (10) et sevrage (11) sont les 2 criteres pharmacologiques."},
+// === 10 CLASSES DE SUBSTANCES ===
+{q:"Le DSM-5 reconnait combien de classes de substances ?",o:["10","5","14","20"],a:0,e:"Le DSM-5 reconnait 10 classes (alcool, cafeine, cannabis, hallucinogenes, inhales, opiaces, sedatifs, stimulants, tabac, autres)."},
+{q:"La cafeine est-elle une classe DSM-5 ?",o:["Oui","Non","Seulement en CIM-11","Seulement chez les jeunes"],a:0,e:"Oui, la cafeine est une des 10 classes officielles."},
+{q:"Les benzodiazepines appartiennent a la classe :",o:["Sedatifs / hypnotiques / anxiolytiques","Stimulants","Opiaces","Hallucinogenes"],a:0,e:"Benzodiazepines et barbituriques = classe des sedatifs/hypnotiques/anxiolytiques."},
+{q:"Cocaine et amphetamines appartiennent a la classe :",o:["Stimulants","Sedatifs","Opiaces","Cannabis"],a:0,e:"Cocaine et amphetamines = stimulants."},
+{q:"Heroine et morphine appartiennent a la classe :",o:["Opiaces","Hallucinogenes","Stimulants","Tabac"],a:0,e:"Heroine, morphine, codeine, fentanyl = opiaces."},
+// === CIM-11 ===
+{q:"La CIM-11 distingue combien de niveaux d'usage excessifs ?",o:["4 (dangereux, episode nefaste, pattern nefaste, dependance)","2","6","10"],a:0,e:"CIM-11 : 4 niveaux = dangereux / episode nefaste / pattern nefaste / dependance."},
+{q:"En CIM-11, l'usage 'dangereux' :",o:["Est un facteur de risque, sans consequences directes","Implique une dependance","Est un episode isole avec consequences","Est un pattern repete"],a:0,e:"Usage dangereux = facteur de risque SANS consequences directes (le plus leger)."},
+{q:"La dependance en CIM-11 exige au moins :",o:["2 criteres majeurs sur 3","1 critere sur 3","3 criteres sur 3","5 criteres sur 11"],a:0,e:"CIM-11 : ≥ 2 sur 3 (perte de controle / priorite accrue / aspects physiologiques)."},
+{q:"La duree exigee pour la dependance en CIM-11 est :",o:["Au moins 12 mois (ou usage continu > 3 mois)","2 semaines","1 an strictement","6 mois"],a:0,e:"CIM-11 : ≥ 12 mois OU usage continu > 3 mois."},
+// === KOOB & VOLKOW - 3 PHASES ===
+{q:"Le modele en 3 phases de l'addiction est associe a :",o:["Koob & Volkow","Kahneman & Tversky","Beck","Solomon"],a:0,e:"Koob & Volkow ont theorise les 3 phases : Binge / Withdrawal / Preoccupation."},
+{q:"Les 3 phases du cycle de l'addiction sont :",o:["Binge / Withdrawal / Preoccupation","Plaisir / Tolerance / Sevrage","Initiation / Maintien / Rechute","Tolerance / Craving / Rechute"],a:0,e:"Phases : 1. Binge / Intoxication ; 2. Withdrawal / Negative affect ; 3. Preoccupation / Anticipation."},
+{q:"En phase 1 (Binge/Intoxication) :",o:["Le CPF garde le controle, les GB sont actives, l'AE est silencieuse","Le CPF est totalement deregle","L'AE est hyperactive","Toutes les zones sont eteintes"],a:0,e:"Phase 1 = plaisir, GB activees, CPF intact, AE silencieuse."},
+{q:"En phase 2 (Withdrawal/Negative affect), on observe :",o:["Activation de l'AE, baisse du plaisir, debut de perte de controle CPF","Plaisir maximal","CPF totalement intact","Aucun changement"],a:0,e:"Phase 2 = activation de l'AE (stress), baisse du plaisir, CPF commence a faiblir."},
+{q:"En phase 3 (Preoccupation/Anticipation) :",o:["CPF totalement deregle, perte de recompense GB, AE hyperactive","Plaisir intense","Le CPF garde le controle","Tout est equilibre"],a:0,e:"Phase 3 = obsession, craving, CPF dysfonctionnel, GB en perte de recompense, AE hyperactive."},
+// === ZONES CEREBRALES ===
+{q:"Le CPF (Cortex Prefrontal) est associe au :",o:["Systeme decisionnel / fonctions executives (continuer vs arreter)","Systeme de recompense","Systeme de stress","Systeme du plaisir pur"],a:0,e:"CPF = decisionnel/executif. Neurotransmetteur cle : glutamate."},
+{q:"Les Ganglions de la Base (GB) sont associes au :",o:["Systeme de recompense, habitude, plaisir","Systeme decisionnel","Systeme de stress","Memoire"],a:0,e:"GB = recompense/plaisir. Neurotransmetteurs : dopamine + peptides opioides."},
+{q:"L'Amygdale Etendue (AE) est associee au :",o:["Systeme de stress / emotions negatives","Systeme decisionnel","Systeme de plaisir","Memoire de travail"],a:0,e:"AE = stress et emotions negatives. Neurotransmetteurs : CRH, dynorphine, noradrenaline."},
+{q:"Le neurotransmetteur cle du systeme de recompense est :",o:["Dopamine","Glutamate","CRH","Serotonine"],a:0,e:"Dopamine (avec peptides opioides) dans les GB = systeme de recompense."},
+// === RECHUTE ===
+{q:"Les 3 types de rechute sont :",o:["Par la drogue / par stimuli / par stress","Par la famille / les amis / les drogues","Par anxiete / depression / mania","Sociale / financiere / medicale"],a:0,e:"3 types : 1. Par la drogue (petite consommation) ; 2. Par stimuli environnement ; 3. Par stress."},
+{q:"Une simple petite consommation qui relance le cycle est une :",o:["Rechute par la drogue","Rechute par stress","Rechute par stimuli","Rechute volontaire"],a:0,e:"Type 1 : la drogue elle-meme suffit a relancer le cycle."},
+{q:"Une rechute apres etre passe devant un ancien lieu de consommation est :",o:["Rechute par stimuli environnementaux","Rechute par la drogue","Rechute par stress","Rechute mecanique"],a:0,e:"Type 2 : un lieu, une odeur, une personne associes declenchent le craving."},
+{q:"Une rechute apres un evenement difficile est :",o:["Rechute par stress","Rechute par la drogue","Rechute par stimuli","Rechute neurochimique"],a:0,e:"Type 3 : evenement stressant ou emotion negative declenche la rechute."},
+// === MODELES THEORIQUES ===
+{q:"Le modele Opponent Process est de :",o:["Solomon (1977)","Bechara (2005)","West (2011)","Goodman (1990)"],a:0,e:"Solomon (1977) : modele Opponent Process = passage du plaisir au manque."},
+{q:"Le modele Dual Process (impulsion vs controle) est de :",o:["Bechara (2005) et Wiers et al. (2009)","Solomon (1977)","Koob & Volkow","Kahneman"],a:0,e:"Bechara (2005) et Wiers et al. (2009) : Dual Process = systeme amygdalien (impulsion) vs prefrontal (controle)."},
+{q:"Dans le Dual Process Model, le systeme d'impulsion correspond a :",o:["Amygdale / NAc (limbique)","CPF","Cervelet","Thalamus"],a:0,e:"Systeme d'impulsion = limbique (amygdale, NAc) : signale les renforcements immediats."},
+{q:"Dans le Dual Process Model, le systeme de controle correspond a :",o:["Cortex prefrontal (CPF)","Amygdale","Hippocampe","Cervelet"],a:0,e:"Systeme de controle = CPF : pondere les renforcements futurs."},
+{q:"Dans l'addiction selon le Dual Process :",o:["Le systeme d'impulsion augmente, le systeme de controle diminue","Les deux systemes sont equilibres","Le systeme de controle est dominant","Aucun systeme n'est implique"],a:0,e:"Augmentation de l'impulsion + diminution du controle = comportements plaisants immediats malgre les consequences."},
+{q:"Le PRIME Model est de :",o:["West (2011)","Solomon (1977)","Bechara","Kahneman"],a:0,e:"PRIME Model = West (2011). Acronyme : Plans, Reponses, Impulsions, Motivation, Evaluations."},
+{q:"Que signifie 'I' dans le modele PRIME (West, 2011) ?",o:["Impulsions","Intentions","Indices","Inhibition"],a:0,e:"PRIME : Plans, Reponses, IMPULSIONS, Motivation, Evaluations."},
+// === GENETIQUE ===
+{q:"Le polymorphisme 5-HTTLPR concerne :",o:["Le gene du transporteur de la serotonine","La dopamine","Le glutamate","Le GABA"],a:0,e:"5-HTTLPR = polymorphisme du gene du transporteur de la serotonine. Vulnerabilite a l'addiction."},
+{q:"Les polymorphismes DRD2, DRD3, DRD4 concernent :",o:["Les recepteurs dopaminergiques","Les recepteurs serotoninergiques","Les recepteurs GABAergiques","Les recepteurs cholinergiques"],a:0,e:"DRD2, DRD3, DRD4 = recepteurs dopaminergiques (vulnerabilite genetique a l'addiction)."},
+// === ADDICTIONS COMPORTEMENTALES ===
+{q:"Quelle est la PREMIERE addiction comportementale officiellement reconnue ?",o:["Le jeu pathologique (gambling disorder), DSM-5, 2013","L'addiction aux jeux video","L'addiction au sexe","L'addiction au sport"],a:0,e:"Gambling disorder = APA, DSM-5, 2013. Premiere addiction sans substance officiellement reconnue."},
+{q:"L'addiction aux jeux video (gaming disorder) est reconnue dans :",o:["La CIM-11","Le DSM-5 uniquement","Le DSM-IV","Aucune classification"],a:0,e:"Gaming disorder = officiel dans la CIM-11. Dans le DSM-5, c'est encore 'a etudier'."},
+{q:"L'addiction au sexe et au shopping sont des troubles officiellement reconnus :",o:["Faux, ils ne sont pas encore dans les classifications","Vrai (DSM-5)","Vrai (CIM-11)","Vrai (DSM-IV)"],a:0,e:"Faux : achat compulsif, addiction au sexe, internet, travail... ne sont PAS encore officiellement reconnus."},
+// === JEU PATHOLOGIQUE ===
+{q:"Le sophisme du joueur est :",o:["Croire que les evenements passes influencent les chances futures dans des jeux de hasard","Croire qu'on peut tout controler","Croire qu'on est invincible","Une vraie strategie"],a:0,e:"Sophisme du joueur : 'apres 5 rouges, le noir DOIT sortir' (alors que les tirages sont independants)."},
+{q:"Le 'chasing' designe :",o:["Continuer a jouer pour recuperer ses pertes","Augmenter les mises pour le frisson","La premiere mise","Le sevrage"],a:0,e:"Chasing = courir apres ses pertes : 'je dois continuer pour me refaire'."},
+{q:"Le renforcement le plus addictogene est :",o:["Le renforcement intermittent","Le renforcement continu","L'absence de renforcement","Le renforcement negatif uniquement"],a:0,e:"Renforcement intermittent (machines a sous, paris) > renforcement continu. C'est ce qui rend les jeux d'argent si dangereux."},
+{q:"En phase 'gain' du jeu pathologique :",o:["Plaisir, excitation par les gains, sursélection compulsive","Frustration, perte d'argent","Effondrement financier","Anhédonie"],a:0,e:"Phase de gain = plaisir, saillance incitative liee aux stimuli de jeu (parallele Phase 1 Koob)."},
+{q:"En phase 'perte' du jeu pathologique apparait :",o:["Le sophisme du joueur et le chasing","Le plaisir initial","La premiere mise","La cure"],a:0,e:"Phase de perte = sensibilisation AE, dysfonction serotoninergique, apparition du sophisme et du chasing."},
+{q:"En phase 'desespoir' du jeu pathologique :",o:["Effondrement financier, perte de controle CPF, troubles des FE","Plaisir maximal","Premier dérapage","Joueur récréatif"],a:0,e:"Phase de desespoir = parallele a la phase 3 de Koob : perte de controle CPF, troubles executifs."},
+// === BIAIS COGNITIFS ===
+{q:"Qui a etudie la dissonance cognitive en 1957 ?",o:["Festinger","Kahneman & Tversky","Beck","Freud"],a:0,e:"Festinger (1957) : etude fondatrice de la dissonance cognitive (origine des biais cognitifs)."},
+{q:"Qui a introduit le terme 'biais cognitif' en 1974 ?",o:["Kahneman & Tversky","Festinger","Beck","Goodman"],a:0,e:"Kahneman & Tversky (1974) : decouverte des heuristiques et introduction du terme 'biais cognitif'."},
+{q:"Selon Kahneman & Tversky (1974), les biais cognitifs sont :",o:["Des derivations de la pensee menant a des erreurs de jugement","Des decisions rationnelles","Des emotions","Des hallucinations"],a:0,e:"Definition originale : 'derivations de la pensee qui menent a des erreurs de jugement'."},
+{q:"La dissonance cognitive dans l'addiction se manifeste par :",o:["'Je sais que ca me detruit, mais...' (justifications, rationalisations)","La negation totale","Le craving uniquement","Le sevrage"],a:0,e:"Dissonance cognitive : la personne minimise/justifie pour reduire l'inconfort entre valeurs et comportement."},
+{q:"L'optimisme irrealiste dans l'addiction se traduit par :",o:["'Moi je controle, je peux arreter quand je veux'","'Je suis condamne'","'Je n'ai aucun controle'","'C'est genetique'"],a:0,e:"Optimisme irrealiste : surestimation de sa capacite de controle ou de l'absence de risque pour soi."},
+{q:"Le biais d'attention dans l'addiction concerne :",o:["La capture des stimuli lies a la substance (pubs, bouteilles, casinos)","Une attention deficitaire generale","Une amelioration de l'attention","Un trouble de l'audition"],a:0,e:"Biais d'attention = capter prioritairement les stimuli lies a la substance/comportement."},
+// === VIGNETTES - REPERAGE ===
+{q:"Une personne consomme occasionnellement, sans dommages ni consequences. Diagnostic :",o:["Usage simple (non pathologique)","Usage nocif","Dependance","Trouble severe"],a:0,e:"Sans dommages, sans consequences = usage simple, non pathologique."},
+{q:"Une femme boit quotidiennement avec tremblements a l'arret, craving, conflits. Diagnostic :",o:["Trouble de l'usage de l'alcool, severe","Joueur recreatif","Usage simple","Pas de trouble"],a:0,e:"Tableau d'Elodie : tolerance + sevrage + craving + abandon + maintien = severe."},
+{q:"Un homme joue aux paris occasionnellement, budget controle, pas de craving, vie pro/sociale OK. Diagnostic :",o:["Joueur recreatif (PAS pathologique)","Jeu pathologique","Dependance physique","Usage nocif"],a:0,e:"Tableau de Thomas : joueur recreatif. Surdiagnostiquer serait une erreur."},
+{q:"Un homme joue au poker en ligne, augmente les mises, irritabilite a l'arret, decline les sorties, problemes pro et conjugaux. Diagnostic :",o:["Jeu pathologique severe","Joueur recreatif","Usage simple","TP antisociale"],a:0,e:"Tableau de Martin : tolerance + sevrage + craving + abandon + consequences = jeu pathologique severe."},
+{q:"Le contre-exemple de Thomas vise a :",o:["Eviter le surdiagnostic du jeu pathologique","Confirmer le diagnostic","Montrer une rechute","Illustrer le sevrage"],a:0,e:"Pedagogiquement crucial : un derapage isole sans craving/sevrage/retentissement = pas un trouble."},
+// === AUTRES ===
+{q:"Pour l'alcool, les medicaments classiques de la prise en charge incluent :",o:["Naltrexone, acamprosate, disulfirame","Benzodiazepines uniquement","Antidepresseurs uniquement","Aucun"],a:0,e:"Alcool : naltrexone (anti-craving), acamprosate, disulfirame (effet antabuse)."},
+{q:"Pour les opiaces, les traitements de substitution incluent :",o:["Methadone et buprenorphine","Naltrexone","Disulfirame","Acamprosate"],a:0,e:"Opiaces = methadone et buprenorphine (traitements de substitution)."},
+{q:"L'entretien motivationnel est associe a :",o:["Miller & Rollnick","Beck","Freud","Goodman"],a:0,e:"L'entretien motivationnel = Miller & Rollnick (approche centrale en addictologie)."},
+{q:"Les approches modernes integrent les modeles psychologique, cognitif et biomedical dans :",o:["Un modele biopsychosocial","Un modele purement biologique","Un modele purement psychologique","Aucun modele"],a:0,e:"Les 3 modeles sont COMPLEMENTAIRES (biopsychosocial), avec la triade PIE en filigrane."},
+];
+
+const TOTAL=20;
+let selected,current,score,answered;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startGame(){
+  selected=shuffle([...ALL_QUESTIONS]).slice(0,TOTAL);
+  current=0;score=0;answered=false;
+  render();
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(current>=TOTAL){showResult();return}
+  const q=selected[current];
+  const isVF=q.o.length===2&&(q.o[0]==="Vrai"||q.o[0]==="Faux")&&(q.o[1]==="Vrai"||q.o[1]==="Faux");
+  let indices=[...Array(q.o.length).keys()];
+  if(!isVF) indices=shuffle(indices);
+  const pct=Math.round((current/TOTAL)*100);
+  app.innerHTML=`
+    <h1>Le Cycle de l'Addiction</h1>
+    <p class="subtitle">Chapitre 12 : Troubles du comportement et addictions</p>
+    <div class="score-bar"><span>Question ${current+1}/${TOTAL}</span><span>Score : ${score}/${TOTAL}</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="card">
+      <span class="tag">${isVF?'Vrai / Faux':'QCM'}</span>
+      <div class="question">${q.q}</div>
+      <div class="options">${indices.map(i=>`<button class="opt-btn" data-idx="${i}">${q.o[i]}</button>`).join('')}</div>
+      <div class="explanation" id="expl">&#128161; ${q.e}</div>
+    </div>
+    <button class="next-btn" id="nextBtn">${current<TOTAL-1?'Question suivante &#10140;':'Voir le resultat &#10140;'}</button>`;
+  answered=false;
+  document.querySelectorAll('.opt-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>handleAnswer(parseInt(btn.dataset.idx),q.a,btn));
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{current++;render()});
+}
+
+function handleAnswer(chosen,correct,btn){
+  if(answered)return;answered=true;
+  document.querySelectorAll('.opt-btn').forEach(b=>{b.classList.add('locked');b.disabled=true});
+  if(chosen===correct){score++;btn.classList.add('correct')}
+  else{btn.classList.add('wrong');document.querySelectorAll('.opt-btn').forEach(b=>{if(parseInt(b.dataset.idx)===correct)b.classList.add('reveal')})}
+  document.getElementById('expl').classList.add('show');
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function showResult(){
+  const pct=Math.round((score/TOTAL)*100);
+  let msg='';
+  if(pct>=90)msg='Excellent ! Vous maitrisez le cycle de l\'addiction.';
+  else if(pct>=70)msg='Tres bien ! Quelques nuances a affiner.';
+  else if(pct>=50)msg='Correct, mais le chapitre 12 merite une relecture.';
+  else msg='Il faut reprendre le chapitre 12 serieusement !';
+  document.getElementById('app').innerHTML=`
+    <h1>Le Cycle de l'Addiction</h1>
+    <p class="subtitle">Chapitre 12 : Troubles du comportement et addictions</p>
+    <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="card result">
+      <h2>Resultat</h2>
+      <div class="big-score">${score} / ${TOTAL}</div>
+      <p>${pct}% de bonnes reponses</p>
+      <p>${msg}</p>
+      <button class="replay-btn" onclick="startGame()">&#128260; Rejouer</button>
+    </div>`;
+}
+
+startGame();
+</script>
+</body>
+</html>

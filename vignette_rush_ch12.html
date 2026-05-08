@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Diagnostic Express Addictions — Chapitre 12</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes bonusPop{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(1.5)}}
+@keyframes fireFlicker{0%,100%{text-shadow:0 0 8px #c2410c,0 0 16px #ea580c}50%{text-shadow:0 0 16px #c2410c,0 0 32px #ea580c,0 0 48px #fbbf24}}
+@keyframes slideIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes correctFlash{0%{box-shadow:0 0 0 0 rgba(0,255,100,.6)}100%{box-shadow:0 0 0 20px rgba(0,255,100,0)}}
+@keyframes wrongShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes timerUrgent{0%,100%{border-color:#dc2626}50%{border-color:#f87171}}
+
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d0d1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden}
+#startScreen,#gameScreen,#endScreen{width:100%;max-width:800px;padding:20px;display:none;flex-direction:column;align-items:center}
+#startScreen.active,#gameScreen.active,#endScreen.active{display:flex}
+
+/* Start Screen */
+#startScreen{justify-content:center;min-height:100vh;gap:30px;text-align:center}
+#startScreen h1{font-size:2.8em;background:linear-gradient(135deg,#7C2D12,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+#startScreen p{font-size:1.1em;color:#aaa;max-width:520px;line-height:1.6}
+.rules{background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:20px;text-align:left;width:100%;max-width:520px}
+.rules li{margin:8px 0;color:#ccc}
+.rules li strong{color:#ea580c}
+#startBtn{padding:18px 60px;font-size:1.3em;border:none;border-radius:12px;background:linear-gradient(135deg,#7C2D12,#9a3412);color:#fff;cursor:pointer;font-weight:700;transition:transform .2s,box-shadow .2s;text-transform:uppercase;letter-spacing:2px}
+#startBtn:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(194,65,12,.5)}
+
+/* Top Bar */
+.topBar{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 0;margin-bottom:10px}
+.globalTimer{font-size:1.4em;font-weight:700;color:#c2410c;font-variant-numeric:tabular-nums}
+.scoreDisplay{font-size:1.2em;font-weight:600;color:#fbbf24}
+.statsDisplay{font-size:1em;color:#aaa}
+
+/* Progress Bar */
+.progressWrap{width:100%;height:6px;background:#222;border-radius:3px;margin-bottom:15px;overflow:hidden}
+.progressBar{height:100%;background:linear-gradient(90deg,#7C2D12,#ea580c);transition:width .4s ease;border-radius:3px}
+
+/* Timer Circle */
+.timerCircleWrap{position:relative;width:140px;height:140px;margin:10px auto 20px}
+.timerCircleSvg{width:140px;height:140px;transform:rotate(-90deg)}
+.timerTrack{fill:none;stroke:#1a1a2e;stroke-width:8}
+.timerArc{fill:none;stroke:#c2410c;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .3s linear,stroke .3s}
+.timerText{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2.4em;font-weight:800;font-variant-numeric:tabular-nums;color:#c2410c}
+.timerCircleWrap.urgent .timerText{animation:timerUrgent .5s infinite}
+.timerCircleWrap.urgent .timerArc{stroke:#dc2626}
+
+/* Streak */
+.streakWrap{text-align:center;min-height:36px;margin-bottom:10px}
+.streakText{font-size:1.3em;font-weight:700;color:#ea580c;animation:fireFlicker 1s infinite}
+.streakText.hidden{display:none}
+
+/* Bonus Pop */
+.bonusPop{position:absolute;top:30%;left:50%;transform:translateX(-50%);font-size:1.6em;font-weight:800;color:#fbbf24;pointer-events:none;animation:bonusPop .8s ease-out forwards;z-index:10}
+
+/* Vignette */
+.vignetteCard{background:linear-gradient(145deg,#1a1a2e,#2a1610);border:1px solid #4a2510;border-radius:16px;padding:28px;width:100%;margin-bottom:20px;animation:slideIn .4s ease;position:relative;min-height:120px}
+.vignetteCard .label{font-size:.85em;color:#ea580c;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.vignetteCard .text{font-size:1.1em;line-height:1.6;color:#ddd}
+
+/* Answer Buttons */
+.answersGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;margin-bottom:20px}
+.ansBtn{padding:18px 16px;font-size:1.05em;border:2px solid #333;border-radius:12px;background:#1a1a2e;color:#e0e0e0;cursor:pointer;transition:all .2s;font-weight:600;text-align:center;line-height:1.3}
+.ansBtn:hover:not(.disabled){border-color:#ea580c;background:#2a1f1c;transform:translateY(-2px)}
+.ansBtn.correct{border-color:#00ff64;background:#0a3d1a;color:#00ff64;animation:correctFlash .5s ease}
+.ansBtn.wrong{border-color:#dc2626;background:#3d0a0a;color:#f87171;animation:wrongShake .4s ease}
+.ansBtn.reveal{border-color:#00ff64;background:#0a3d1a;color:#00ff64}
+.ansBtn.disabled{cursor:default;opacity:.7}
+
+/* Feedback */
+.feedback{text-align:center;min-height:40px;margin-bottom:10px;font-size:1.1em;font-weight:700}
+.feedback.correct{color:#00ff64}
+.feedback.wrong{color:#f87171}
+.feedback .expl{display:block;font-size:.85em;font-weight:400;color:#aaa;margin-top:4px}
+
+/* End Screen */
+#endScreen{min-height:100vh;justify-content:flex-start;padding-top:40px;gap:20px}
+#endScreen h2{font-size:2.2em;color:#fbbf24}
+.finalStats{display:flex;gap:30px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+.statBox{background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:20px 30px;text-align:center}
+.statBox .val{font-size:2em;font-weight:800;color:#ea580c}
+.statBox .lbl{font-size:.9em;color:#999;margin-top:4px}
+.reviewTitle{font-size:1.4em;font-weight:700;color:#ccc;margin-top:10px}
+.reviewList{width:100%;display:flex;flex-direction:column;gap:10px;margin-top:10px;padding-bottom:40px}
+.reviewItem{background:#1a1a2e;border-radius:12px;padding:16px;border-left:4px solid #555}
+.reviewItem.wasCorrect{border-left-color:#00ff64}
+.reviewItem.wasWrong{border-left-color:#dc2626}
+.reviewItem.skipped{border-left-color:#888}
+.reviewItem .rvText{font-size:.95em;color:#bbb;margin-bottom:8px;line-height:1.4}
+.reviewItem .rvAnswer{font-size:.9em}
+.reviewItem .rvAnswer .correct{color:#00ff64;font-weight:600}
+.reviewItem .rvAnswer .given{color:#f87171;font-weight:600}
+.reviewItem .rvAnswer .skippedLbl{color:#888;font-style:italic}
+#restartBtn{padding:14px 50px;font-size:1.1em;border:none;border-radius:12px;background:linear-gradient(135deg,#7C2D12,#9a3412);color:#fff;cursor:pointer;font-weight:700;margin-top:10px;transition:transform .2s}
+#restartBtn:hover{transform:scale(1.05)}
+
+@media(max-width:600px){
+  .answersGrid{grid-template-columns:1fr}
+  #startScreen h1{font-size:2em}
+  .timerCircleWrap{width:110px;height:110px}
+  .timerCircleSvg{width:110px;height:110px}
+  .timerText{font-size:1.8em}
+}
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="startScreen" class="active">
+  <h1>DIAGNOSTIC EXPRESS</h1>
+  <p>Diagnostiquez le plus de vignettes d'addictions en 5 minutes.<br>Plus vous repondez vite, plus vous gagnez de points !</p>
+  <ul class="rules">
+    <li><strong>30 secondes</strong> par vignette</li>
+    <li><strong>5 minutes</strong> au total</li>
+    <li><strong>10 points</strong> par bonne reponse + bonus vitesse</li>
+    <li>Serie de bonnes reponses = multiplicateur de streak</li>
+    <li>Cherchez : pattern persistant, perte de controle, craving, tolerance, sevrage, retentissement</li>
+  </ul>
+  <button id="startBtn">COMMENCER</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="gameScreen">
+  <div class="topBar">
+    <div class="globalTimer" id="globalTimer">05:00</div>
+    <div class="statsDisplay" id="statsDisplay">0 / 0</div>
+    <div class="scoreDisplay" id="scoreDisplay">0 pts</div>
+  </div>
+  <div class="progressWrap"><div class="progressBar" id="progressBar"></div></div>
+
+  <div class="timerCircleWrap" id="timerCircleWrap">
+    <svg class="timerCircleSvg" viewBox="0 0 140 140">
+      <circle class="timerTrack" cx="70" cy="70" r="62"/>
+      <circle class="timerArc" id="timerArc" cx="70" cy="70" r="62"/>
+    </svg>
+    <div class="timerText" id="timerText">30</div>
+  </div>
+
+  <div class="streakWrap"><span class="streakText hidden" id="streakText"></span></div>
+
+  <div class="vignetteCard" id="vignetteCard">
+    <div class="label">Vignette <span id="vigNum">1</span></div>
+    <div class="text" id="vigText"></div>
+  </div>
+
+  <div class="answersGrid" id="answersGrid"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<!-- END SCREEN -->
+<div id="endScreen">
+  <h2>Resultats</h2>
+  <div class="finalStats" id="finalStats"></div>
+  <div class="reviewTitle">Revue des vignettes</div>
+  <div class="reviewList" id="reviewList"></div>
+  <button id="restartBtn">REJOUER</button>
+</div>
+
+<script>
+const ALL_DIAG = ["Usage simple","Usage nocif","Dependance physique","Dependance psychologique","Joueur recreatif","Jeu pathologique"];
+
+const VIGNETTES = [
+  // === USAGE SIMPLE ===
+  {text:"Lucas, 22 ans, etudiant, fume un joint deux fois par mois lors de soirees entre amis. Il dit qu'il pourrait arreter facilement. Pas de retentissement etudes/sociale.",correct:"Usage simple",expl:"Consommation experimentale, sans dommages, sans craving : usage simple non pathologique."},
+  {text:"Marc, 27 ans, boit un verre de vin a table le week-end avec sa famille. Il ne ressent jamais le besoin de boire en semaine. Aucune consequence.",correct:"Usage simple",expl:"Consommation occasionnelle ritualisee, sans dommages ni perte de controle : usage simple."},
+  {text:"Camille, 19 ans, a essaye la MDMA une fois en festival. N'y a pas repense depuis 6 mois.",correct:"Usage simple",expl:"Consommation experimentale isolee, sans poursuite : usage simple."},
+  {text:"Antoine, 30 ans, prend de la cafeine quotidiennement (3 cafes/jour) sans probleme particulier ni augmentation des doses.",correct:"Usage simple",expl:"Cafeine reguliere mais stable, sans tolerance ni retentissement : usage simple."},
+
+  // === USAGE NOCIF ===
+  {text:"Romain, 24 ans, s'enivre presque tous les week-ends, a deja eu des bagarres et a perdu son emploi etudiant. Il dit ne pas ressentir de manque la semaine et ne pense pas au prochain verre.",correct:"Usage nocif",expl:"Degats sociaux/professionnels mais sans craving ni sevrage : usage nocif (pas de dependance)."},
+  {text:"Lea, 28 ans, prend des amphetamines en periode d'examen depuis 2 ans. A maigri de 10 kg, palpitations cardiaques, mais pas de besoin physique entre les sessions.",correct:"Usage nocif",expl:"Dommages physiques manifestes mais sans dependance entre les episodes : usage nocif."},
+  {text:"Julien, 35 ans, fume du cannabis tous les soirs. A des problemes de memoire et de concentration au travail, mais nie tout craving et tout malaise les week-ends sans consommation.",correct:"Usage nocif",expl:"Dommages cognitifs/professionnels mais sans craving ni sevrage : usage nocif."},
+  {text:"Sophie, 21 ans, boit jusqu'a l'ivresse 2-3 fois par mois en boite. Elle a deja eu une intoxication ethylique aux urgences. Pas de craving, pas de manque entre les episodes.",correct:"Usage nocif",expl:"Episodes d'intoxication avec dommages aigus mais sans dependance : usage nocif."},
+  {text:"Bruno, 40 ans, consomme de la cocaine en soirees mensuelles. A des problemes financiers et conjugaux. Il dit pouvoir s'arreter mais 'aime trop ca'. Aucun craving au quotidien.",correct:"Usage nocif",expl:"Pattern episodique avec consequences mais sans craving quotidien : usage nocif."},
+
+  // === DEPENDANCE PHYSIQUE ===
+  {text:"Patrick, 55 ans, alcoolique chronique. Quand il essaie d'arreter, il presente tremblements importants des mains, sueurs, nausees, et a deja eu une crise convulsive de sevrage.",correct:"Dependance physique",expl:"Signes physiques de sevrage (tremblements, sueurs, convulsion) = dependance physique."},
+  {text:"Laurent, 45 ans, sous heroine depuis 10 ans. A l'arret : douleurs musculaires intenses, diarrhees, larmoiement, frissons, bouffees de chaleur.",correct:"Dependance physique",expl:"Syndrome de sevrage classique des opiaces : dependance physique."},
+  {text:"Helene, 60 ans, sous benzodiazepines depuis 15 ans. Arret brutal -> tremblements, anxiete extreme, insomnie totale, risque convulsif.",correct:"Dependance physique",expl:"Sevrage somatique des benzodiazepines : dependance physique."},
+  {text:"Bertrand, 50 ans, gros fumeur. A l'arret : tremblements, transpiration, irritabilite, troubles de la concentration. Symptomes somatiques marques.",correct:"Dependance physique",expl:"Symptomes physiques de sevrage (tremblements, sueurs) : dependance physique."},
+
+  // === DEPENDANCE PSYCHOLOGIQUE ===
+  {text:"Carla, 32 ans, ne presente aucun signe de sevrage physique mais ressent une envie irrepressible de fumer du cannabis des qu'elle est stressee. Pensee intrusive constante.",correct:"Dependance psychologique",expl:"Craving sans manifestations physiques : dependance psychologique pure."},
+  {text:"Vincent, 28 ans, addict aux jeux video. Pas de sueurs ni tremblements, mais des qu'il voit le boitier de la console, il ressent une envie envahissante de jouer.",correct:"Dependance psychologique",expl:"Envie psychique declenchee par stimuli, sans sevrage physique : dependance psychologique."},
+  {text:"Aurelie, 24 ans, devant une vitrine de pubs pour casino, ressent une envie incontrolable de jouer. Pas de symptome physique a l'arret, mais pensees intrusives.",correct:"Dependance psychologique",expl:"Craving cognitif declenche par stimulus environnemental : dependance psychologique."},
+  {text:"Frederic, 38 ans, a arrete la cocaine depuis 3 mois. Aucun symptome physique, mais quand il croise un ancien dealer, ressent une bouffee de craving avec pensees intrusives.",correct:"Dependance psychologique",expl:"Craving residuel cognitif sans signe physique : dependance psychologique."},
+
+  // === JOUEUR RECREATIF ===
+  {text:"Thomas, 30 ans, joue aux paris sportifs lors des grands evenements. Recemment perdu 200 € en un week-end (plus que prevu, mais incident isole). Budget habituel strict, pas de craving, vie pro/sociale OK.",correct:"Joueur recreatif",expl:"Cas pedagogique de Thomas : derapage isole, controle preserve, pas de retentissement = joueur recreatif."},
+  {text:"Manon, 27 ans, joue parfois au loto, depense 5 € par semaine. N'y pense jamais en dehors. Ne ressent ni craving ni envie irrepressible.",correct:"Joueur recreatif",expl:"Jeu occasionnel a budget controle, sans craving : joueur recreatif."},
+  {text:"Olivier, 35 ans, va au casino 2 fois par an avec un budget fixe (100 €). Quand son budget est epuise, il s'arrete sans difficulte. Aucun retentissement.",correct:"Joueur recreatif",expl:"Budget strict respecte sans difficulte, pas de chasing : joueur recreatif."},
+  {text:"Florence, 40 ans, achete un ticket a gratter une fois par mois pour le plaisir. Ne pense pas au jeu en dehors. Vie pro/sociale parfaitement preservee.",correct:"Joueur recreatif",expl:"Jeu rituel mensuel sans craving ni perte de controle : joueur recreatif."},
+
+  // === JEU PATHOLOGIQUE ===
+  {text:"Martin, 36 ans, joue au poker en ligne plusieurs soirs/semaine et meme au travail. Augmente les mises pour le frisson. Irritabilite, anxiete, pensees intrusives a l'arret. Decline les sorties. Avertissements employeur, tensions conjugales.",correct:"Jeu pathologique",expl:"Cas pedagogique de Martin : tolerance + sevrage psychique + craving + abandon + consequences = jeu pathologique severe."},
+  {text:"Stephanie, 42 ans, ne dort plus, joue a la roulette en ligne jusqu'a 4h du matin. Endettement de 30 000 €. Ment a sa famille, a perdu son emploi. Continue a jouer pour se 'refaire'.",correct:"Jeu pathologique",expl:"Pattern persistant + chasing + perte d'emploi + mensonges + endettement = jeu pathologique severe."},
+  {text:"Gerald, 50 ans, mise des sommes croissantes au PMU. A vendu sa voiture pour rembourser des dettes de jeu. Ressent une envie irrepressible des qu'il passe devant un cafe-PMU.",correct:"Jeu pathologique",expl:"Tolerance (sommes croissantes) + craving + retentissement materiel : jeu pathologique."},
+  {text:"Nadia, 33 ans, joue aux machines a sous tous les week-ends depuis 3 ans. Pense au jeu en permanence. A vide son compte epargne. Continue malgre divorce annonce par son mari.",correct:"Jeu pathologique",expl:"Pattern persistant + craving + maintien malgre consequences (divorce) = jeu pathologique."},
+  {text:"Christophe, 28 ans, apres avoir perdu 5 fois de suite au poker, est convaincu que la prochaine main 'doit' etre la bonne. Mise plus pour 'se refaire'. A perdu son loyer ce mois-ci.",correct:"Jeu pathologique",expl:"Sophisme du joueur + chasing + retentissement (loyer) : jeu pathologique."},
+
+  // === DEPENDANCE PHYSIQUE (ELODIE) ===
+  {text:"Elodie, 38 ans, boit de l'alcool quotidiennement depuis plusieurs annees. Tremblements, anxiete et sueurs froides quand elle essaie d'arreter. Envie puissante face au stress. Conflits, difficultes au travail.",correct:"Dependance physique",expl:"Cas d'Elodie : tremblements/sueurs a l'arret = manifestations physiques = dependance physique (avec aussi craving = volet psychologique)."},
+  {text:"Henri, 70 ans, alcoolique depuis 40 ans. Hospitalise pour sevrage avec delirium tremens (hallucinations, confusion, hyperthermie, tremblements majeurs).",correct:"Dependance physique",expl:"Delirium tremens = expression la plus severe du sevrage alcoolique : dependance physique."},
+
+  // === USAGE SIMPLE / NOCIF (PIEGES) ===
+  {text:"Eva, 25 ans, prend de la kétamine en festival une fois par an. Pas de retentissement quotidien, pas de poursuite entre les episodes.",correct:"Usage simple",expl:"Consommation rituelle annuelle isolee, sans dommages ni craving : usage simple."},
+  {text:"David, 33 ans, fume 20 cigarettes/jour depuis 15 ans. A souvent essaye d'arreter sans succes. Sevrage marque a l'arret (irritabilite, tremblements). BPCO debutante. Continue a fumer.",correct:"Dependance physique",expl:"Tentatives infructueuses + sevrage physique + maintien malgre BPCO : dependance physique."},
+];
+
+const CIRC = 2*Math.PI*62;
+const VIGNETTE_TIME = 30;
+const GLOBAL_TIME = 300;
+const BASE_POINTS = 10;
+
+let deck, currentIdx, score, correctCount, totalAnswered, streak;
+let vigTimerVal, globalTimerVal;
+let vigInterval, globalInterval;
+let results;
+let gameActive = false;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function $(id){return document.getElementById(id)}
+
+function showScreen(id){
+  document.querySelectorAll('#startScreen,#gameScreen,#endScreen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+function formatTime(s){
+  const m=Math.floor(s/60);
+  const sec=s%60;
+  return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+
+function updateTimerCircle(val,max){
+  const frac=val/max;
+  const arc=$('timerArc');
+  arc.style.strokeDasharray=CIRC;
+  arc.style.strokeDashoffset=CIRC*(1-frac);
+  $('timerText').textContent=val;
+  const wrap=$('timerCircleWrap');
+  if(val<=10)wrap.classList.add('urgent');
+  else wrap.classList.remove('urgent');
+  if(val<=10)arc.style.stroke='#dc2626';
+  else if(val<=20)arc.style.stroke='#ea580c';
+  else arc.style.stroke='#c2410c';
+}
+
+function showBonus(pts){
+  const card=$('vignetteCard');
+  const pop=document.createElement('div');
+  pop.className='bonusPop';
+  pop.textContent='+'+pts;
+  card.appendChild(pop);
+  setTimeout(()=>pop.remove(),900);
+}
+
+function updateStreak(){
+  const el=$('streakText');
+  if(streak>=2){
+    el.classList.remove('hidden');
+    el.textContent='🔥 Streak x'+streak+' !';
+  }else{
+    el.classList.add('hidden');
+  }
+}
+
+function updateStats(){
+  $('scoreDisplay').textContent=score+' pts';
+  $('statsDisplay').textContent=correctCount+' / '+totalAnswered;
+}
+
+function buildChoices(correct){
+  // Always show all 6 options (manageable on screen) for clarity
+  return [...ALL_DIAG];
+}
+
+function loadVignette(){
+  if(currentIdx>=deck.length){
+    deck=shuffle([...VIGNETTES]);
+    currentIdx=0;
+  }
+  const v=deck[currentIdx];
+  $('vigNum').textContent=totalAnswered+1;
+  $('vigText').textContent=v.text;
+  $('progressBar').style.width=((totalAnswered/deck.length)*100)+'%';
+
+  const card=$('vignetteCard');
+  card.style.animation='none';
+  card.offsetHeight;
+  card.style.animation='slideIn .4s ease';
+
+  const grid=$('answersGrid');
+  grid.innerHTML='';
+  const choices = buildChoices(v.correct);
+  shuffle(choices);
+  choices.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='ansBtn';
+    btn.textContent=c;
+    btn.addEventListener('click',()=>handleAnswer(btn,c,v));
+    grid.appendChild(btn);
+  });
+
+  $('feedback').textContent='';
+  $('feedback').className='feedback';
+
+  vigTimerVal=VIGNETTE_TIME;
+  updateTimerCircle(vigTimerVal,VIGNETTE_TIME);
+  clearInterval(vigInterval);
+  vigInterval=setInterval(()=>{
+    vigTimerVal--;
+    updateTimerCircle(vigTimerVal,VIGNETTE_TIME);
+    if(vigTimerVal<=0){
+      clearInterval(vigInterval);
+      handleTimeout();
+    }
+  },1000);
+}
+
+function disableButtons(){
+  document.querySelectorAll('.ansBtn').forEach(b=>b.classList.add('disabled'));
+}
+
+function handleAnswer(btn,choice,vignette){
+  if(!gameActive)return;
+  if(btn.classList.contains('disabled'))return;
+  clearInterval(vigInterval);
+  disableButtons();
+
+  const isCorrect=choice===vignette.correct;
+  const timeLeft=vigTimerVal;
+  let pts=0;
+
+  if(isCorrect){
+    btn.classList.add('correct');
+    streak++;
+    const speedBonus=Math.round((timeLeft/VIGNETTE_TIME)*15);
+    const streakMult=Math.min(streak,5);
+    pts=BASE_POINTS+speedBonus;
+    if(streakMult>=2)pts=Math.round(pts*(1+(streakMult-1)*0.2));
+    score+=pts;
+    correctCount++;
+    $('feedback').innerHTML='Correct ! +'+pts+' pts <span class="expl">'+vignette.expl+'</span>';
+    $('feedback').className='feedback correct';
+    showBonus(pts);
+  }else{
+    btn.classList.add('wrong');
+    streak=0;
+    document.querySelectorAll('.ansBtn').forEach(b=>{
+      if(b.textContent===vignette.correct)b.classList.add('reveal');
+    });
+    $('feedback').innerHTML='Incorrect ! Reponse : '+vignette.correct+' <span class="expl">'+vignette.expl+'</span>';
+    $('feedback').className='feedback wrong';
+  }
+
+  updateStreak();
+  totalAnswered++;
+  updateStats();
+
+  results.push({vignette:vignette,given:choice,correct:isCorrect,points:pts});
+
+  setTimeout(()=>{
+    if(!gameActive)return;
+    currentIdx++;
+    loadVignette();
+  },2200);
+}
+
+function handleTimeout(){
+  if(!gameActive)return;
+  disableButtons();
+  const v=deck[currentIdx];
+  streak=0;
+  updateStreak();
+  document.querySelectorAll('.ansBtn').forEach(b=>{
+    if(b.textContent===v.correct)b.classList.add('reveal');
+  });
+  $('feedback').innerHTML='Temps ecoule ! Reponse : '+v.correct+' <span class="expl">'+v.expl+'</span>';
+  $('feedback').className='feedback wrong';
+  totalAnswered++;
+  updateStats();
+  results.push({vignette:v,given:null,correct:false,points:0});
+
+  setTimeout(()=>{
+    if(!gameActive)return;
+    currentIdx++;
+    loadVignette();
+  },2500);
+}
+
+function endGame(){
+  gameActive=false;
+  clearInterval(vigInterval);
+  clearInterval(globalInterval);
+  showScreen('endScreen');
+
+  const pct=totalAnswered>0?Math.round(correctCount/totalAnswered*100):0;
+  let bestStreak=0;
+  let cur=0;
+  results.forEach(r=>{
+    if(r.correct){cur++;if(cur>bestStreak)bestStreak=cur}
+    else cur=0;
+  });
+  $('finalStats').innerHTML=
+    '<div class="statBox"><div class="val">'+score+'</div><div class="lbl">Points</div></div>'+
+    '<div class="statBox"><div class="val">'+correctCount+'/'+totalAnswered+'</div><div class="lbl">Correct</div></div>'+
+    '<div class="statBox"><div class="val">'+pct+'%</div><div class="lbl">Precision</div></div>'+
+    '<div class="statBox"><div class="val">x'+bestStreak+'</div><div class="lbl">Meilleur streak</div></div>';
+
+  const list=$('reviewList');
+  list.innerHTML='';
+  results.forEach((r,i)=>{
+    const item=document.createElement('div');
+    item.className='reviewItem '+(r.given===null?'skipped':r.correct?'wasCorrect':'wasWrong');
+    let ansHtml='';
+    if(r.given===null){
+      ansHtml='<span class="skippedLbl">Temps ecoule</span> | Reponse : <span class="correct">'+r.vignette.correct+'</span>';
+    }else if(r.correct){
+      ansHtml='<span class="correct">'+r.given+' ✓</span>';
+    }else{
+      ansHtml='Votre reponse : <span class="given">'+r.given+'</span> | Reponse : <span class="correct">'+r.vignette.correct+'</span>';
+    }
+    item.innerHTML='<div class="rvText"><strong>'+(i+1)+'.</strong> '+r.vignette.text+'</div><div class="rvAnswer">'+ansHtml+'</div>';
+    list.appendChild(item);
+  });
+}
+
+function startGame(){
+  deck=shuffle([...VIGNETTES]);
+  currentIdx=0;
+  score=0;correctCount=0;totalAnswered=0;streak=0;
+  results=[];
+  gameActive=true;
+  showScreen('gameScreen');
+  updateStats();
+  updateStreak();
+
+  globalTimerVal=GLOBAL_TIME;
+  $('globalTimer').textContent=formatTime(globalTimerVal);
+  clearInterval(globalInterval);
+  globalInterval=setInterval(()=>{
+    globalTimerVal--;
+    $('globalTimer').textContent=formatTime(globalTimerVal);
+    if(globalTimerVal<=60)$('globalTimer').style.color='#dc2626';
+    else $('globalTimer').style.color='#c2410c';
+    if(globalTimerVal<=0){
+      endGame();
+    }
+  },1000);
+
+  loadVignette();
+}
+
+$('startBtn').addEventListener('click',startGame);
+$('restartBtn').addEventListener('click',startGame);
+</script>
+</body>
+</html>
